@@ -28,9 +28,6 @@ function Landing() {
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Smart Attendance</div>
             </div>
           </Link>
-          <div className="flex items-center gap-2">
-            <Link to="/login"><Button variant="ghost" size="sm">Sign in</Button></Link>
-          </div>
         </div>
       </header>
 
