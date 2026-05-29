@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -32,6 +32,16 @@ const CATEGORY_LABEL: Record<Category, string> = {
   junior_secondary: "Junior Secondary School",
 };
 
+const CLASS_GROUPS: Record<Category, { label: string; options: string[] }[]> = {
+  primary: [
+    { label: "Early Childhood / Nursery", options: ["Nursery 1", "Nursery 2", "Kindergarten (KG) / Nursery 3"] },
+    { label: "Primary", options: ["Primary 1", "Primary 2", "Primary 3", "Primary 4", "Primary 5", "Primary 6"] },
+  ],
+  junior_secondary: [
+    { label: "Junior Secondary", options: ["JSS 1 (Basic 7)", "JSS 2 (Basic 8)", "JSS 3 (Basic 9)"] },
+  ],
+};
+
 function prettyLga(lga: string) {
   return lga
     .split("-")
@@ -51,6 +61,7 @@ function SignupPage() {
     category: "" as "" | Category,
     lga: "",
     schoolId: "",
+    classTaught: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -96,6 +107,10 @@ function SignupPage() {
       toast.error("Please select your school");
       return;
     }
+    if (needsSchool && !form.classTaught) {
+      toast.error("Please select the class you teach");
+      return;
+    }
     setLoading(true);
     const redirectUrl = `${window.location.origin}/dashboard`;
     const { error } = await supabase.auth.signUp({
@@ -108,6 +123,7 @@ function SignupPage() {
           phone: form.phone,
           role: form.role,
           school_id: needsSchool ? form.schoolId : null,
+          class_taught: needsSchool ? form.classTaught : null,
         },
       },
     });
@@ -170,7 +186,7 @@ function SignupPage() {
               <Select
                 value={form.role}
                 onValueChange={(v: Role) =>
-                  setForm((f) => ({ ...f, role: v, category: "", lga: "", schoolId: "" }))
+                  setForm((f) => ({ ...f, role: v, category: "", lga: "", schoolId: "", classTaught: "" }))
                 }
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -189,7 +205,7 @@ function SignupPage() {
                   <Select
                     value={form.category}
                     onValueChange={(v: Category) =>
-                      setForm((f) => ({ ...f, category: v, lga: "", schoolId: "" }))
+                      setForm((f) => ({ ...f, category: v, lga: "", schoolId: "", classTaught: "" }))
                     }
                   >
                     <SelectTrigger><SelectValue placeholder="Select school type" /></SelectTrigger>
@@ -233,6 +249,30 @@ function SignupPage() {
                       {filteredSchools.map((s) => (
                         <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>Class taught</Label>
+                  <Select
+                    value={form.classTaught}
+                    onValueChange={(v) => setForm((f) => ({ ...f, classTaught: v }))}
+                    disabled={!form.category}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={form.category ? "Select class" : "Pick school type first"} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {form.category &&
+                        CLASS_GROUPS[form.category].map((group) => (
+                          <SelectGroup key={group.label}>
+                            <SelectLabel>{group.label}</SelectLabel>
+                            {group.options.map((opt) => (
+                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
