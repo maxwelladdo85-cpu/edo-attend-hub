@@ -35,15 +35,17 @@ function Landing() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
+      {/* Hero + features over shared background */}
+      <div className="relative overflow-hidden">
         <img
           src={landingBg}
           alt="Edo State primary school classroom"
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/40" />
-        <div className="container mx-auto px-4 py-20 lg:py-28 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/40 to-background/85" />
+
+        <section className="relative container mx-auto px-4 py-20 lg:py-28">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">
               Real-time attendance, <span className="bg-gradient-primary bg-clip-text text-transparent">verified by GPS.</span>
@@ -69,41 +71,41 @@ function Landing() {
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Feature cards */}
-      <section className="container mx-auto px-4 pb-20">
-        <div className="grid md:grid-cols-3 gap-4">
-          {[
-            { icon: MapPin, title: "GPS Verification", desc: "Attendance is only valid when teachers are within the school's approved radius.", bg: cardGps },
-            { icon: Activity, title: "Real-time Monitoring", desc: "Head Teachers and Admins see arrivals, departures, and absences as they happen.", bg: cardMonitoring },
-            { icon: Shield, title: "Role-based Access", desc: "Teachers, Head Teachers, and EdoSUBEB Admins each get a focused, secure workspace.", bg: cardRoles },
-          ].map(({ icon: Icon, title, desc, bg }) => (
-            <div
-              key={title}
-              className="relative overflow-hidden rounded-2xl border border-border shadow-card hover:shadow-elegant transition-shadow min-h-[260px] flex flex-col justify-end p-6"
-            >
-              <img
-                src={bg}
-                alt=""
-                loading="lazy"
-                width={800}
-                height={600}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/20" />
-              <div className="relative">
-                <div className="h-11 w-11 rounded-xl bg-white/15 backdrop-blur grid place-items-center mb-4">
-                  <Icon className="h-5 w-5 text-white" />
+        {/* Feature cards */}
+        <section className="relative container mx-auto px-4 pb-20">
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              { icon: MapPin, title: "GPS Verification", desc: "Attendance is only valid when teachers are within the school's approved radius.", bg: cardGps },
+              { icon: Activity, title: "Real-time Monitoring", desc: "Head Teachers and Admins see arrivals, departures, and absences as they happen.", bg: cardMonitoring },
+              { icon: Shield, title: "Role-based Access", desc: "Teachers, Head Teachers, and EdoSUBEB Admins each get a focused, secure workspace.", bg: cardRoles },
+            ].map(({ icon: Icon, title, desc, bg }) => (
+              <div
+                key={title}
+                className="relative overflow-hidden rounded-2xl border border-border shadow-card hover:shadow-elegant transition-shadow min-h-[260px] flex flex-col justify-end p-6"
+              >
+                <img
+                  src={bg}
+                  alt=""
+                  loading="lazy"
+                  width={800}
+                  height={600}
+                  className="absolute inset-0 h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/20" />
+                <div className="relative">
+                  <div className="h-11 w-11 rounded-xl bg-white/15 backdrop-blur grid place-items-center mb-4">
+                    <Icon className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="font-display font-semibold text-lg text-white">{title}</h3>
+                  <p className="mt-1.5 text-sm text-white/85">{desc}</p>
                 </div>
-                <h3 className="font-display font-semibold text-lg text-white">{title}</h3>
-                <p className="mt-1.5 text-sm text-white/85">{desc}</p>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      </div>
 
       <footer className="border-t border-border/60 py-8">
         <div className="container mx-auto px-4 text-xs text-muted-foreground flex flex-wrap items-center justify-between gap-2">
