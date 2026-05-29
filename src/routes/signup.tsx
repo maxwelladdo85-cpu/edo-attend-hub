@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { GraduationCap, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,8 +58,8 @@ function SignupPage() {
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
       <div className="hidden lg:flex relative bg-gradient-hero p-12 text-primary-foreground flex-col justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="h-9 w-9 rounded-lg bg-white/15 backdrop-blur grid place-items-center">
-            <GraduationCap className="h-5 w-5" />
+          <div className="h-11 w-11 rounded-lg bg-white p-1 grid place-items-center">
+            <Logo className="h-9 w-9" />
           </div>
           <div className="font-display font-semibold">EdoSUBEB</div>
         </div>
@@ -74,9 +75,7 @@ function SignupPage() {
       <div className="flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-sm">
           <Link to="/" className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="h-8 w-8 rounded-lg bg-gradient-primary grid place-items-center">
-              <GraduationCap className="h-4 w-4 text-primary-foreground" />
-            </div>
+            <Logo className="h-9 w-9" />
             <span className="font-display font-semibold">EdoSUBEB</span>
           </Link>
           <h1 className="text-2xl font-bold text-foreground">Create your account</h1>
