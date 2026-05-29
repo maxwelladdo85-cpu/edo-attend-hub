@@ -1,0 +1,96 @@
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { GraduationCap, LogOut, type LucideIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth, primaryRole } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import type { ReactNode } from "react";
+
+export interface NavItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+}
+
+export function DashboardShell({
+  children,
+  nav,
+  roleLabel,
+}: {
+  children: ReactNode;
+  nav: NavItem[];
+  roleLabel: string;
+}) {
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const handleLogout = async () => {
+    await signOut();
+    toast.success("Signed out");
+    navigate({ to: "/login", replace: true });
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Top bar */}
+      <header className="border-b border-border/60 bg-card sticky top-0 z-40">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <Link to="/dashboard" className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-lg bg-gradient-primary grid place-items-center shadow-elegant">
+              <GraduationCap className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div className="leading-tight">
+              <div className="font-display font-bold text-sm">EdoSUBEB</div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{roleLabel}</div>
+            </div>
+          </Link>
+          <div className="flex items-center gap-3">
+            <div className="hidden md:block text-right leading-tight">
+              <div className="text-sm font-medium">{profile?.full_name ?? "—"}</div>
+              <div className="text-xs text-muted-foreground">{profile?.designation ?? roleLabel}</div>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 md:mr-1.5" />
+              <span className="hidden md:inline">Sign out</span>
+            </Button>
+          </div>
+        </div>
+        {nav.length > 0 && (
+          <nav className="container mx-auto px-4 flex gap-1 overflow-x-auto">
+            {nav.map((item) => {
+              const active = pathname === item.to;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`flex items-center gap-1.5 px-3 py-2.5 text-sm border-b-2 transition-colors whitespace-nowrap ${
+                    active
+                      ? "border-primary text-primary font-medium"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+        )}
+      </header>
+
+      <main className="flex-1 container mx-auto px-4 py-6 md:py-8">{children}</main>
+    </div>
+  );
+}
+
+export function roleLabelFor(role: ReturnType<typeof primaryRole>) {
+  switch (role) {
+    case "admin":
+      return "EdoSUBEB Administrator";
+    case "head_teacher":
+      return "Head Teacher";
+    default:
+      return "Teacher";
+  }
+}
