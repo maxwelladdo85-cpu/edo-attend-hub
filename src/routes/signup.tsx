@@ -107,6 +107,10 @@ function SignupPage() {
       toast.error("Please select your school");
       return;
     }
+    if (needsSchool && !form.classTaught) {
+      toast.error("Please select the class you teach");
+      return;
+    }
     setLoading(true);
     const redirectUrl = `${window.location.origin}/dashboard`;
     const { error } = await supabase.auth.signUp({
@@ -119,6 +123,7 @@ function SignupPage() {
           phone: form.phone,
           role: form.role,
           school_id: needsSchool ? form.schoolId : null,
+          class_taught: needsSchool ? form.classTaught : null,
         },
       },
     });
