@@ -46,6 +46,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          class_taught: string | null
           created_at: string
           designation: string | null
           full_name: string
@@ -58,6 +59,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          class_taught?: string | null
           created_at?: string
           designation?: string | null
           full_name: string
@@ -70,6 +72,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          class_taught?: string | null
           created_at?: string
           designation?: string | null
           full_name?: string
