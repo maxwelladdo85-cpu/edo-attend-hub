@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, MapPin, LogIn, LogOut, Users, School, Clock, AlertCircle, CheckCircle2, UserCheck, Building2, Activity } from "lucide-react";
+import { Loader2, MapPin, LogIn, LogOut, Users, School, Clock, AlertCircle, CheckCircle2, UserCheck, Building2, Activity, GraduationCap as GraduationIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
