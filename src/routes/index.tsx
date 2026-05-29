@@ -1,5 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { MapPin, Shield, Activity, GraduationCap, ArrowRight, CheckCircle2 } from "lucide-react";
+import { MapPin, Shield, Activity, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
@@ -21,9 +22,7 @@ function Landing() {
       <header className="border-b border-border/60 bg-background/80 backdrop-blur sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-lg bg-gradient-primary grid place-items-center shadow-elegant">
-              <GraduationCap className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <Logo className="h-10 w-10" />
             <div className="leading-tight">
               <div className="font-display font-bold text-foreground">EdoSUBEB</div>
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Smart Attendance</div>

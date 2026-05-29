@@ -1,5 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { GraduationCap, LogOut, type LucideIcon } from "lucide-react";
+import { LogOut, type LucideIcon } from "lucide-react";
+import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -36,9 +37,7 @@ export function DashboardShell({
       <header className="border-b border-border/60 bg-card sticky top-0 z-40">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/dashboard" className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-lg bg-gradient-primary grid place-items-center shadow-elegant">
-              <GraduationCap className="h-5 w-5 text-primary-foreground" />
-            </div>
+            <Logo className="h-10 w-10" />
             <div className="leading-tight">
               <div className="font-display font-bold text-sm">EdoSUBEB</div>
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{roleLabel}</div>
