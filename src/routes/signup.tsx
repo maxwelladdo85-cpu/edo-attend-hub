@@ -186,7 +186,7 @@ function SignupPage() {
               <Select
                 value={form.role}
                 onValueChange={(v: Role) =>
-                  setForm((f) => ({ ...f, role: v, category: "", lga: "", schoolId: "" }))
+                  setForm((f) => ({ ...f, role: v, category: "", lga: "", schoolId: "", classTaught: "" }))
                 }
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
