@@ -205,7 +205,7 @@ function SignupPage() {
                   <Select
                     value={form.category}
                     onValueChange={(v: Category) =>
-                      setForm((f) => ({ ...f, category: v, lga: "", schoolId: "" }))
+                      setForm((f) => ({ ...f, category: v, lga: "", schoolId: "", classTaught: "" }))
                     }
                   >
                     <SelectTrigger><SelectValue placeholder="Select school type" /></SelectTrigger>
