@@ -252,6 +252,30 @@ function SignupPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                <div className="space-y-1.5">
+                  <Label>Class taught</Label>
+                  <Select
+                    value={form.classTaught}
+                    onValueChange={(v) => setForm((f) => ({ ...f, classTaught: v }))}
+                    disabled={!form.category}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={form.category ? "Select class" : "Pick school type first"} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {form.category &&
+                        CLASS_GROUPS[form.category].map((group) => (
+                          <SelectGroup key={group.label}>
+                            <SelectLabel>{group.label}</SelectLabel>
+                            {group.options.map((opt) => (
+                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </>
             )}
 
