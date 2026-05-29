@@ -382,6 +382,3 @@ function AdminView() {
     </div>
   );
 }
-
-// Small alias to avoid clashing import name
-import { GraduationCap as GraduationIcon } from "lucide-react";
