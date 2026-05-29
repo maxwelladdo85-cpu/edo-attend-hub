@@ -1,13 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -16,20 +18,82 @@ export const Route = createFileRoute("/signup")({
   component: SignupPage,
 });
 
+type Role = "teacher" | "head_teacher" | "admin";
+type Category = "primary" | "junior_secondary";
+
+const ROLE_LABEL: Record<Role, string> = {
+  teacher: "Teacher",
+  head_teacher: "Head Teacher",
+  admin: "Administrator",
+};
+
+const CATEGORY_LABEL: Record<Category, string> = {
+  primary: "Primary School",
+  junior_secondary: "Junior Secondary School",
+};
+
+function prettyLga(lga: string) {
+  return lga
+    .split("-")
+    .map((s) => s.charAt(0) + s.slice(1).toLowerCase())
+    .join(" ");
+}
+
 function SignupPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
-  const [form, setForm] = useState({ fullName: "", email: "", phone: "", password: "" });
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    password: "",
+    role: "teacher" as Role,
+    category: "" as "" | Category,
+    lga: "",
+    schoolId: "",
+  });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (session) navigate({ to: "/dashboard", replace: true });
   }, [session, navigate]);
 
+  const needsSchool = form.role !== "admin";
+
+  const { data: schools = [] } = useQuery({
+    queryKey: ["schools-signup"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("schools")
+        .select("id,name,category,lga")
+        .order("name")
+        .limit(2000);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const lgas = useMemo(() => {
+    if (!form.category) return [];
+    const set = new Set(schools.filter((s) => s.category === form.category).map((s) => s.lga));
+    return Array.from(set).sort();
+  }, [schools, form.category]);
+
+  const filteredSchools = useMemo(() => {
+    if (!form.category || !form.lga) return [];
+    return schools
+      .filter((s) => s.category === form.category && s.lga === form.lga)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [schools, form.category, form.lga]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.password.length < 8) {
       toast.error("Password must be at least 8 characters");
+      return;
+    }
+    if (needsSchool && !form.schoolId) {
+      toast.error("Please select your school");
       return;
     }
     setLoading(true);
@@ -39,7 +103,12 @@ function SignupPage() {
       password: form.password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: { full_name: form.fullName, phone: form.phone },
+        data: {
+          full_name: form.fullName,
+          phone: form.phone,
+          role: form.role,
+          school_id: needsSchool ? form.schoolId : null,
+        },
       },
     });
     setLoading(false);
@@ -51,8 +120,9 @@ function SignupPage() {
     navigate({ to: "/login", replace: true });
   };
 
-  const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const updateText = (k: "fullName" | "email" | "phone" | "password") =>
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      setForm((f) => ({ ...f, [k]: e.target.value }));
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
@@ -69,7 +139,7 @@ function SignupPage() {
             Create your account to start marking attendance, verifying records, or supervising your school.
           </p>
         </div>
-        <div className="text-xs text-primary-foreground/70">After signup, an administrator will assign your school and role.</div>
+        <div className="text-xs text-primary-foreground/70">Select your role and school to get started.</div>
       </div>
 
       <div className="flex items-center justify-center p-6 lg:p-12">
@@ -79,24 +149,99 @@ function SignupPage() {
             <span className="font-display font-semibold">EdoSUBEB</span>
           </Link>
           <h1 className="text-2xl font-bold text-foreground">Create your account</h1>
-          <p className="text-sm text-muted-foreground mt-1.5">New accounts default to the Teacher role.</p>
+          <p className="text-sm text-muted-foreground mt-1.5">Choose your role and assigned school.</p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="fullName">Full name</Label>
-              <Input id="fullName" required value={form.fullName} onChange={update("fullName")} />
+              <Input id="fullName" required value={form.fullName} onChange={updateText("fullName")} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={form.email} onChange={update("email")} />
+              <Input id="email" type="email" required value={form.email} onChange={updateText("email")} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" type="tel" value={form.phone} onChange={update("phone")} placeholder="+234..." />
+              <Input id="phone" type="tel" value={form.phone} onChange={updateText("phone")} placeholder="+234..." />
             </div>
+
+            <div className="space-y-1.5">
+              <Label>Role</Label>
+              <Select
+                value={form.role}
+                onValueChange={(v: Role) =>
+                  setForm((f) => ({ ...f, role: v, category: "", lga: "", schoolId: "" }))
+                }
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(ROLE_LABEL) as Role[]).map((r) => (
+                    <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {needsSchool && (
+              <>
+                <div className="space-y-1.5">
+                  <Label>School type</Label>
+                  <Select
+                    value={form.category}
+                    onValueChange={(v: Category) =>
+                      setForm((f) => ({ ...f, category: v, lga: "", schoolId: "" }))
+                    }
+                  >
+                    <SelectTrigger><SelectValue placeholder="Select school type" /></SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(CATEGORY_LABEL) as Category[]).map((c) => (
+                        <SelectItem key={c} value={c}>{CATEGORY_LABEL[c]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>Local government</Label>
+                  <Select
+                    value={form.lga}
+                    onValueChange={(v) => setForm((f) => ({ ...f, lga: v, schoolId: "" }))}
+                    disabled={!form.category}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={form.category ? "Select LGA" : "Pick school type first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {lgas.map((l) => (
+                        <SelectItem key={l} value={l}>{prettyLga(l)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>School</Label>
+                  <Select
+                    value={form.schoolId}
+                    onValueChange={(v) => setForm((f) => ({ ...f, schoolId: v }))}
+                    disabled={!form.lga}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={form.lga ? "Select school" : "Pick LGA first"} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {filteredSchools.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+
             <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required minLength={8} value={form.password} onChange={update("password")} />
+              <Input id="password" type="password" required minLength={8} value={form.password} onChange={updateText("password")} />
             </div>
             <Button type="submit" disabled={loading} className="w-full bg-gradient-primary hover:opacity-90">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create account"}
