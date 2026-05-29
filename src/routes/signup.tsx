@@ -32,6 +32,16 @@ const CATEGORY_LABEL: Record<Category, string> = {
   junior_secondary: "Junior Secondary School",
 };
 
+const CLASS_GROUPS: Record<Category, { label: string; options: string[] }[]> = {
+  primary: [
+    { label: "Early Childhood / Nursery", options: ["Nursery 1", "Nursery 2", "Kindergarten (KG) / Nursery 3"] },
+    { label: "Primary", options: ["Primary 1", "Primary 2", "Primary 3", "Primary 4", "Primary 5", "Primary 6"] },
+  ],
+  junior_secondary: [
+    { label: "Junior Secondary", options: ["JSS 1 (Basic 7)", "JSS 2 (Basic 8)", "JSS 3 (Basic 9)"] },
+  ],
+};
+
 function prettyLga(lga: string) {
   return lga
     .split("-")
@@ -51,6 +61,7 @@ function SignupPage() {
     category: "" as "" | Category,
     lga: "",
     schoolId: "",
+    classTaught: "",
   });
   const [loading, setLoading] = useState(false);
 
