@@ -1,10 +1,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
-import { MapPin, Shield, Activity, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import cardGps from "@/assets/card-gps.jpg";
-import cardMonitoring from "@/assets/card-monitoring.jpg";
-import cardRoles from "@/assets/card-roles.jpg";
 import landingBg from "@/assets/landing-bg.png";
 
 export const Route = createFileRoute("/")({
