@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import cardGps from "@/assets/card-gps.jpg";
 import cardMonitoring from "@/assets/card-monitoring.jpg";
 import cardRoles from "@/assets/card-roles.jpg";
+import landingBg from "@/assets/landing-bg.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -36,13 +37,18 @@ function Landing() {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-hero opacity-[0.03]" />
+        <img
+          src={landingBg}
+          alt="Edo State primary school classroom"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/40" />
         <div className="container mx-auto px-4 py-20 lg:py-28 relative">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">
               Real-time attendance, <span className="bg-gradient-primary bg-clip-text text-transparent">verified by GPS.</span>
             </h1>
-            <p className="mt-6 text-lg text-muted-foreground max-w-2xl">
+            <p className="mt-6 text-lg text-foreground/80 max-w-2xl">
               EdoSUBEB Smart Attendance digitally captures teacher arrivals, departures, and student presence — with location verification, lateness flags, and statewide analytics.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -55,10 +61,10 @@ function Landing() {
                 <Button size="lg" variant="outline">I already have an account</Button>
               </Link>
             </div>
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-foreground/80">
               {["GPS-verified check-in", "Head Teacher review", "Statewide dashboards"].map((t) => (
                 <div key={t} className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary-glow" /> {t}
+                  <CheckCircle2 className="h-4 w-4 text-primary" /> {t}
                 </div>
               ))}
             </div>
