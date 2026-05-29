@@ -2,6 +2,9 @@ import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { MapPin, Shield, Activity, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
+import cardGps from "@/assets/card-gps.jpg";
+import cardMonitoring from "@/assets/card-monitoring.jpg";
+import cardRoles from "@/assets/card-roles.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -36,10 +39,6 @@ function Landing() {
         <div className="absolute inset-0 bg-gradient-hero opacity-[0.03]" />
         <div className="container mx-auto px-4 py-20 lg:py-28 relative">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary mb-6">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary-glow animate-pulse" />
-              Live across Edo State public primary schools
-            </div>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground">
               Real-time attendance, <span className="bg-gradient-primary bg-clip-text text-transparent">verified by GPS.</span>
             </h1>
@@ -71,16 +70,30 @@ function Landing() {
       <section className="container mx-auto px-4 pb-20">
         <div className="grid md:grid-cols-3 gap-4">
           {[
-            { icon: MapPin, title: "GPS Verification", desc: "Attendance is only valid when teachers are within the school's approved radius." },
-            { icon: Activity, title: "Real-time Monitoring", desc: "Head Teachers and Admins see arrivals, departures, and absences as they happen." },
-            { icon: Shield, title: "Role-based Access", desc: "Teachers, Head Teachers, and EdoSUBEB Admins each get a focused, secure workspace." },
-          ].map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="rounded-2xl border border-border bg-card p-6 shadow-card hover:shadow-elegant transition-shadow">
-              <div className="h-11 w-11 rounded-xl bg-primary/10 grid place-items-center mb-4">
-                <Icon className="h-5 w-5 text-primary" />
+            { icon: MapPin, title: "GPS Verification", desc: "Attendance is only valid when teachers are within the school's approved radius.", bg: cardGps },
+            { icon: Activity, title: "Real-time Monitoring", desc: "Head Teachers and Admins see arrivals, departures, and absences as they happen.", bg: cardMonitoring },
+            { icon: Shield, title: "Role-based Access", desc: "Teachers, Head Teachers, and EdoSUBEB Admins each get a focused, secure workspace.", bg: cardRoles },
+          ].map(({ icon: Icon, title, desc, bg }) => (
+            <div
+              key={title}
+              className="relative overflow-hidden rounded-2xl border border-border shadow-card hover:shadow-elegant transition-shadow min-h-[260px] flex flex-col justify-end p-6"
+            >
+              <img
+                src={bg}
+                alt=""
+                loading="lazy"
+                width={800}
+                height={600}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/20" />
+              <div className="relative">
+                <div className="h-11 w-11 rounded-xl bg-white/15 backdrop-blur grid place-items-center mb-4">
+                  <Icon className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="font-display font-semibold text-lg text-white">{title}</h3>
+                <p className="mt-1.5 text-sm text-white/85">{desc}</p>
               </div>
-              <h3 className="font-display font-semibold text-lg text-foreground">{title}</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">{desc}</p>
             </div>
           ))}
         </div>
