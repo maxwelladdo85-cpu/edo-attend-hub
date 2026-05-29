@@ -24,8 +24,8 @@ function Landing() {
           <Link to="/" className="flex items-center gap-2.5">
             <Logo className="h-10 w-10" />
             <div className="leading-tight">
-              <div className="font-display font-bold text-foreground">EdoSUBEB</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Smart Attendance</div>
+              <div className="font-display font-bold text-3xl text-foreground">EdoSUBEB</div>
+              <div className="text-xl uppercase tracking-wider text-muted-foreground">Smart Attendance</div>
             </div>
           </Link>
         </div>
