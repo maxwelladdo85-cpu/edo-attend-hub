@@ -40,6 +40,14 @@ export function AdminShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Warm the shared admin caches once the shell mounts so every sidebar
+  // section navigates instantly from cached data.
+  useSchools();
+  useTeacherProfiles();
+  useStudents();
+  useTeacherAttendanceToday();
+  useStudentAttendanceToday();
+
   useEffect(() => {
     if (loading) return;
     if (!session) {
