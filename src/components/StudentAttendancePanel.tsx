@@ -228,12 +228,11 @@ function SessionCheck({ icon: Icon, label, current, markedAt, lat, lng, saving, 
       saving && "opacity-60 cursor-wait",
     )}>
       <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={checked}
           disabled={saving}
-          onChange={(e) => onToggle(e.target.checked)}
-          className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+          onCheckedChange={(v) => onToggle(v === true)}
+          className="h-5 w-5"
         />
         <Icon className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-xs font-medium">{label}</span>
