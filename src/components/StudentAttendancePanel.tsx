@@ -161,8 +161,8 @@ export function StudentAttendancePanel() {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
       {isHead && total > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 p-5">
-          <StatCard icon={Users} label="Total Students" value={total} tone="default" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 p-3 sm:p-5">
+          <StatCard icon={Users} label="Total" value={total} tone="default" />
           <StatCard icon={Sun} label="AM Present" value={`${amPresent}`} hint={`${total > 0 ? Math.round((amPresent / total) * 100) : 0}%`} tone="success" />
           <StatCard icon={Sun} label="AM Absent" value={`${amAbsent}`} hint={`${total > 0 ? Math.round((amAbsent / total) * 100) : 0}%`} tone="destructive" />
           <StatCard icon={Sunset} label="PM Present" value={`${pmPresent}`} hint={`${total > 0 ? Math.round((pmPresent / total) * 100) : 0}%`} tone="success" />
@@ -218,66 +218,48 @@ export function StudentAttendancePanel() {
         <div className="p-8 text-center text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin inline" /></div>
       ) : students.length === 0 ? (
         <div className="p-8 text-center text-muted-foreground text-sm">{isHead ? "No students enrolled in this school yet." : "No students in your class yet."}</div>
-      ) : (() => {
-        return (
+      ) : (
         <div className="divide-y divide-border">
           {visible.map((s) => {
             const row = rows[s.id];
             return (
-              <div key={s.id} className="p-4 flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <label className="flex flex-col items-center gap-1 cursor-pointer select-none" title="Mark morning">
-                    <Checkbox
-                      checked={row?.morning_status === "present"}
-                      disabled={savingKey === `${s.id}-morning`}
-                      onCheckedChange={(v) => mark(s, "morning", v === true ? "present" : null)}
-                      className="h-6 w-6"
-                    />
-                    <span className="text-[10px] text-muted-foreground">AM</span>
-                  </label>
-                  <label className="flex flex-col items-center gap-1 cursor-pointer select-none" title="Mark afternoon">
-                    <Checkbox
-                      checked={row?.afternoon_status === "present"}
-                      disabled={savingKey === `${s.id}-afternoon`}
-                      onCheckedChange={(v) => mark(s, "afternoon", v === true ? "present" : null)}
-                      className="h-6 w-6"
-                    />
-                    <span className="text-[10px] text-muted-foreground">PM</span>
-                  </label>
+              <div key={s.id} className="p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-9 w-9 rounded-lg bg-primary/10 grid place-items-center font-mono text-xs font-semibold text-primary flex-shrink-0">
+                    {s.student_id}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{s.full_name}</div>
+                    <div className="text-xs text-muted-foreground truncate">{s.class}{s.gender ? ` · ${s.gender}` : ""}</div>
+                  </div>
                 </div>
-                <div className="h-9 w-9 rounded-lg bg-primary/10 grid place-items-center font-mono text-xs font-semibold text-primary">
-                  {s.student_id}
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:flex-1 sm:justify-end">
+                  <SessionCheck
+                    icon={Sun}
+                    label="Morning"
+                    current={row?.morning_status ?? null}
+                    markedAt={row?.morning_marked_at ?? null}
+                    lat={row?.morning_lat ?? null}
+                    lng={row?.morning_lng ?? null}
+                    saving={savingKey === `${s.id}-morning`}
+                    onToggle={(checked) => mark(s, "morning", checked ? "present" : null)}
+                  />
+                  <SessionCheck
+                    icon={Sunset}
+                    label="Afternoon"
+                    current={row?.afternoon_status ?? null}
+                    markedAt={row?.afternoon_marked_at ?? null}
+                    lat={row?.afternoon_lat ?? null}
+                    lng={row?.afternoon_lng ?? null}
+                    saving={savingKey === `${s.id}-afternoon`}
+                    onToggle={(checked) => mark(s, "afternoon", checked ? "present" : null)}
+                  />
                 </div>
-                <div className="flex-1 min-w-[140px]">
-                  <div className="font-medium truncate">{s.full_name}</div>
-                  <div className="text-xs text-muted-foreground">{s.class}{s.gender ? ` · ${s.gender}` : ""}</div>
-                </div>
-                <SessionCheck
-                  icon={Sun}
-                  label="Morning"
-                  current={row?.morning_status ?? null}
-                  markedAt={row?.morning_marked_at ?? null}
-                  lat={row?.morning_lat ?? null}
-                  lng={row?.morning_lng ?? null}
-                  saving={savingKey === `${s.id}-morning`}
-                  onToggle={(checked) => mark(s, "morning", checked ? "present" : null)}
-                />
-                <SessionCheck
-                  icon={Sunset}
-                  label="Afternoon"
-                  current={row?.afternoon_status ?? null}
-                  markedAt={row?.afternoon_marked_at ?? null}
-                  lat={row?.afternoon_lat ?? null}
-                  lng={row?.afternoon_lng ?? null}
-                  saving={savingKey === `${s.id}-afternoon`}
-                  onToggle={(checked) => mark(s, "afternoon", checked ? "present" : null)}
-                />
               </div>
             );
           })}
         </div>
-        );
-      })()}
+      )}
     </div>
   );
 }
@@ -295,7 +277,7 @@ function SessionCheck({ icon: Icon, label, current, markedAt, lat, lng, saving, 
       onClick={() => !saving && onToggle(!checked)}
       onKeyDown={(e) => { if (!saving && (e.key === " " || e.key === "Enter")) { e.preventDefault(); onToggle(!checked); } }}
       className={cn(
-        "flex flex-col gap-1 rounded-lg border border-border px-3 py-2 cursor-pointer transition min-w-[140px] select-none",
+        "flex flex-col gap-1 rounded-lg border border-border px-3 py-2 cursor-pointer transition select-none w-full sm:w-auto sm:min-w-[140px]",
         checked ? "bg-success/10 border-success/40" : "bg-background hover:bg-muted",
         saving && "opacity-60 cursor-wait",
       )}>

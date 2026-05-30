@@ -23,15 +23,15 @@ export function StatCard({
   }[tone];
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">{label}</div>
-          <div className="mt-2 text-3xl font-bold font-display text-foreground">{value}</div>
-          {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
+    <div className="rounded-xl border border-border bg-card p-4 sm:p-5 shadow-card">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-[10px] sm:text-xs uppercase tracking-wide text-muted-foreground font-medium truncate">{label}</div>
+          <div className="mt-1.5 sm:mt-2 text-2xl sm:text-3xl font-bold font-display text-foreground">{value}</div>
+          {hint && <div className="mt-1 text-[10px] sm:text-xs text-muted-foreground">{hint}</div>}
         </div>
-        <div className={`h-10 w-10 rounded-lg grid place-items-center ${toneStyles}`}>
-          <Icon className="h-5 w-5" />
+        <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-lg grid place-items-center flex-shrink-0 ${toneStyles}`}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
         </div>
       </div>
     </div>
