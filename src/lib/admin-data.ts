@@ -67,16 +67,34 @@ const ATT_STALE = 60_000;
 const ATT_GC = 10 * 60_000;
 const ATT_REFETCH = 90_000;
 
+// PostgREST caps responses at 1000 rows by default, so fetch in pages.
+async function fetchAllPaged<T>(
+  query: (from: number, to: number) => Promise<{ data: T[] | null; error: unknown }>,
+  pageSize = 1000,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += pageSize) {
+    const to = from + pageSize - 1;
+    const { data, error } = await query(from, to);
+    if (error) throw error;
+    const rows = data ?? [];
+    out.push(...rows);
+    if (rows.length < pageSize) break;
+  }
+  return out;
+}
+
 export function useSchools() {
   return useQuery({
     queryKey: ["admin", "schools"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("schools")
-        .select("id,name,lga,category,latitude,longitude")
-        .limit(10000);
-      if (error) throw error;
-      return (data ?? []) as SchoolLite[];
+      return await fetchAllPaged<SchoolLite>(async (from, to) => {
+        const { data, error } = await supabase
+          .from("schools")
+          .select("id,name,lga,category,latitude,longitude")
+          .range(from, to);
+        return { data: data as SchoolLite[] | null, error };
+      });
     },
     staleTime: REF_STALE,
     gcTime: REF_GC,
@@ -112,12 +130,13 @@ export function useStudents() {
   return useQuery({
     queryKey: ["admin", "students"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("students")
-        .select("id,school_id")
-        .limit(50000);
-      if (error) throw error;
-      return (data ?? []) as StudentLite[];
+      return await fetchAllPaged<StudentLite>(async (from, to) => {
+        const { data, error } = await supabase
+          .from("students")
+          .select("id,school_id")
+          .range(from, to);
+        return { data: data as StudentLite[] | null, error };
+      });
     },
     staleTime: REF_STALE,
     gcTime: REF_GC,
@@ -129,16 +148,18 @@ export function useTeacherAttendanceToday() {
   return useQuery({
     queryKey: ["admin", "teacher-attendance", todayStr()],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("teacher_attendance")
-        .select("id,school_id,teacher_user_id,arrival_time,arrival_status,departure_time,head_verified")
-        .eq("attendance_date", todayStr())
-        .limit(20000);
-      if (error) throw error;
+      const rows = await fetchAllPaged<TeacherAttendanceLite>(async (from, to) => {
+        const { data, error } = await supabase
+          .from("teacher_attendance")
+          .select("id,school_id,teacher_user_id,arrival_time,arrival_status,departure_time,head_verified")
+          .eq("attendance_date", todayStr())
+          .range(from, to);
+        return { data: data as TeacherAttendanceLite[] | null, error };
+      });
       // De-duplicate by teacher_user_id so a teacher with multiple rows in a
       // single day cannot be counted more than once.
       const byTeacher = new Map<string, TeacherAttendanceLite>();
-      for (const row of (data ?? []) as TeacherAttendanceLite[]) {
+      for (const row of rows) {
         const existing = byTeacher.get(row.teacher_user_id);
         // Prefer the row with an arrival_time, otherwise keep the first.
         if (!existing || (!existing.arrival_time && row.arrival_time)) {
@@ -159,16 +180,18 @@ export function useStudentAttendanceToday() {
   return useQuery({
     queryKey: ["admin", "student-attendance", todayStr()],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("student_attendance")
-        .select("student_id,school_id,morning_status,afternoon_status")
-        .eq("attendance_date", todayStr())
-        .limit(50000);
-      if (error) throw error;
+      const rows = await fetchAllPaged<StudentAttendanceLite>(async (from, to) => {
+        const { data, error } = await supabase
+          .from("student_attendance")
+          .select("student_id,school_id,morning_status,afternoon_status")
+          .eq("attendance_date", todayStr())
+          .range(from, to);
+        return { data: data as StudentAttendanceLite[] | null, error };
+      });
       // De-duplicate by student_id, merging morning + afternoon so a student
       // present in either slot is counted once.
       const byStudent = new Map<string, StudentAttendanceLite>();
-      for (const row of (data ?? []) as StudentAttendanceLite[]) {
+      for (const row of rows) {
         const existing = byStudent.get(row.student_id);
         if (!existing) {
           byStudent.set(row.student_id, { ...row });
