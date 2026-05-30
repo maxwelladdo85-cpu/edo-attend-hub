@@ -81,14 +81,13 @@ export function StudentAttendancePanel() {
         student_id: student.id,
         school_id: profile.school_id,
         attendance_date: dateStr,
-        morning_status: existing?.morning_status ?? null,
-        afternoon_status: existing?.afternoon_status ?? null,
-        [session]: value,
+        morning_status: session === "morning_status" ? value : existing?.morning_status ?? null,
+        afternoon_status: session === "afternoon_status" ? value : existing?.afternoon_status ?? null,
         marked_by: user.id,
       };
       const { error } = await supabase
         .from("student_attendance")
-        .upsert(payload, { onConflict: "student_id,attendance_date" });
+        .upsert([payload], { onConflict: "student_id,attendance_date" });
       if (error) throw error;
       setRows((prev) => ({
         ...prev,
