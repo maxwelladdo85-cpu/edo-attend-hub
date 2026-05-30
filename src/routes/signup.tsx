@@ -117,7 +117,7 @@ function SignupPage() {
       toast.error("Please select your school");
       return;
     }
-    if (needsSchool && !form.classTaught) {
+    if (needsSchool && form.role === "teacher" && !form.classTaught) {
       toast.error("Please select the class you teach");
       return;
     }
