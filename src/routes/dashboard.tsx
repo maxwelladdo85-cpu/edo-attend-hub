@@ -86,16 +86,25 @@ function TeacherView() {
     }
     setBusy(kind);
     try {
-      const pos = await getCurrentPosition();
-      const dist = distanceMeters(pos.coords.latitude, pos.coords.longitude, school.latitude, school.longitude);
-      const verified = dist <= (school.radius_meters ?? 100);
-      if (!verified) {
-        toast.error(`You are ${Math.round(dist)}m from ${school.name}. Must be within ${school.radius_meters}m.`);
-        setBusy(null);
-        return;
-      }
+      // Capture the exact timestamp the moment the button is pressed
       const now = new Date().toISOString();
       const dateStr = now.slice(0, 10);
+
+      // Best-effort location capture — does NOT block saving the time
+      let lat: number | null = null;
+      let lng: number | null = null;
+      let verified = false;
+      let dist: number | null = null;
+      try {
+        const pos = await getCurrentPosition();
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+        dist = distanceMeters(lat, lng, school.latitude, school.longitude);
+        verified = dist <= (school.radius_meters ?? 100);
+      } catch {
+        // Location unavailable — still record the time, just unverified
+      }
+
       if (kind === "arrival") {
         const status = classifyArrival(now, school.resumption_time);
         const { error } = await supabase.from("teacher_attendance").upsert(
@@ -104,35 +113,43 @@ function TeacherView() {
             school_id: school.id,
             attendance_date: dateStr,
             arrival_time: now,
-            arrival_lat: pos.coords.latitude,
-            arrival_lng: pos.coords.longitude,
+            arrival_lat: lat,
+            arrival_lng: lng,
             arrival_status: status,
-            arrival_verified: true,
+            arrival_verified: verified,
             device_info: navigator.userAgent.slice(0, 200),
           },
           { onConflict: "teacher_user_id,attendance_date" },
         );
         if (error) throw error;
-        toast.success(`Arrival marked — ${status.replace("_", " ")}`);
+        const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        if (verified) {
+          toast.success(`Arrival marked at ${timeLabel} — ${status.replace("_", " ")}`);
+        } else if (dist !== null) {
+          toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)}m from ${school.name} (unverified).`);
+        } else {
+          toast.warning(`Arrival recorded at ${timeLabel} without location (unverified).`);
+        }
       } else {
         const status = classifyDeparture(now, school.closing_time);
         const { error } = await supabase
           .from("teacher_attendance")
           .update({
             departure_time: now,
-            departure_lat: pos.coords.latitude,
-            departure_lng: pos.coords.longitude,
+            departure_lat: lat,
+            departure_lng: lng,
             departure_status: status,
-            departure_verified: true,
+            departure_verified: verified,
           })
           .eq("teacher_user_id", user.id)
           .eq("attendance_date", dateStr);
         if (error) throw error;
-        toast.success(`Departure marked — ${status.replace("_", " ")}`);
+        const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        toast.success(`Departure marked at ${timeLabel} — ${status.replace("_", " ")}`);
       }
       await load();
     } catch (e: any) {
-      toast.error(e.message ?? "Could not capture location");
+      toast.error(e.message ?? "Could not save attendance");
     } finally {
       setBusy(null);
     }
