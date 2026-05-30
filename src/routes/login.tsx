@@ -64,6 +64,17 @@ function LoginPage() {
             <Logo className="h-9 w-9" />
             <span className="font-display font-semibold">EdoSUBEB</span>
           </Link>
+          <div className="flex rounded-lg border border-border overflow-hidden mb-6">
+            <Link
+              to="/signup"
+              className="flex-1 py-2 text-center text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              Sign Up
+            </Link>
+            <div className="flex-1 py-2 text-center text-sm font-medium bg-primary text-primary-foreground">
+              Sign In
+            </div>
+          </div>
           <h1 className="text-2xl font-bold text-foreground">Sign in to your account</h1>
           <p className="text-sm text-muted-foreground mt-1.5">Enter your details to continue.</p>
 
@@ -81,10 +92,6 @@ function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-sm text-muted-foreground">
-            Don't have an account?{" "}
-            <Link to="/signup" className="text-primary font-medium hover:underline">Create one</Link>
-          </p>
         </div>
       </div>
     </div>
