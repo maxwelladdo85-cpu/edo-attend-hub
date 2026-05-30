@@ -9,6 +9,7 @@ import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { DashboardShell, roleLabelFor } from "@/components/DashboardShell";
 import { StatCard } from "@/components/StatCard";
 import { distanceMeters, getCurrentPosition, classifyArrival, classifyDeparture } from "@/lib/geo";
+import { AssignTeachersPanel } from "@/components/AssignTeachersPanel";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — EdoSUBEB Smart Attendance" }] }),
@@ -36,17 +37,23 @@ function DashboardPage() {
 
   return (
     <DashboardShell nav={[]} roleLabel={label}>
-      {role === "teacher" && <TeacherView />}
-      {role === "head_teacher" && <HeadTeacherView />}
-      {role === "admin" && <AdminView />}
-      {!profile?.school_id && role !== "admin" && (
-        <div className="mt-6 rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm flex gap-3">
-          <AlertCircle className="h-5 w-5 text-warning-foreground flex-shrink-0" />
-          <div>
-            <div className="font-medium text-foreground">No school assigned yet</div>
-            <div className="text-muted-foreground mt-1">An EdoSUBEB administrator must assign you to a school before you can mark attendance.</div>
-          </div>
-        </div>
+      {role === "admin" ? (
+        <AdminView />
+      ) : role === "head_teacher" ? (
+        <HeadTeacherView />
+      ) : (
+        <>
+          <TeacherView />
+          {!profile?.school_id && (
+            <div className="mt-6 rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm flex gap-3">
+              <AlertCircle className="h-5 w-5 text-warning-foreground flex-shrink-0" />
+              <div>
+                <div className="font-medium text-foreground">No school assigned yet</div>
+                <div className="text-muted-foreground mt-1">An EdoSUBEB administrator must assign you to a school before you can mark attendance.</div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </DashboardShell>
   );
@@ -371,6 +378,7 @@ function HeadTeacherView() {
 
 /* ----------------------- ADMIN ----------------------- */
 function AdminView() {
+  const { profile } = useAuth();
   const [stats, setStats] = useState({ schools: 0, teachers: 0, students: 0, present: 0, late: 0, absent: 0 });
   const [feed, setFeed] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -380,7 +388,7 @@ function AdminView() {
       const dateStr = new Date().toISOString().slice(0, 10);
       const [{ count: schools }, { count: teachers }, { count: students }, { data: att }] = await Promise.all([
         supabase.from("schools").select("*", { count: "exact", head: true }),
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
+        supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "teacher"),
         supabase.from("students").select("*", { count: "exact", head: true }),
         supabase.from("teacher_attendance").select("*").eq("attendance_date", dateStr).order("arrival_time", { ascending: false }).limit(20),
       ]);
@@ -402,8 +410,10 @@ function AdminView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold">Statewide Overview</h1>
-        <p className="text-sm text-muted-foreground mt-1">EdoSUBEB real-time monitoring · {new Date().toLocaleDateString()}</p>
+        <h1 className="text-2xl md:text-3xl font-bold">
+          Welcome, {profile?.full_name?.split(" ")[0] ?? "Administrator"}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">EdoSUBEB statewide administration · {new Date().toLocaleDateString()}</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
@@ -414,6 +424,8 @@ function AdminView() {
         <StatCard icon={Clock} label="Late today" value={stats.late} tone="warning" />
         <StatCard icon={AlertCircle} label="Absent today" value={Math.max(0, stats.absent)} tone="destructive" />
       </div>
+
+      <AssignTeachersPanel />
 
       <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
         <div className="p-5 border-b border-border flex items-center gap-2">
