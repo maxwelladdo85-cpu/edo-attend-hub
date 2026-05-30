@@ -78,7 +78,7 @@ export function StudentAttendancePanel() {
     load();
   }, [profile?.school_id, profile?.class_taught, dateStr]);
 
-  const mark = async (student: Student, session: Session, value: Mark) => {
+  const mark = async (student: Student, session: Session, value: Mark | null) => {
     if (!user || !profile?.school_id) return;
     const key = `${student.id}-${session}`;
     setSavingKey(key);
