@@ -117,7 +117,17 @@ export function useTeacherAttendanceToday() {
         .eq("attendance_date", todayStr())
         .limit(20000);
       if (error) throw error;
-      return (data ?? []) as TeacherAttendanceLite[];
+      // De-duplicate by teacher_user_id so a teacher with multiple rows in a
+      // single day cannot be counted more than once.
+      const byTeacher = new Map<string, TeacherAttendanceLite>();
+      for (const row of (data ?? []) as TeacherAttendanceLite[]) {
+        const existing = byTeacher.get(row.teacher_user_id);
+        // Prefer the row with an arrival_time, otherwise keep the first.
+        if (!existing || (!existing.arrival_time && row.arrival_time)) {
+          byTeacher.set(row.teacher_user_id, row);
+        }
+      }
+      return Array.from(byTeacher.values());
     },
     refetchInterval: 30_000,
   });
@@ -133,10 +143,32 @@ export function useStudentAttendanceToday() {
         .eq("attendance_date", todayStr())
         .limit(50000);
       if (error) throw error;
-      return (data ?? []) as StudentAttendanceLite[];
+      // De-duplicate by student_id, merging morning + afternoon so a student
+      // present in either slot is counted once.
+      const byStudent = new Map<string, StudentAttendanceLite>();
+      for (const row of (data ?? []) as StudentAttendanceLite[]) {
+        const existing = byStudent.get(row.student_id);
+        if (!existing) {
+          byStudent.set(row.student_id, { ...row });
+        } else {
+          byStudent.set(row.student_id, {
+            ...existing,
+            morning_status: existing.morning_status ?? row.morning_status,
+            afternoon_status: existing.afternoon_status ?? row.afternoon_status,
+          });
+        }
+      }
+      return Array.from(byStudent.values());
     },
     refetchInterval: 30_000,
   });
+}
+
+/** Round a ratio to a whole percentage, clamped to [0, 100]. */
+export function safePct(numerator: number, denominator: number) {
+  if (!denominator || denominator <= 0) return 0;
+  const n = Math.min(numerator, denominator);
+  return Math.round((n / denominator) * 100);
 }
 
 export function isStudentPresent(r: { morning_status: string | null; afternoon_status: string | null }) {

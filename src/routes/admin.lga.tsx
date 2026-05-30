@@ -10,6 +10,7 @@ import {
   useStudentAttendanceToday,
   isStudentPresent,
   prettyLga,
+  safePct,
 } from "@/lib/admin-data";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
@@ -69,8 +70,10 @@ function ByLgaPage() {
     return Array.from(lgas.values())
       .map((r) => ({
         ...r,
-        teacherPct: r.teachers ? Math.round((r.teachersPresent / r.teachers) * 100) : 0,
-        studentPct: r.students ? Math.round((r.studentsPresent / r.students) * 100) : 0,
+        teachersPresent: Math.min(r.teachersPresent, r.teachers),
+        studentsPresent: Math.min(r.studentsPresent, r.students),
+        teacherPct: safePct(r.teachersPresent, r.teachers),
+        studentPct: safePct(r.studentsPresent, r.students),
       }))
       .sort((a, b) => a.lga.localeCompare(b.lga));
   }, [schools, teachers, students, tAtt, sAtt]);

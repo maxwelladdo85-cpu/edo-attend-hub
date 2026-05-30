@@ -11,6 +11,7 @@ import {
   isStudentPresent,
   prettyLga,
   prettyCategory,
+  safePct,
 } from "@/lib/admin-data";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
@@ -34,13 +35,20 @@ function AnalyticsPage() {
   const { data: tAtt = [] } = useTeacherAttendanceToday();
   const { data: sAtt = [] } = useStudentAttendanceToday();
 
-  const teachersPresent = tAtt.filter((r) => r.arrival_time).length;
+  // Denominator includes any teacher who appears in attendance but isn't in
+  // the teacher profile list, so percentages never exceed 100%.
+  const teacherDenom = new Set<string>([
+    ...teachers.map((t) => t.user_id),
+    ...tAtt.map((r) => r.teacher_user_id),
+  ]).size;
+  const teachersPresent = Math.min(tAtt.filter((r) => r.arrival_time).length, teacherDenom);
   const teachersLate = tAtt.filter((r) => r.arrival_status === "late").length;
   const teachersOnTime = tAtt.filter((r) => r.arrival_status === "on_time" || r.arrival_status === "early").length;
-  const teachersAbsent = Math.max(0, teachers.length - teachersPresent);
+  const teachersAbsent = Math.max(0, teacherDenom - teachersPresent);
 
-  const studentsPresent = sAtt.filter(isStudentPresent).length;
-  const studentsAbsent = Math.max(0, students.length - studentsPresent);
+  const studentDenom = Math.max(students.length, sAtt.length);
+  const studentsPresent = Math.min(sAtt.filter(isStudentPresent).length, studentDenom);
+  const studentsAbsent = Math.max(0, studentDenom - studentsPresent);
 
   const teacherPie = [
     { name: "On time", value: teachersOnTime, fill: COLORS.brightGreen },
@@ -74,7 +82,7 @@ function AnalyticsPage() {
       const lga = schoolToLga.get(r.school_id); if (!lga || !isStudentPresent(r)) continue; lgas.get(lga)!.sPresent += 1;
     }
     return Array.from(lgas.values())
-      .map((r) => ({ name: prettyLga(r.lga), Pupils: r.students ? Math.round((r.sPresent / r.students) * 100) : 0, Teachers: r.teachers ? Math.round((r.tPresent / r.teachers) * 100) : 0 }))
+      .map((r) => ({ name: prettyLga(r.lga), Pupils: safePct(r.sPresent, r.students), Teachers: safePct(r.tPresent, r.teachers) }))
       .sort((a, b) => b.Pupils - a.Pupils)
       .slice(0, 10);
   }, [schools, teachers, students, tAtt, sAtt]);
@@ -100,7 +108,7 @@ function AnalyticsPage() {
     for (const r of sAtt) {
       const c = schoolToCat.get(r.school_id); if (!c || !isStudentPresent(r)) continue; buckets.get(c)!.sPresent += 1;
     }
-    return Array.from(buckets.values()).map((r) => ({ name: r.name, Pupils: r.students ? Math.round((r.sPresent / r.students) * 100) : 0, Teachers: r.teachers ? Math.round((r.tPresent / r.teachers) * 100) : 0 }));
+    return Array.from(buckets.values()).map((r) => ({ name: r.name, Pupils: safePct(r.sPresent, r.students), Teachers: safePct(r.tPresent, r.teachers) }));
   }, [schools, teachers, students, tAtt, sAtt]);
 
   return (
