@@ -204,7 +204,7 @@ export function StudentAttendancePanel() {
         const visible = isHead && classFilter !== "all" ? students.filter((s) => s.class === classFilter) : students;
         return (
         <div className="divide-y divide-border">
-          {students.map((s) => {
+          {visible.map((s) => {
             const row = rows[s.id];
             return (
               <div key={s.id} className="p-4 flex flex-wrap items-center gap-3">
