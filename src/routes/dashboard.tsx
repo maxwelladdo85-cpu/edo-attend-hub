@@ -374,58 +374,123 @@ function HeadTeacherView() {
 /* ----------------------- ADMIN ----------------------- */
 function AdminView() {
   const { profile } = useAuth();
-  const [stats, setStats] = useState({ schools: 0, teachers: 0, students: 0, present: 0, late: 0, absent: 0 });
+  const [stats, setStats] = useState({
+    schools: 0, teachers: 0, students: 0,
+    present: 0, late: 0, absent: 0,
+    studentsPresent: 0, studentsAbsent: 0,
+  });
   const [feed, setFeed] = useState<any[]>([]);
+  const [teacherNames, setTeacherNames] = useState<Record<string, any>>({});
+  const [schoolNames, setSchoolNames] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+
+  const refresh = async () => {
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const [{ count: schools }, { count: teachers }, { count: students }, { data: att }, { data: satt }] = await Promise.all([
+      supabase.from("schools").select("*", { count: "exact", head: true }),
+      supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "teacher"),
+      supabase.from("students").select("*", { count: "exact", head: true }),
+      supabase.from("teacher_attendance").select("*").eq("attendance_date", dateStr).order("arrival_time", { ascending: false }).limit(50),
+      supabase.from("student_attendance").select("morning_status,afternoon_status").eq("attendance_date", dateStr),
+    ]);
+    const present = att?.filter((r: any) => r.arrival_time).length ?? 0;
+    const late = att?.filter((r: any) => r.arrival_status === "late").length ?? 0;
+    const studentsPresent = satt?.filter((r: any) => r.morning_status === "present" || r.afternoon_status === "present").length ?? 0;
+    setStats({
+      schools: schools ?? 0,
+      teachers: teachers ?? 0,
+      students: students ?? 0,
+      present,
+      late,
+      absent: Math.max(0, (teachers ?? 0) - present),
+      studentsPresent,
+      studentsAbsent: Math.max(0, (students ?? 0) - studentsPresent),
+    });
+    const recs = att ?? [];
+    setFeed(recs);
+    const tids = [...new Set(recs.map((r: any) => r.teacher_user_id))];
+    const sids = [...new Set(recs.map((r: any) => r.school_id).filter(Boolean))];
+    if (tids.length) {
+      const { data: ps } = await supabase.from("profiles").select("user_id, full_name, teacher_id").in("user_id", tids);
+      setTeacherNames(Object.fromEntries((ps ?? []).map((p: any) => [p.user_id, p])));
+    }
+    if (sids.length) {
+      const { data: ss } = await supabase.from("schools").select("id, name").in("id", sids);
+      setSchoolNames(Object.fromEntries((ss ?? []).map((s: any) => [s.id, s])));
+    }
+    setLastUpdated(new Date());
+    setLoading(false);
+  };
 
   useEffect(() => {
-    (async () => {
-      const dateStr = new Date().toISOString().slice(0, 10);
-      const [{ count: schools }, { count: teachers }, { count: students }, { data: att }] = await Promise.all([
-        supabase.from("schools").select("*", { count: "exact", head: true }),
-        supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "teacher"),
-        supabase.from("students").select("*", { count: "exact", head: true }),
-        supabase.from("teacher_attendance").select("*").eq("attendance_date", dateStr).order("arrival_time", { ascending: false }).limit(20),
-      ]);
-      const present = att?.filter((r: any) => r.arrival_time).length ?? 0;
-      const late = att?.filter((r: any) => r.arrival_status === "late").length ?? 0;
-      setStats({
-        schools: schools ?? 0,
-        teachers: teachers ?? 0,
-        students: students ?? 0,
-        present,
-        late,
-        absent: (teachers ?? 0) - present,
-      });
-      setFeed(att ?? []);
-      setLoading(false);
-    })();
+    refresh();
+    const channel = supabase
+      .channel("admin-attendance")
+      .on("postgres_changes", { event: "*", schema: "public", table: "teacher_attendance" }, () => refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "student_attendance" }, () => refresh())
+      .subscribe();
+    const interval = setInterval(refresh, 30000);
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+    };
+    // eslint-disable-next-line
   }, []);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold">
-          Welcome, {profile?.full_name?.split(" ")[0] ?? "Administrator"}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">EdoSUBEB statewide administration · {new Date().toLocaleDateString()}</p>
+      <div className="rounded-2xl p-6 bg-gradient-to-br from-primary via-primary/90 to-gold text-primary-foreground shadow-card">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold font-display">
+              Welcome, {profile?.full_name?.split(" ")[0] ?? "Administrator"}
+            </h1>
+            <p className="text-sm opacity-90 mt-1">EdoSUBEB statewide administration · {new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</p>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur px-3 py-1.5 text-xs font-medium">
+            <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
+            Live · {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-        <StatCard icon={School} label="Schools" value={stats.schools} />
-        <StatCard icon={Users} label="Teachers" value={stats.teachers} />
-        <StatCard icon={GraduationIcon} label="Students" value={stats.students} />
-        <StatCard icon={UserCheck} label="Present today" value={stats.present} tone="success" />
-        <StatCard icon={Clock} label="Late today" value={stats.late} tone="warning" />
-        <StatCard icon={AlertCircle} label="Absent today" value={Math.max(0, stats.absent)} tone="destructive" />
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Network overview</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <StatCard icon={School} label="Schools" value={stats.schools} />
+          <StatCard icon={Users} label="Teachers" value={stats.teachers} />
+          <StatCard icon={GraduationIcon} label="Students" value={stats.students} tone="gold" />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Teachers today</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <StatCard icon={UserCheck} label="Present" value={stats.present} tone="success" hint={`${stats.teachers ? Math.round((stats.present / stats.teachers) * 100) : 0}% of teachers`} />
+          <StatCard icon={Clock} label="Late" value={stats.late} tone="warning" />
+          <StatCard icon={AlertCircle} label="Absent" value={stats.absent} tone="destructive" />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Students today</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <StatCard icon={UserCheck} label="Present" value={stats.studentsPresent} tone="success" hint={`${stats.students ? Math.round((stats.studentsPresent / stats.students) * 100) : 0}% of students`} />
+          <StatCard icon={AlertCircle} label="Not marked" value={stats.studentsAbsent} tone="destructive" />
+          <StatCard icon={GraduationIcon} label="Total enrolled" value={stats.students} tone="gold" />
+        </div>
       </div>
 
       <AssignTeachersPanel />
 
       <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
-        <div className="p-5 border-b border-border flex items-center gap-2">
-          <Activity className="h-4 w-4 text-primary" />
-          <h3 className="font-display font-semibold">Real-time activity</h3>
+        <div className="p-5 border-b border-border flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-primary" />
+            <h3 className="font-display font-semibold">Real-time activity</h3>
+          </div>
+          <span className="text-xs text-muted-foreground">Auto-refresh every 30s</span>
         </div>
         {loading ? (
           <div className="p-8 text-center text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin inline" /></div>
@@ -433,22 +498,31 @@ function AdminView() {
           <div className="p-8 text-center text-muted-foreground text-sm">No attendance activity yet today.</div>
         ) : (
           <div className="divide-y divide-border">
-            {feed.map((r) => (
-              <div key={r.id} className="p-4 flex flex-wrap items-center gap-3 text-sm">
-                <MapPin className={`h-4 w-4 ${r.arrival_verified ? "text-success" : "text-destructive"}`} />
-                <div className="flex-1">
-                  <div className="font-medium">Teacher attendance</div>
-                  <div className="text-xs text-muted-foreground">
-                    {r.arrival_time ? `Arrived ${new Date(r.arrival_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}
-                    {r.departure_time ? ` · Left ${new Date(r.departure_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}
+            {feed.map((r) => {
+              const t = teacherNames[r.teacher_user_id];
+              const s = schoolNames[r.school_id];
+              return (
+                <div key={r.id} className="p-4 flex flex-wrap items-center gap-3 text-sm">
+                  <div className={`h-9 w-9 rounded-lg grid place-items-center ${r.arrival_verified ? "bg-success/15 text-success" : "bg-destructive/10 text-destructive"}`}>
+                    <MapPin className="h-4 w-4" />
                   </div>
+                  <div className="flex-1 min-w-[180px]">
+                    <div className="font-medium">{t?.full_name ?? "Teacher"} {t?.teacher_id && <span className="text-xs text-muted-foreground font-mono">({t.teacher_id})</span>}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {s?.name ?? "—"}
+                      {r.arrival_time ? ` · Arrived ${new Date(r.arrival_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}
+                      {r.departure_time ? ` · Left ${new Date(r.departure_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : ""}
+                    </div>
+                  </div>
+                  {r.arrival_status && <StatusBadge status={r.arrival_status} />}
+                  {r.head_verified && <Badge className="bg-success/15 text-success border-success/20"><CheckCircle2 className="h-3 w-3 mr-1" />Verified</Badge>}
                 </div>
-                {r.arrival_status && <StatusBadge status={r.arrival_status} />}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
     </div>
   );
 }
+
