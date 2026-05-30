@@ -148,16 +148,18 @@ export function useTeacherAttendanceToday() {
   return useQuery({
     queryKey: ["admin", "teacher-attendance", todayStr()],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("teacher_attendance")
-        .select("id,school_id,teacher_user_id,arrival_time,arrival_status,departure_time,head_verified")
-        .eq("attendance_date", todayStr())
-        .limit(20000);
-      if (error) throw error;
+      const rows = await fetchAllPaged<TeacherAttendanceLite>(async (from, to) => {
+        const { data, error } = await supabase
+          .from("teacher_attendance")
+          .select("id,school_id,teacher_user_id,arrival_time,arrival_status,departure_time,head_verified")
+          .eq("attendance_date", todayStr())
+          .range(from, to);
+        return { data: data as TeacherAttendanceLite[] | null, error };
+      });
       // De-duplicate by teacher_user_id so a teacher with multiple rows in a
       // single day cannot be counted more than once.
       const byTeacher = new Map<string, TeacherAttendanceLite>();
-      for (const row of (data ?? []) as TeacherAttendanceLite[]) {
+      for (const row of rows) {
         const existing = byTeacher.get(row.teacher_user_id);
         // Prefer the row with an arrival_time, otherwise keep the first.
         if (!existing || (!existing.arrival_time && row.arrival_time)) {
