@@ -10,6 +10,7 @@ import { DashboardShell, roleLabelFor } from "@/components/DashboardShell";
 import { StatCard } from "@/components/StatCard";
 import { distanceMeters, getCurrentPosition, classifyArrival, classifyDeparture } from "@/lib/geo";
 import { AssignTeachersPanel } from "@/components/AssignTeachersPanel";
+import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — EdoSUBEB Smart Attendance" }] }),
