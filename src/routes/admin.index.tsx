@@ -27,12 +27,31 @@ function OverviewPage() {
   const { data: tAtt = [] } = useTeacherAttendanceToday();
   const { data: sAtt = [] } = useStudentAttendanceToday();
 
-  const teachersPresent = tAtt.filter((r) => r.arrival_time).length;
-  const teachersLate = tAtt.filter((r) => r.arrival_status === "late").length;
-  const studentsPresent = sAtt.filter(isStudentPresent).length;
+  // De-duplicate by teacher to avoid multiple attendance rows inflating counts.
+  const presentTeacherIds = new Set(
+    tAtt.filter((r) => r.arrival_time).map((r) => r.teacher_user_id),
+  );
+  const lateTeacherIds = new Set(
+    tAtt.filter((r) => r.arrival_status === "late").map((r) => r.teacher_user_id),
+  );
+  const presentStudentIds = new Set(
+    sAtt.filter(isStudentPresent).map((r) => r.student_id),
+  );
 
-  const teacherPct = pct(teachersPresent, teachers.length);
-  const studentPct = pct(studentsPresent, students.length);
+  // Denominator is the union of registered teachers and any teacher with an
+  // attendance row today, so the percentage can never exceed 100%.
+  const teacherDenom = new Set<string>([
+    ...teachers.map((t) => t.user_id),
+    ...tAtt.map((r) => r.teacher_user_id),
+  ]).size;
+  const studentDenom = Math.max(students.length, presentStudentIds.size);
+
+  const teachersPresent = Math.min(presentTeacherIds.size, teacherDenom);
+  const teachersLate = lateTeacherIds.size;
+  const studentsPresent = Math.min(presentStudentIds.size, studentDenom);
+
+  const teacherPct = pct(teachersPresent, teacherDenom);
+  const studentPct = pct(studentsPresent, studentDenom);
 
   return (
     <div>
@@ -48,14 +67,14 @@ function OverviewPage() {
             <div className="text-xs uppercase tracking-wider opacity-80">Pupils present statewide</div>
             <div className="mt-2 flex items-baseline gap-3">
               <div className="text-5xl font-bold font-display">{studentPct}%</div>
-              <div className="text-sm opacity-90">{studentsPresent.toLocaleString()} of {students.length.toLocaleString()}</div>
+              <div className="text-sm opacity-90">{studentsPresent.toLocaleString()} of {studentDenom.toLocaleString()}</div>
             </div>
           </div>
           <div>
             <div className="text-xs uppercase tracking-wider opacity-80">Teachers present statewide</div>
             <div className="mt-2 flex items-baseline gap-3">
               <div className="text-5xl font-bold font-display">{teacherPct}%</div>
-              <div className="text-sm opacity-90">{teachersPresent.toLocaleString()} of {teachers.length.toLocaleString()}</div>
+              <div className="text-sm opacity-90">{teachersPresent.toLocaleString()} of {teacherDenom.toLocaleString()}</div>
             </div>
           </div>
         </div>
@@ -63,7 +82,13 @@ function OverviewPage() {
 
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Network</h2>
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-        <StatCard icon={SchoolIcon} label="Schools" value={schools.length} className="bg-head-teacher-card" />
+        <StatCard
+          icon={SchoolIcon}
+          label="Schools"
+          value={schools.length}
+          hint={`${schools.filter((s) => s.category === "primary").length} Primary · ${schools.filter((s) => s.category === "junior_secondary").length} Junior Sec.`}
+          className="bg-head-teacher-card"
+        />
         <StatCard icon={Users} label="Teachers" value={teachers.length} className="bg-head-teacher-card" />
         <StatCard icon={GraduationCap} label="Students" value={students.length} tone="gold" className="bg-head-teacher-card" />
       </div>
