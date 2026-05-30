@@ -1,0 +1,144 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export type SchoolLite = {
+  id: string;
+  name: string;
+  lga: string;
+  category: string | null;
+  latitude: number;
+  longitude: number;
+};
+
+export type TeacherAttendanceLite = {
+  id: string;
+  school_id: string | null;
+  teacher_user_id: string;
+  arrival_time: string | null;
+  arrival_status: string | null;
+  departure_time: string | null;
+  head_verified: boolean;
+};
+
+export type StudentAttendanceLite = {
+  student_id: string;
+  school_id: string;
+  morning_status: string | null;
+  afternoon_status: string | null;
+};
+
+export type TeacherProfileLite = {
+  user_id: string;
+  school_id: string | null;
+};
+
+export type StudentLite = {
+  id: string;
+  school_id: string;
+};
+
+export function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function prettyLga(lga: string) {
+  return lga
+    .split("-")
+    .map((s) => s.charAt(0) + s.slice(1).toLowerCase())
+    .join(" ");
+}
+
+export function prettyCategory(c: string | null) {
+  if (!c) return "Other";
+  if (c === "primary") return "Primary";
+  if (c === "junior_secondary") return "Junior Secondary";
+  return c;
+}
+
+export function useSchools() {
+  return useQuery({
+    queryKey: ["admin", "schools"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("schools")
+        .select("id,name,lga,category,latitude,longitude")
+        .limit(10000);
+      if (error) throw error;
+      return (data ?? []) as SchoolLite[];
+    },
+    staleTime: 60_000,
+  });
+}
+
+export function useTeacherProfiles() {
+  return useQuery({
+    queryKey: ["admin", "teacher-profiles"],
+    queryFn: async () => {
+      const { data: roleRows, error: rerr } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "teacher");
+      if (rerr) throw rerr;
+      const ids = (roleRows ?? []).map((r) => r.user_id);
+      if (ids.length === 0) return [] as TeacherProfileLite[];
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id,school_id")
+        .in("user_id", ids);
+      if (error) throw error;
+      return (data ?? []) as TeacherProfileLite[];
+    },
+    staleTime: 60_000,
+  });
+}
+
+export function useStudents() {
+  return useQuery({
+    queryKey: ["admin", "students"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("id,school_id")
+        .limit(50000);
+      if (error) throw error;
+      return (data ?? []) as StudentLite[];
+    },
+    staleTime: 60_000,
+  });
+}
+
+export function useTeacherAttendanceToday() {
+  return useQuery({
+    queryKey: ["admin", "teacher-attendance", todayStr()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teacher_attendance")
+        .select("id,school_id,teacher_user_id,arrival_time,arrival_status,departure_time,head_verified")
+        .eq("attendance_date", todayStr())
+        .limit(20000);
+      if (error) throw error;
+      return (data ?? []) as TeacherAttendanceLite[];
+    },
+    refetchInterval: 30_000,
+  });
+}
+
+export function useStudentAttendanceToday() {
+  return useQuery({
+    queryKey: ["admin", "student-attendance", todayStr()],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_attendance")
+        .select("student_id,school_id,morning_status,afternoon_status")
+        .eq("attendance_date", todayStr())
+        .limit(50000);
+      if (error) throw error;
+      return (data ?? []) as StudentAttendanceLite[];
+    },
+    refetchInterval: 30_000,
+  });
+}
+
+export function isStudentPresent(r: { morning_status: string | null; afternoon_status: string | null }) {
+  return r.morning_status === "present" || r.afternoon_status === "present";
+}
