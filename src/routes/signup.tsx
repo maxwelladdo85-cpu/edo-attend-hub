@@ -178,7 +178,7 @@ function SignupPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" type="tel" value={form.phone} onChange={updateText("phone")} placeholder="+234..." />
+              <Input id="phone" type="tel" value={form.phone} onChange={updateText("phone")} placeholder="090..." />
             </div>
 
             <div className="space-y-1.5">
