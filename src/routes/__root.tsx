@@ -87,6 +87,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Real-time GPS attendance tracking for teachers and students across Edo State public primary schools." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "EdoSUBEB Smart Attendance" },
+      { name: "twitter:description", content: "Real-time GPS attendance tracking for teachers and students across Edo State public primary schools." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/9845edf3-2d76-42d6-a7f3-23e480c8ffc7/id-preview-bbf8b37b--0122526a-a6ec-424b-ad22-b0417771a7fd.lovable.app-1780125242970.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/9845edf3-2d76-42d6-a7f3-23e480c8ffc7/id-preview-bbf8b37b--0122526a-a6ec-424b-ad22-b0417771a7fd.lovable.app-1780125242970.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
