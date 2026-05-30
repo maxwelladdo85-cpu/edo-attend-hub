@@ -130,12 +130,13 @@ export function useStudents() {
   return useQuery({
     queryKey: ["admin", "students"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("students")
-        .select("id,school_id")
-        .limit(50000);
-      if (error) throw error;
-      return (data ?? []) as StudentLite[];
+      return await fetchAllPaged<StudentLite>(async (from, to) => {
+        const { data, error } = await supabase
+          .from("students")
+          .select("id,school_id")
+          .range(from, to);
+        return { data: data as StudentLite[] | null, error };
+      });
     },
     staleTime: REF_STALE,
     gcTime: REF_GC,
