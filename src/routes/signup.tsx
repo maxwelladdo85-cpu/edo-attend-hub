@@ -139,7 +139,7 @@ function SignupPage() {
           phone: form.phone,
           role: form.role,
           school_id: needsSchool ? form.schoolId : null,
-          class_taught: needsSchool ? form.classTaught : null,
+          class_taught: needsSchool && form.role === "teacher" ? form.classTaught : null,
           teacher_id: form.role === "admin" ? null : form.teacherId,
         },
       },
