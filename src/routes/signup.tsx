@@ -64,6 +64,7 @@ function SignupPage() {
     classTaught: "",
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (session) navigate({ to: "/dashboard", replace: true });
