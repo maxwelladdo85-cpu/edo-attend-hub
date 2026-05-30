@@ -41,7 +41,7 @@ function LoginPage() {
     setSubmitting(true);
     try {
       let signInEmail = email;
-      if (role === "teacher") {
+      if (role === "teacher" || role === "head_teacher") {
         const { email: resolved } = await resolveEmail({ data: { teacherId } });
         signInEmail = resolved;
       }
