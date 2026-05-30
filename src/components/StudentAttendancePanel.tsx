@@ -124,10 +124,12 @@ export function StudentAttendancePanel() {
         [student.id]: { ...(prev[student.id] ?? {} as AttendanceRow), ...payload },
       }));
 
-      const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      toast.success(
-        `${student.full_name.split(" ")[0]} · ${session} ${value} · ${timeLabel}${lat !== null ? " · location captured" : ""}`,
-      );
+      if (value && now) {
+        const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        toast.success(`${student.full_name.split(" ")[0]} · ${session} marked at ${timeLabel}${lat !== null ? " · location captured" : ""}`);
+      } else {
+        toast.success(`${student.full_name.split(" ")[0]} · ${session} cleared`);
+      }
     } catch (e: any) {
       toast.error(e.message ?? "Could not save attendance");
     } finally {
