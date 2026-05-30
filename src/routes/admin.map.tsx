@@ -91,7 +91,7 @@ function MapPage() {
           <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full" style={{ background: "oklch(0.55 0.21 27)" }} /> &lt; 40%</span>
           <span className="ml-auto text-muted-foreground">{points.length} schools</span>
         </div>
-        <div style={{ height: "calc(100vh - 280px)", minHeight: 480 }}>
+        <div style={{ height: "calc(100dvh - 280px)", minHeight: 480 }}>
           <MapContainer center={EDO_CENTER} zoom={9} scrollWheelZoom style={{ height: "100%", width: "100%" }}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
