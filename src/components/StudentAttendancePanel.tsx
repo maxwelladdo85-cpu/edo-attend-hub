@@ -266,6 +266,6 @@ function SessionCheck({ icon: Icon, label, current, markedAt, lat, lng, saving, 
           )}
         </div>
       )}
-    </label>
+    </div>
   );
 }
