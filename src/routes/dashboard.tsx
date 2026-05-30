@@ -393,10 +393,10 @@ function HeadTeacherView() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon={UserCheck} label="Present" value={present} tone="success" />
-        <StatCard icon={Clock} label="Late" value={late} tone="warning" />
-        <StatCard icon={LogOut} label="Left early" value={leftEarly} tone="destructive" />
-        <StatCard icon={AlertCircle} label="Pending" value={pending} tone="gold" />
+        <StatCard icon={UserCheck} label="Present" value={present} tone="success" className="bg-head-teacher-card" />
+        <StatCard icon={Clock} label="Late" value={late} tone="warning" className="bg-head-teacher-card" />
+        <StatCard icon={LogOut} label="Left early" value={leftEarly} tone="destructive" className="bg-head-teacher-card" />
+        <StatCard icon={AlertCircle} label="Pending" value={pending} tone="gold" className="bg-head-teacher-card" />
       </div>
 
       <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
