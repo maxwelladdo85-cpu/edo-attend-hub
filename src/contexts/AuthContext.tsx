@@ -13,6 +13,7 @@ export interface Profile {
   designation: string | null;
   school_id: string | null;
   status: string;
+  class_taught: string | null;
 }
 
 interface AuthContextValue {
