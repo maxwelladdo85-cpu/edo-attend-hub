@@ -35,29 +35,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const loadProfile = async (userId: string) => {
-    const [{ data: p }, { data: r }] = await Promise.all([
+    const [{ data: p, error: profileError }, { data: r, error: rolesError }] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
     ]);
-    setProfile((p as Profile) ?? null);
-    setRoles(((r ?? []) as { role: AppRole }[]).map((x) => x.role));
+
+    if (profileError) {
+      console.error("Failed to load profile", profileError);
+      setProfile(null);
+    } else {
+      setProfile((p as Profile) ?? null);
+    }
+
+    if (rolesError) {
+      console.error("Failed to load roles", rolesError);
+      setRoles([]);
+    } else {
+      setRoles(((r ?? []) as { role: AppRole }[]).map((x) => x.role));
+    }
   };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setLoading(true);
       setSession(newSession);
       if (newSession?.user) {
-        // defer to avoid recursion
-        setTimeout(() => loadProfile(newSession.user.id), 0);
+        setProfile(null);
+        setRoles([]);
+        setTimeout(() => {
+          loadProfile(newSession.user.id).finally(() => setLoading(false));
+        }, 0);
       } else {
         setProfile(null);
         setRoles([]);
+        setLoading(false);
       }
     });
 
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       if (data.session?.user) {
+        setLoading(true);
         loadProfile(data.session.user.id).finally(() => setLoading(false));
       } else {
         setLoading(false);
@@ -68,11 +86,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    setLoading(true);
     await supabase.auth.signOut();
   };
 
   const refresh = async () => {
-    if (session?.user) await loadProfile(session.user.id);
+    if (!session?.user) return;
+    setLoading(true);
+    await loadProfile(session.user.id);
+    setLoading(false);
   };
 
   return (

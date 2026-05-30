@@ -32,6 +32,14 @@ function DashboardPage() {
     );
   }
 
+   if (roles.length === 0 || !profile) {
+     return (
+       <div className="min-h-screen grid place-items-center">
+         <Loader2 className="h-6 w-6 animate-spin text-primary" />
+       </div>
+     );
+   }
+
   const role = primaryRole(roles);
   const label = roleLabelFor(role);
 
