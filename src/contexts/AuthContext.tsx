@@ -56,10 +56,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setLoading(true);
+    let currentUserId: string | null = null;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
+      const nextUserId = newSession?.user?.id ?? null;
+
+      // Only re-load profile when the user actually changes (sign-in / sign-out / switch user).
+      // Ignore TOKEN_REFRESHED / USER_UPDATED so the dashboard doesn't flicker or log out.
+      if (nextUserId === currentUserId && event !== "SIGNED_OUT") return;
+
+      currentUserId = nextUserId;
       if (newSession?.user) {
+        setLoading(true);
         setProfile(null);
         setRoles([]);
         setTimeout(() => {
@@ -74,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
+      currentUserId = data.session?.user?.id ?? null;
       if (data.session?.user) {
         setLoading(true);
         loadProfile(data.session.user.id).finally(() => setLoading(false));

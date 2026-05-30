@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, GraduationCap, Loader2, Sun, Sunset } from "lucide-react";
+import { CalendarIcon, GraduationCap, Loader2, MapPin, Sun, Sunset } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getCurrentPosition } from "@/lib/geo";
 
 type Mark = "present" | "late" | "absent";
-type Session = "morning_status" | "afternoon_status";
+type Session = "morning" | "afternoon";
 
 interface Student {
   id: string;
@@ -24,6 +25,12 @@ interface AttendanceRow {
   student_id: string;
   morning_status: Mark | null;
   afternoon_status: Mark | null;
+  morning_marked_at: string | null;
+  afternoon_marked_at: string | null;
+  morning_lat: number | null;
+  morning_lng: number | null;
+  afternoon_lat: number | null;
+  afternoon_lng: number | null;
 }
 
 const MARKS: { value: Mark; label: string; cls: string }[] = [
@@ -58,7 +65,7 @@ export function StudentAttendancePanel() {
           .order("student_id", { ascending: true }),
         supabase
           .from("student_attendance")
-          .select("student_id, morning_status, afternoon_status")
+          .select("*")
           .eq("school_id", profile.school_id)
           .eq("attendance_date", dateStr),
       ]);
@@ -76,23 +83,49 @@ export function StudentAttendancePanel() {
     const key = `${student.id}-${session}`;
     setSavingKey(key);
     try {
+      const now = new Date().toISOString();
+
+      // Best-effort location — does NOT block saving
+      let lat: number | null = null;
+      let lng: number | null = null;
+      try {
+        const pos = await getCurrentPosition();
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch {
+        // location unavailable — still save the mark
+      }
+
       const existing = rows[student.id];
+      const isMorning = session === "morning";
       const payload = {
         student_id: student.id,
         school_id: profile.school_id,
         attendance_date: dateStr,
-        morning_status: session === "morning_status" ? value : existing?.morning_status ?? null,
-        afternoon_status: session === "afternoon_status" ? value : existing?.afternoon_status ?? null,
+        morning_status: isMorning ? value : existing?.morning_status ?? null,
+        afternoon_status: !isMorning ? value : existing?.afternoon_status ?? null,
+        morning_marked_at: isMorning ? now : existing?.morning_marked_at ?? null,
+        afternoon_marked_at: !isMorning ? now : existing?.afternoon_marked_at ?? null,
+        morning_lat: isMorning ? lat : existing?.morning_lat ?? null,
+        morning_lng: isMorning ? lng : existing?.morning_lng ?? null,
+        afternoon_lat: !isMorning ? lat : existing?.afternoon_lat ?? null,
+        afternoon_lng: !isMorning ? lng : existing?.afternoon_lng ?? null,
         marked_by: user.id,
       };
       const { error } = await supabase
         .from("student_attendance")
         .upsert([payload], { onConflict: "student_id,attendance_date" });
       if (error) throw error;
+
       setRows((prev) => ({
         ...prev,
-        [student.id]: { ...(prev[student.id] ?? { student_id: student.id, morning_status: null, afternoon_status: null }), [session]: value },
+        [student.id]: { ...(prev[student.id] ?? {} as AttendanceRow), ...payload },
       }));
+
+      const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      toast.success(
+        `${student.full_name.split(" ")[0]} · ${session} ${value} · ${timeLabel}${lat !== null ? " · location captured" : ""}`,
+      );
     } catch (e: any) {
       toast.error(e.message ?? "Could not save attendance");
     } finally {
@@ -148,12 +181,26 @@ export function StudentAttendancePanel() {
                   <div className="font-medium truncate">{s.full_name}</div>
                   <div className="text-xs text-muted-foreground">{s.class}{s.gender ? ` · ${s.gender}` : ""}</div>
                 </div>
-                <SessionPicker icon={Sun} label="Morning" current={row?.morning_status ?? null}
-                  saving={savingKey?.startsWith(`${s.id}-morning_status`) ?? false}
-                  onPick={(v) => mark(s, "morning_status", v)} />
-                <SessionPicker icon={Sunset} label="Afternoon" current={row?.afternoon_status ?? null}
-                  saving={savingKey?.startsWith(`${s.id}-afternoon_status`) ?? false}
-                  onPick={(v) => mark(s, "afternoon_status", v)} />
+                <SessionPicker
+                  icon={Sun}
+                  label="Morning"
+                  current={row?.morning_status ?? null}
+                  markedAt={row?.morning_marked_at ?? null}
+                  lat={row?.morning_lat ?? null}
+                  lng={row?.morning_lng ?? null}
+                  saving={savingKey === `${s.id}-morning`}
+                  onPick={(v) => mark(s, "morning", v)}
+                />
+                <SessionPicker
+                  icon={Sunset}
+                  label="Afternoon"
+                  current={row?.afternoon_status ?? null}
+                  markedAt={row?.afternoon_marked_at ?? null}
+                  lat={row?.afternoon_lat ?? null}
+                  lng={row?.afternoon_lng ?? null}
+                  saving={savingKey === `${s.id}-afternoon`}
+                  onPick={(v) => mark(s, "afternoon", v)}
+                />
               </div>
             );
           })}
@@ -163,7 +210,11 @@ export function StudentAttendancePanel() {
   );
 }
 
-function SessionPicker({ icon: Icon, label, current, saving, onPick }: { icon: any; label: string; current: Mark | null; saving: boolean; onPick: (v: Mark) => void }) {
+function SessionPicker({ icon: Icon, label, current, markedAt, lat, lng, saving, onPick }: {
+  icon: any; label: string; current: Mark | null;
+  markedAt: string | null; lat: number | null; lng: number | null;
+  saving: boolean; onPick: (v: Mark) => void;
+}) {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
@@ -188,6 +239,27 @@ function SessionPicker({ icon: Icon, label, current, saving, onPick }: { icon: a
           );
         })}
       </div>
+      {markedAt && (
+        <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+          <div>
+            {new Date(markedAt).toLocaleDateString([], { day: "2-digit", month: "short" })}
+            {" · "}
+            {new Date(markedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </div>
+          {lat !== null && lng !== null ? (
+            <a
+              href={`https://www.google.com/maps?q=${lat},${lng}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-0.5 text-primary hover:underline"
+            >
+              <MapPin className="h-2.5 w-2.5" />{lat.toFixed(4)}, {lng.toFixed(4)}
+            </a>
+          ) : (
+            <span className="text-muted-foreground/70">no location</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
