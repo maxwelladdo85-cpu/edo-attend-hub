@@ -55,6 +55,7 @@ function SignupPage() {
   const [form, setForm] = useState({
     fullName: "",
     teacherId: "",
+    email: "",
     phone: "",
     password: "",
     role: "teacher" as Role,
@@ -103,6 +104,15 @@ function SignupPage() {
       toast.error("Password must be at least 8 characters");
       return;
     }
+    if (form.role === "admin") {
+      if (!form.email) {
+        toast.error("Please enter your email address");
+        return;
+      }
+    } else if (!form.teacherId) {
+      toast.error("Please enter your Teacher ID");
+      return;
+    }
     if (needsSchool && !form.schoolId) {
       toast.error("Please select your school");
       return;
@@ -113,7 +123,12 @@ function SignupPage() {
     }
     setLoading(true);
     const redirectUrl = `${window.location.origin}/dashboard`;
-    const authEmail = form.teacherId.includes("@") ? form.teacherId : `${form.teacherId}@edosubeb.gov.ng`;
+    const authEmail =
+      form.role === "admin"
+        ? form.email
+        : form.teacherId.includes("@")
+          ? form.teacherId
+          : `${form.teacherId}@edosubeb.gov.ng`;
     const { error } = await supabase.auth.signUp({
       email: authEmail,
       password: form.password,
@@ -125,7 +140,7 @@ function SignupPage() {
           role: form.role,
           school_id: needsSchool ? form.schoolId : null,
           class_taught: needsSchool ? form.classTaught : null,
-          teacher_id: form.teacherId,
+          teacher_id: form.role === "admin" ? null : form.teacherId,
         },
       },
     });
@@ -134,11 +149,11 @@ function SignupPage() {
       toast.error(error.message);
       return;
     }
-    toast.success("Account created — check your email to verify, then sign in.");
+    toast.success("Account created — you can sign in now.");
     navigate({ to: "/login", replace: true });
   };
 
-  const updateText = (k: "fullName" | "teacherId" | "phone" | "password") =>
+  const updateText = (k: "fullName" | "teacherId" | "email" | "phone" | "password") =>
     (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -188,10 +203,17 @@ function SignupPage() {
               <Label htmlFor="fullName">Full name</Label>
               <Input id="fullName" required value={form.fullName} onChange={updateText("fullName")} />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="teacherId">Teacher ID</Label>
-              <Input id="teacherId" type="text" required value={form.teacherId} onChange={updateText("teacherId")} />
-            </div>
+            {form.role === "admin" ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="email">Email address</Label>
+                <Input id="email" type="email" required value={form.email} onChange={updateText("email")} placeholder="you@edosubeb.gov.ng" />
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Label htmlFor="teacherId">Teacher ID</Label>
+                <Input id="teacherId" type="text" required value={form.teacherId} onChange={updateText("teacherId")} />
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="phone">Phone</Label>
               <Input id="phone" type="tel" value={form.phone} onChange={updateText("phone")} placeholder="090..." />
