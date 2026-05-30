@@ -169,6 +169,3 @@ export function AdminPageHeader({ title, subtitle, icon: Icon }: { title: string
     </div>
   );
 }
-
-// Reused for the MapPin import warning silence
-export const _unused = MapPin;
