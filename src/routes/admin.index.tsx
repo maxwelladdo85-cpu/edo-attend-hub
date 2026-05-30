@@ -27,12 +27,31 @@ function OverviewPage() {
   const { data: tAtt = [] } = useTeacherAttendanceToday();
   const { data: sAtt = [] } = useStudentAttendanceToday();
 
-  const teachersPresent = tAtt.filter((r) => r.arrival_time).length;
-  const teachersLate = tAtt.filter((r) => r.arrival_status === "late").length;
-  const studentsPresent = sAtt.filter(isStudentPresent).length;
+  // De-duplicate by teacher to avoid multiple attendance rows inflating counts.
+  const presentTeacherIds = new Set(
+    tAtt.filter((r) => r.arrival_time).map((r) => r.teacher_user_id),
+  );
+  const lateTeacherIds = new Set(
+    tAtt.filter((r) => r.arrival_status === "late").map((r) => r.teacher_user_id),
+  );
+  const presentStudentIds = new Set(
+    sAtt.filter(isStudentPresent).map((r) => r.student_id),
+  );
 
-  const teacherPct = pct(teachersPresent, teachers.length);
-  const studentPct = pct(studentsPresent, students.length);
+  // Denominator is the union of registered teachers and any teacher with an
+  // attendance row today, so the percentage can never exceed 100%.
+  const teacherDenom = new Set<string>([
+    ...teachers.map((t) => t.user_id),
+    ...tAtt.map((r) => r.teacher_user_id),
+  ]).size;
+  const studentDenom = Math.max(students.length, presentStudentIds.size);
+
+  const teachersPresent = Math.min(presentTeacherIds.size, teacherDenom);
+  const teachersLate = lateTeacherIds.size;
+  const studentsPresent = Math.min(presentStudentIds.size, studentDenom);
+
+  const teacherPct = pct(teachersPresent, teacherDenom);
+  const studentPct = pct(studentsPresent, studentDenom);
 
   return (
     <div>
