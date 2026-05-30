@@ -159,14 +159,14 @@ export function StudentAttendancePanel() {
   const pmAbsent = total - pmPresent;
 
   return (
-    <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+    <div className={`rounded-2xl border border-border ${isHead ? "bg-head-teacher-card" : "bg-card"} shadow-card overflow-hidden`}>
       {isHead && total > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 p-3 sm:p-5">
-          <StatCard icon={Users} label="Total" value={total} tone="default" />
-          <StatCard icon={Sun} label="AM Present" value={`${amPresent}`} hint={`${total > 0 ? Math.round((amPresent / total) * 100) : 0}%`} tone="success" />
-          <StatCard icon={Sun} label="AM Absent" value={`${amAbsent}`} hint={`${total > 0 ? Math.round((amAbsent / total) * 100) : 0}%`} tone="destructive" />
-          <StatCard icon={Sunset} label="PM Present" value={`${pmPresent}`} hint={`${total > 0 ? Math.round((pmPresent / total) * 100) : 0}%`} tone="success" />
-          <StatCard icon={Sunset} label="PM Absent" value={`${pmAbsent}`} hint={`${total > 0 ? Math.round((pmAbsent / total) * 100) : 0}%`} tone="destructive" />
+          <StatCard icon={Users} label="Total" value={total} tone="default" className="bg-head-teacher-card" />
+          <StatCard icon={Sun} label="AM Present" value={`${amPresent}`} hint={`${total > 0 ? Math.round((amPresent / total) * 100) : 0}%`} tone="success" className="bg-head-teacher-card" />
+          <StatCard icon={Sun} label="AM Absent" value={`${amAbsent}`} hint={`${total > 0 ? Math.round((amAbsent / total) * 100) : 0}%`} tone="destructive" className="bg-head-teacher-card" />
+          <StatCard icon={Sunset} label="PM Present" value={`${pmPresent}`} hint={`${total > 0 ? Math.round((pmPresent / total) * 100) : 0}%`} tone="success" className="bg-head-teacher-card" />
+          <StatCard icon={Sunset} label="PM Absent" value={`${pmAbsent}`} hint={`${total > 0 ? Math.round((pmAbsent / total) * 100) : 0}%`} tone="destructive" className="bg-head-teacher-card" />
         </div>
       )}
       <div className="p-5 border-b border-border flex flex-wrap items-center justify-between gap-3">
