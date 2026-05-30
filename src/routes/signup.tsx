@@ -226,10 +226,10 @@ function SignupPage() {
                   <Select
                     value={form.lga}
                     onValueChange={(v) => setForm((f) => ({ ...f, lga: v, schoolId: "" }))}
-                    disabled={!form.category}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder={form.category ? "Select LGA" : "Pick school type first"} />
+                      <SelectValue placeholder="Select LGA" />
+
                     </SelectTrigger>
                     <SelectContent>
                       {lgas.map((l) => (
