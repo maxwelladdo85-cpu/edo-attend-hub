@@ -85,10 +85,9 @@ function SignupPage() {
   });
 
   const lgas = useMemo(() => {
-    if (!form.category) return [];
-    const set = new Set(schools.filter((s) => s.category === form.category).map((s) => s.lga));
-    return Array.from(set).sort();
-  }, [schools, form.category]);
+    const set = new Set(schools.map((s) => s.lga));
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [schools]);
 
   const filteredSchools = useMemo(() => {
     if (!form.category || !form.lga) return [];
