@@ -147,7 +147,11 @@ export function useTeacherAttendanceToday() {
       }
       return Array.from(byTeacher.values());
     },
-    refetchInterval: 30_000,
+    staleTime: ATT_STALE,
+    gcTime: ATT_GC,
+    refetchInterval: ATT_REFETCH,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
   });
 }
 
