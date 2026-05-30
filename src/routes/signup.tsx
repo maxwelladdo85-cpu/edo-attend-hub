@@ -203,10 +203,17 @@ function SignupPage() {
               <Label htmlFor="fullName">Full name</Label>
               <Input id="fullName" required value={form.fullName} onChange={updateText("fullName")} />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="teacherId">Teacher ID</Label>
-              <Input id="teacherId" type="text" required value={form.teacherId} onChange={updateText("teacherId")} />
-            </div>
+            {form.role === "admin" ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="email">Email address</Label>
+                <Input id="email" type="email" required value={form.email} onChange={updateText("email")} placeholder="you@edosubeb.gov.ng" />
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Label htmlFor="teacherId">Teacher ID</Label>
+                <Input id="teacherId" type="text" required value={form.teacherId} onChange={updateText("teacherId")} />
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="phone">Phone</Label>
               <Input id="phone" type="tel" value={form.phone} onChange={updateText("phone")} placeholder="090..." />
