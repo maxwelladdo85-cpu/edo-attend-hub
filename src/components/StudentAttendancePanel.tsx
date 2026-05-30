@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, GraduationCap, Loader2, MapPin, Sun, Sunset } from "lucide-react";
+import { CalendarIcon, GraduationCap, Loader2, MapPin, Sun, Sunset, Users } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { getCurrentPosition } from "@/lib/geo";
+import { StatCard } from "@/components/StatCard";
 
 type Mark = "present" | "late" | "absent";
 type Session = "morning" | "afternoon";
