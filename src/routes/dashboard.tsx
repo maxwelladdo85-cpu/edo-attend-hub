@@ -410,8 +410,10 @@ function AdminView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold">Statewide Overview</h1>
-        <p className="text-sm text-muted-foreground mt-1">EdoSUBEB real-time monitoring · {new Date().toLocaleDateString()}</p>
+        <h1 className="text-2xl md:text-3xl font-bold">
+          Welcome, {profile?.full_name?.split(" ")[0] ?? "Administrator"}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">EdoSUBEB statewide administration · {new Date().toLocaleDateString()}</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
