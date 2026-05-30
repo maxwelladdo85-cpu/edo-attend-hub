@@ -2,7 +2,6 @@ import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-route
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
-  MapPin,
   Map,
   BarChart3,
   Building2,
@@ -11,13 +10,13 @@ import {
   LogOut,
   Menu,
   X,
+  Loader2,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 
 const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
