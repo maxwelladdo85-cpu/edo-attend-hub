@@ -215,7 +215,7 @@ function TeacherView() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+        <div className={`rounded-2xl border border-border ${cardBg} p-6 shadow-card`}>
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Arrival</div>
@@ -233,7 +233,7 @@ function TeacherView() {
           </Button>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+        <div className={`rounded-2xl border border-border ${cardBg} p-6 shadow-card`}>
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Departure</div>
