@@ -143,6 +143,18 @@ function TeacherView() {
       <div>
         <h1 className="text-2xl md:text-3xl font-bold">Welcome, {profile?.full_name?.split(" ")[0] ?? "Teacher"}</h1>
         <p className="text-sm text-muted-foreground mt-1">{school ? school.name : "No school assigned"} · {new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</p>
+        <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm">
+          <UserCheck className="h-4 w-4 text-primary" />
+          <span className="text-muted-foreground">Teacher ID:</span>
+          <span className="font-mono font-semibold text-foreground">{profile?.teacher_id ?? "—"}</span>
+          {profile?.class_taught && (
+            <>
+              <span className="text-border">|</span>
+              <span className="text-muted-foreground">Class:</span>
+              <span className="font-semibold text-foreground">{profile.class_taught}</span>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
