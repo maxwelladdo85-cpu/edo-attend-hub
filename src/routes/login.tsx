@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { signInWithTeacherId } from "@/lib/teacher-auth.functions";
+import { resolveTeacherEmail } from "@/lib/teacher-auth.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
