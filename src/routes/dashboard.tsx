@@ -474,8 +474,8 @@ function AdminView() {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Teachers today</h2>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           <StatCard icon={UserCheck} label="Present" value={stats.present} tone="success" hint={`${stats.teachers ? Math.round((stats.present / stats.teachers) * 100) : 0}% of teachers`} />
-          <StatCard icon={Clock} label="Late" value={stats.late} tone="warning" />
-          <StatCard icon={AlertCircle} label="Absent" value={stats.absent} tone="destructive" />
+          <StatCard icon={Clock} label="Late" value={stats.late} tone="warning" hint={`${stats.teachers ? Math.round((stats.late / stats.teachers) * 100) : 0}% of teachers`} />
+          <StatCard icon={AlertCircle} label="Absent" value={stats.absent} tone="destructive" hint={`${stats.teachers ? Math.round((stats.absent / stats.teachers) * 100) : 0}% of teachers`} />
         </div>
       </div>
 
