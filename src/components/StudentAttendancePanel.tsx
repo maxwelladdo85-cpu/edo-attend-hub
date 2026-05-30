@@ -8,7 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { getCurrentPosition } from "@/lib/geo";
 
 type Mark = "present" | "late" | "absent";
@@ -41,29 +41,40 @@ const MARKS: { value: Mark; label: string; cls: string }[] = [
 ];
 
 export function StudentAttendancePanel() {
-  const { user, profile } = useAuth();
+  const { user, profile, roles } = useAuth();
+  const isHead = primaryRole(roles) === "head_teacher";
   const [date, setDate] = useState<Date>(new Date());
   const [students, setStudents] = useState<Student[]>([]);
   const [rows, setRows] = useState<Record<string, AttendanceRow>>({});
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [classFilter, setClassFilter] = useState<string>("all");
 
   const dateStr = format(date, "yyyy-MM-dd");
 
   useEffect(() => {
     const load = async () => {
-      if (!profile?.school_id || !profile?.class_taught) {
+      if (!profile?.school_id) {
+        setLoading(false);
+        return;
+      }
+      // Teachers need a class assigned; head teachers see all classes in the school
+      if (!isHead && !profile?.class_taught) {
         setLoading(false);
         return;
       }
       setLoading(true);
+      let studentsQuery = supabase
+        .from("students")
+        .select("*")
+        .eq("school_id", profile.school_id)
+        .order("class", { ascending: true })
+        .order("student_id", { ascending: true });
+      if (!isHead) {
+        studentsQuery = studentsQuery.eq("class", profile.class_taught!);
+      }
       const [{ data: st }, { data: att }] = await Promise.all([
-        supabase
-          .from("students")
-          .select("*")
-          .eq("school_id", profile.school_id)
-          .eq("class", profile.class_taught)
-          .order("student_id", { ascending: true }),
+        studentsQuery,
         supabase
           .from("student_attendance")
           .select("*")
@@ -77,7 +88,7 @@ export function StudentAttendancePanel() {
       setLoading(false);
     };
     load();
-  }, [profile?.school_id, profile?.class_taught, dateStr]);
+  }, [profile?.school_id, profile?.class_taught, dateStr, isHead]);
 
   const mark = async (student: Student, session: Session, value: Mark | null) => {
     if (!user || !profile?.school_id) return;
@@ -144,38 +155,56 @@ export function StudentAttendancePanel() {
         <div className="flex items-center gap-2">
           <GraduationCap className="h-4 w-4 text-primary" />
           <h3 className="font-display font-semibold">
-            Student attendance {profile?.class_taught ? `· ${profile.class_taught}` : ""}
+            {isHead
+              ? `Student attendance · All classes${classFilter !== "all" ? ` · ${classFilter}` : ""}`
+              : `Student attendance${profile?.class_taught ? ` · ${profile.class_taught}` : ""}`}
           </h3>
         </div>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className={cn("justify-start text-left font-normal", !date && "text-muted-foreground")}>
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {format(date, "PPP")}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(d) => d && setDate(d)}
-              disabled={(d) => d > new Date()}
-              initialFocus
-              className={cn("p-3 pointer-events-auto")}
-            />
-          </PopoverContent>
-        </Popover>
+        <div className="flex items-center gap-2">
+          {isHead && (
+            <select
+              value={classFilter}
+              onChange={(e) => setClassFilter(e.target.value)}
+              className="h-9 rounded-md border border-border bg-background px-2 text-sm"
+            >
+              <option value="all">All classes</option>
+              {[...new Set(students.map((s) => s.class))].sort().map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          )}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className={cn("justify-start text-left font-normal", !date && "text-muted-foreground")}>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {format(date, "PPP")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(d) => d && setDate(d)}
+                disabled={(d) => d > new Date()}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
-      {!profile?.class_taught ? (
+      {!isHead && !profile?.class_taught ? (
         <div className="p-8 text-center text-muted-foreground text-sm">Class not assigned yet.</div>
       ) : loading ? (
         <div className="p-8 text-center text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin inline" /></div>
       ) : students.length === 0 ? (
-        <div className="p-8 text-center text-muted-foreground text-sm">No students in your class yet.</div>
-      ) : (
+        <div className="p-8 text-center text-muted-foreground text-sm">{isHead ? "No students enrolled in this school yet." : "No students in your class yet."}</div>
+      ) : (() => {
+        const visible = isHead && classFilter !== "all" ? students.filter((s) => s.class === classFilter) : students;
+        return (
         <div className="divide-y divide-border">
-          {students.map((s) => {
+          {visible.map((s) => {
             const row = rows[s.id];
             return (
               <div key={s.id} className="p-4 flex flex-wrap items-center gap-3">
@@ -230,7 +259,8 @@ export function StudentAttendancePanel() {
             );
           })}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
