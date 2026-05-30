@@ -219,7 +219,6 @@ export function StudentAttendancePanel() {
       ) : students.length === 0 ? (
         <div className="p-8 text-center text-muted-foreground text-sm">{isHead ? "No students enrolled in this school yet." : "No students in your class yet."}</div>
       ) : (() => {
-        const visible = isHead && classFilter !== "all" ? students.filter((s) => s.class === classFilter) : students;
         return (
         <div className="divide-y divide-border">
           {visible.map((s) => {
