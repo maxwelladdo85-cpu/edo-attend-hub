@@ -169,7 +169,18 @@ function SignupPage() {
             <Logo className="h-9 w-9" />
             <span className="font-display font-semibold">EdoSUBEB</span>
           </Link>
-          <h1 className="text-2xl font-bold text-foreground">Create your account</h1>
+          <div className="flex rounded-lg border border-border overflow-hidden mb-6">
+            <div className="flex-1 py-2 text-center text-sm font-medium bg-primary text-primary-foreground">
+              Sign Up
+            </div>
+            <Link
+              to="/login"
+              className="flex-1 py-2 text-center text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              Sign In
+            </Link>
+          </div>
+          <h1 className="text-2xl font-bold text-foreground">Sign Up</h1>
           <p className="text-sm text-muted-foreground mt-1.5">Choose your role and assigned school.</p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -307,14 +318,10 @@ function SignupPage() {
               </div>
             </div>
             <Button type="submit" disabled={loading} className="w-full bg-gradient-primary hover:opacity-90">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create account"}
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign Up"}
             </Button>
           </form>
 
-          <p className="mt-6 text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link to="/login" className="text-primary font-medium hover:underline">Sign in</Link>
-          </p>
         </div>
       </div>
     </div>
