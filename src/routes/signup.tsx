@@ -54,7 +54,7 @@ function SignupPage() {
   const { session } = useAuth();
   const [form, setForm] = useState({
     fullName: "",
-    email: "",
+    teacherId: "",
     phone: "",
     password: "",
     role: "teacher" as Role,
