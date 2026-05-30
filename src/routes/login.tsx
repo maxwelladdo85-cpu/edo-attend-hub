@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { signInWithTeacherId } from "@/lib/teacher-auth.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -16,9 +18,14 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
+type Role = "teacher" | "head_teacher" | "admin";
+
 function LoginPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
+  const teacherSignIn = useServerFn(signInWithTeacherId);
+  const [role, setRole] = useState<Role>("teacher");
+  const [teacherId, setTeacherId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,15 +37,31 @@ function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      if (role === "teacher") {
+        const { actionLink } = await teacherSignIn({ data: { teacherId } });
+        window.location.href = actionLink;
+        return;
+      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      toast.success("Welcome back");
+      navigate({ to: "/dashboard", replace: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Sign in failed");
+    } finally {
+      setLoading(false);
     }
-    toast.success("Welcome back");
-    navigate({ to: "/dashboard", replace: true });
   };
+
+  const roles: { value: Role; label: string }[] = [
+    { value: "teacher", label: "Teacher" },
+    { value: "head_teacher", label: "Head Teacher" },
+    { value: "admin", label: "Admin" },
+  ];
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
@@ -76,17 +99,53 @@ function LoginPage() {
             </div>
           </div>
           <h1 className="text-2xl font-bold text-foreground">Sign in to your account</h1>
-          <p className="text-sm text-muted-foreground mt-1.5">Enter your details to continue.</p>
+          <p className="text-sm text-muted-foreground mt-1.5">Select your role to continue.</p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@school.edo.gov.ng" />
+              <Label>Role</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {roles.map((r) => (
+                  <button
+                    key={r.value}
+                    type="button"
+                    onClick={() => setRole(r.value)}
+                    className={`py-2 px-2 rounded-md text-xs font-medium border transition-colors ${
+                      role === r.value
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-muted-foreground border-border hover:bg-muted"
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-            </div>
+
+            {role === "teacher" ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="teacherId">Teacher ID</Label>
+                <Input
+                  id="teacherId"
+                  required
+                  value={teacherId}
+                  onChange={(e) => setTeacherId(e.target.value)}
+                  placeholder="e.g. EDO/TCH/00123"
+                />
+              </div>
+            ) : (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@school.edo.gov.ng" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="password">Password</Label>
+                  <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                </div>
+              </>
+            )}
+
             <Button type="submit" disabled={loading} className="w-full bg-gradient-primary hover:opacity-90">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
             </Button>
