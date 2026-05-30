@@ -90,7 +90,7 @@ function TeacherView() {
 
   const isHead = primaryRole(roles) === "head_teacher";
   const idLabel = isHead ? "Head Teacher ID" : "Teacher ID";
-  const cardBg = isHead ? "bg-head-teacher-card" : "bg-card";
+  const cardBg = "bg-head-teacher-card";
 
   const load = async () => {
     if (!user) return;
@@ -561,33 +561,33 @@ function AdminView() {
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Network overview</h2>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          <StatCard icon={School} label="Schools" value={stats.schools} />
-          <StatCard icon={Users} label="Teachers" value={stats.teachers} />
-          <StatCard icon={GraduationIcon} label="Students" value={stats.students} tone="gold" />
+          <StatCard icon={School} label="Schools" value={stats.schools} className="bg-head-teacher-card" />
+          <StatCard icon={Users} label="Teachers" value={stats.teachers} className="bg-head-teacher-card" />
+          <StatCard icon={GraduationIcon} label="Students" value={stats.students} tone="gold" className="bg-head-teacher-card" />
         </div>
       </div>
 
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Teachers today</h2>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          <StatCard icon={UserCheck} label="Present" value={stats.present} tone="success" hint={`${stats.teachers ? Math.round((stats.present / stats.teachers) * 100) : 0}% of teachers`} />
-          <StatCard icon={Clock} label="Late" value={stats.late} tone="warning" hint={`${stats.teachers ? Math.round((stats.late / stats.teachers) * 100) : 0}% of teachers`} />
-          <StatCard icon={AlertCircle} label="Absent" value={stats.absent} tone="destructive" hint={`${stats.teachers ? Math.round((stats.absent / stats.teachers) * 100) : 0}% of teachers`} />
+          <StatCard icon={UserCheck} label="Present" value={stats.present} tone="success" hint={`${stats.teachers ? Math.round((stats.present / stats.teachers) * 100) : 0}% of teachers`} className="bg-head-teacher-card" />
+          <StatCard icon={Clock} label="Late" value={stats.late} tone="warning" hint={`${stats.teachers ? Math.round((stats.late / stats.teachers) * 100) : 0}% of teachers`} className="bg-head-teacher-card" />
+          <StatCard icon={AlertCircle} label="Absent" value={stats.absent} tone="destructive" hint={`${stats.teachers ? Math.round((stats.absent / stats.teachers) * 100) : 0}% of teachers`} className="bg-head-teacher-card" />
         </div>
       </div>
 
       <div>
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Students today</h2>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          <StatCard icon={UserCheck} label="Present" value={stats.studentsPresent} tone="success" hint={`${stats.students ? Math.round((stats.studentsPresent / stats.students) * 100) : 0}% of students`} />
-          <StatCard icon={AlertCircle} label="Not marked" value={stats.studentsAbsent} tone="destructive" hint={`${stats.students ? Math.round((stats.studentsAbsent / stats.students) * 100) : 0}% of students`} />
-          <StatCard icon={GraduationIcon} label="Total enrolled" value={stats.students} tone="gold" />
+          <StatCard icon={UserCheck} label="Present" value={stats.studentsPresent} tone="success" hint={`${stats.students ? Math.round((stats.studentsPresent / stats.students) * 100) : 0}% of students`} className="bg-head-teacher-card" />
+          <StatCard icon={AlertCircle} label="Not marked" value={stats.studentsAbsent} tone="destructive" hint={`${stats.students ? Math.round((stats.studentsAbsent / stats.students) * 100) : 0}% of students`} className="bg-head-teacher-card" />
+          <StatCard icon={GraduationIcon} label="Total enrolled" value={stats.students} tone="gold" className="bg-head-teacher-card" />
         </div>
       </div>
 
       <AssignTeachersPanel />
 
-      <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+      <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card overflow-hidden">
         <div className="p-5 border-b border-border flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-primary" />
