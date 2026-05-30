@@ -178,8 +178,8 @@ function SignupPage() {
               <Input id="fullName" required value={form.fullName} onChange={updateText("fullName")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={form.email} onChange={updateText("email")} />
+              <Label htmlFor="teacherId">Teacher ID</Label>
+              <Input id="teacherId" type="text" required value={form.teacherId} onChange={updateText("teacherId")} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="phone">Phone</Label>
