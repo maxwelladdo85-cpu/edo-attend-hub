@@ -83,17 +83,19 @@ export function StudentAttendancePanel() {
     const key = `${student.id}-${session}`;
     setSavingKey(key);
     try {
-      const now = new Date().toISOString();
+      const now = value ? new Date().toISOString() : null;
 
-      // Best-effort location — does NOT block saving
+      // Best-effort location — does NOT block saving, only captured when marking present
       let lat: number | null = null;
       let lng: number | null = null;
-      try {
-        const pos = await getCurrentPosition();
-        lat = pos.coords.latitude;
-        lng = pos.coords.longitude;
-      } catch {
-        // location unavailable — still save the mark
+      if (value) {
+        try {
+          const pos = await getCurrentPosition();
+          lat = pos.coords.latitude;
+          lng = pos.coords.longitude;
+        } catch {
+          // location unavailable — still save the mark
+        }
       }
 
       const existing = rows[student.id];
