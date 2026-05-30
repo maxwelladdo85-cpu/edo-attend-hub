@@ -57,22 +57,27 @@ function TeacherView() {
   const { user, profile } = useAuth();
   const [school, setSchool] = useState<any>(null);
   const [today, setToday] = useState<any>(null);
+  const [students, setStudents] = useState<any[]>([]);
   const [busy, setBusy] = useState<"arrival" | "departure" | null>(null);
 
   const load = async () => {
     if (!user) return;
     const dateStr = new Date().toISOString().slice(0, 10);
-    const [{ data: s }, { data: a }] = await Promise.all([
+    const [{ data: s }, { data: a }, { data: st }] = await Promise.all([
       profile?.school_id
         ? supabase.from("schools").select("*").eq("id", profile.school_id).maybeSingle()
         : Promise.resolve({ data: null } as any),
       supabase.from("teacher_attendance").select("*").eq("teacher_user_id", user.id).eq("attendance_date", dateStr).maybeSingle(),
+      profile?.school_id && profile?.class_taught
+        ? supabase.from("students").select("*").eq("school_id", profile.school_id).eq("class", profile.class_taught).order("student_id", { ascending: true })
+        : Promise.resolve({ data: [] } as any),
     ]);
     setSchool(s);
     setToday(a);
+    setStudents(st ?? []);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id, profile?.school_id]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id, profile?.school_id, profile?.class_taught]);
 
   const mark = async (kind: "arrival" | "departure") => {
     if (!user || !profile?.school_id || !school) {
