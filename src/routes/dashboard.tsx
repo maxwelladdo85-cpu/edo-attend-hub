@@ -88,7 +88,9 @@ function TeacherView() {
   const [students, setStudents] = useState<any[]>([]);
   const [busy, setBusy] = useState<"arrival" | "departure" | null>(null);
 
-  const idLabel = primaryRole(roles) === "head_teacher" ? "Head Teacher ID" : "Teacher ID";
+  const isHead = primaryRole(roles) === "head_teacher";
+  const idLabel = isHead ? "Head Teacher ID" : "Teacher ID";
+  const cardBg = isHead ? "bg-head-teacher-card" : "bg-card";
 
   const load = async () => {
     if (!user) return;
@@ -213,7 +215,7 @@ function TeacherView() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+        <div className={`rounded-2xl border border-border ${cardBg} p-6 shadow-card`}>
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Arrival</div>
@@ -231,7 +233,7 @@ function TeacherView() {
           </Button>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+        <div className={`rounded-2xl border border-border ${cardBg} p-6 shadow-card`}>
           <div className="flex items-center justify-between">
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Departure</div>
@@ -251,7 +253,7 @@ function TeacherView() {
       </div>
 
       {school && (
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+        <div className={`rounded-2xl border border-border ${cardBg} p-6 shadow-card`}>
           <h3 className="font-display font-semibold mb-3">School details</h3>
           <div className="grid sm:grid-cols-2 gap-4 text-sm">
             <Info label="Resumption time" value={school.resumption_time?.slice(0,5)} icon={Clock} />
@@ -391,13 +393,13 @@ function HeadTeacherView() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon={UserCheck} label="Present" value={present} tone="success" />
-        <StatCard icon={Clock} label="Late" value={late} tone="warning" />
-        <StatCard icon={LogOut} label="Left early" value={leftEarly} tone="destructive" />
-        <StatCard icon={AlertCircle} label="Pending" value={pending} tone="gold" />
+        <StatCard icon={UserCheck} label="Present" value={present} tone="success" className="bg-head-teacher-card" />
+        <StatCard icon={Clock} label="Late" value={late} tone="warning" className="bg-head-teacher-card" />
+        <StatCard icon={LogOut} label="Left early" value={leftEarly} tone="destructive" className="bg-head-teacher-card" />
+        <StatCard icon={AlertCircle} label="Pending" value={pending} tone="gold" className="bg-head-teacher-card" />
       </div>
 
-      <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+      <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card overflow-hidden">
         <div className="p-5 border-b border-border">
           <h3 className="font-display font-semibold">Teachers in your school</h3>
           <p className="text-xs text-muted-foreground mt-1">Mark on a teacher's behalf if they couldn't sign in.</p>
