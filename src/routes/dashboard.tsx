@@ -82,11 +82,13 @@ function DashboardPage() {
 
 /* ----------------------- TEACHER ----------------------- */
 function TeacherView() {
-  const { user, profile, refresh } = useAuth();
+  const { user, profile, refresh, roles } = useAuth();
   const [school, setSchool] = useState<any>(null);
   const [today, setToday] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [busy, setBusy] = useState<"arrival" | "departure" | null>(null);
+
+  const idLabel = primaryRole(roles) === "head_teacher" ? "Head Teacher ID" : "Teacher ID";
 
   const load = async () => {
     if (!user) return;
@@ -198,7 +200,7 @@ function TeacherView() {
         <p className="text-sm text-muted-foreground mt-1">{school ? school.name : "No school assigned"} · {new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</p>
         <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm">
           <UserCheck className="h-4 w-4 text-primary" />
-          <span className="text-muted-foreground">Teacher ID:</span>
+          <span className="text-muted-foreground">{idLabel}:</span>
           <span className="font-mono font-semibold text-foreground">{profile?.teacher_id ?? "—"}</span>
           {profile?.class_taught && (
             <>
