@@ -159,7 +159,14 @@ function SignupPage() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
-      <div className="hidden lg:flex relative bg-gradient-hero p-12 text-primary-foreground flex-col justify-between">
+      <div className="hidden lg:flex relative bg-gradient-hero p-12 text-primary-foreground flex-col justify-between overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-overlay"
+          style={{ backgroundImage: `url(${authBg})` }}
+        />
+        <div aria-hidden className="absolute inset-0 bg-gradient-hero opacity-60" />
+        <div className="relative z-10 contents">
         <div className="flex items-center gap-2.5">
           <div className="h-11 w-11 rounded-lg bg-white p-1 grid place-items-center">
             <Logo className="h-9 w-9" />
