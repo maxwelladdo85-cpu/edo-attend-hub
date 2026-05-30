@@ -104,6 +104,15 @@ function SignupPage() {
       toast.error("Password must be at least 8 characters");
       return;
     }
+    if (form.role === "admin") {
+      if (!form.email) {
+        toast.error("Please enter your email address");
+        return;
+      }
+    } else if (!form.teacherId) {
+      toast.error("Please enter your Teacher ID");
+      return;
+    }
     if (needsSchool && !form.schoolId) {
       toast.error("Please select your school");
       return;
@@ -114,7 +123,12 @@ function SignupPage() {
     }
     setLoading(true);
     const redirectUrl = `${window.location.origin}/dashboard`;
-    const authEmail = form.teacherId.includes("@") ? form.teacherId : `${form.teacherId}@edosubeb.gov.ng`;
+    const authEmail =
+      form.role === "admin"
+        ? form.email
+        : form.teacherId.includes("@")
+          ? form.teacherId
+          : `${form.teacherId}@edosubeb.gov.ng`;
     const { error } = await supabase.auth.signUp({
       email: authEmail,
       password: form.password,
@@ -126,7 +140,7 @@ function SignupPage() {
           role: form.role,
           school_id: needsSchool ? form.schoolId : null,
           class_taught: needsSchool ? form.classTaught : null,
-          teacher_id: form.teacherId,
+          teacher_id: form.role === "admin" ? null : form.teacherId,
         },
       },
     });
@@ -135,11 +149,11 @@ function SignupPage() {
       toast.error(error.message);
       return;
     }
-    toast.success("Account created — check your email to verify, then sign in.");
+    toast.success("Account created — you can sign in now.");
     navigate({ to: "/login", replace: true });
   };
 
-  const updateText = (k: "fullName" | "teacherId" | "phone" | "password") =>
+  const updateText = (k: "fullName" | "teacherId" | "email" | "phone" | "password") =>
     (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
 
