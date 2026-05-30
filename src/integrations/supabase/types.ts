@@ -144,6 +144,9 @@ export type Database = {
       }
       student_attendance: {
         Row: {
+          afternoon_lat: number | null
+          afternoon_lng: number | null
+          afternoon_marked_at: string | null
           afternoon_status:
             | Database["public"]["Enums"]["attendance_mark"]
             | null
@@ -151,12 +154,18 @@ export type Database = {
           created_at: string
           id: string
           marked_by: string | null
+          morning_lat: number | null
+          morning_lng: number | null
+          morning_marked_at: string | null
           morning_status: Database["public"]["Enums"]["attendance_mark"] | null
           school_id: string
           student_id: string
           updated_at: string
         }
         Insert: {
+          afternoon_lat?: number | null
+          afternoon_lng?: number | null
+          afternoon_marked_at?: string | null
           afternoon_status?:
             | Database["public"]["Enums"]["attendance_mark"]
             | null
@@ -164,12 +173,18 @@ export type Database = {
           created_at?: string
           id?: string
           marked_by?: string | null
+          morning_lat?: number | null
+          morning_lng?: number | null
+          morning_marked_at?: string | null
           morning_status?: Database["public"]["Enums"]["attendance_mark"] | null
           school_id: string
           student_id: string
           updated_at?: string
         }
         Update: {
+          afternoon_lat?: number | null
+          afternoon_lng?: number | null
+          afternoon_marked_at?: string | null
           afternoon_status?:
             | Database["public"]["Enums"]["attendance_mark"]
             | null
@@ -177,6 +192,9 @@ export type Database = {
           created_at?: string
           id?: string
           marked_by?: string | null
+          morning_lat?: number | null
+          morning_lng?: number | null
+          morning_marked_at?: string | null
           morning_status?: Database["public"]["Enums"]["attendance_mark"] | null
           school_id?: string
           student_id?: string
