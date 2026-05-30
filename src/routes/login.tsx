@@ -123,16 +123,22 @@ function LoginPage() {
             </div>
 
             {role === "teacher" ? (
-              <div className="space-y-1.5">
-                <Label htmlFor="teacherId">Teacher ID</Label>
-                <Input
-                  id="teacherId"
-                  required
-                  value={teacherId}
-                  onChange={(e) => setTeacherId(e.target.value)}
-                  placeholder="e.g. EDO/TCH/00123"
-                />
-              </div>
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="teacherId">Teacher ID</Label>
+                  <Input
+                    id="teacherId"
+                    required
+                    value={teacherId}
+                    onChange={(e) => setTeacherId(e.target.value)}
+                    placeholder="e.g. T1000"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="password">Password</Label>
+                  <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                </div>
+              </>
             ) : (
               <>
                 <div className="space-y-1.5">
