@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
+import authBg from "@/assets/auth-bg.png";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -159,7 +160,14 @@ function SignupPage() {
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-background">
-      <div className="hidden lg:flex relative bg-gradient-hero p-12 text-primary-foreground flex-col justify-between">
+      <div
+        className="hidden lg:flex relative p-12 text-primary-foreground flex-col justify-between overflow-hidden bg-gradient-hero"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.55)), url(${authBg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
         <div className="flex items-center gap-2.5">
           <div className="h-11 w-11 rounded-lg bg-white p-1 grid place-items-center">
             <Logo className="h-9 w-9" />
