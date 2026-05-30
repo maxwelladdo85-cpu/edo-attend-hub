@@ -182,7 +182,11 @@ export function useStudentAttendanceToday() {
       }
       return Array.from(byStudent.values());
     },
-    refetchInterval: 30_000,
+    staleTime: ATT_STALE,
+    gcTime: ATT_GC,
+    refetchInterval: ATT_REFETCH,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
   });
 }
 
