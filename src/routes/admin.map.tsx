@@ -65,11 +65,11 @@ function MapPage() {
     return schools
       .filter((s) => Number.isFinite(s.latitude) && Number.isFinite(s.longitude))
       .map((s) => {
-        const t = teacherBySchool.get(s.id) ?? { total: 0, present: 0 };
-        const st = studentBySchool.get(s.id) ?? { total: 0, present: 0 };
-        const pupilPct = st.total ? Math.round((st.present / st.total) * 100) : 0;
-        const teacherPct = t.total ? Math.round((t.present / t.total) * 100) : 0;
-        return { school: s, t, st, pupilPct, teacherPct };
+        const tRaw = teacherBySchool.get(s.id) ?? { total: 0, present: 0 };
+        const stRaw = studentBySchool.get(s.id) ?? { total: 0, present: 0 };
+        const t = { total: tRaw.total, present: Math.min(tRaw.present, tRaw.total) };
+        const st = { total: stRaw.total, present: Math.min(stRaw.present, stRaw.total) };
+        return { school: s, t, st, pupilPct: safePct(st.present, st.total), teacherPct: safePct(t.present, t.total) };
       });
   }, [schools, teachers, students, tAtt, sAtt]);
 
