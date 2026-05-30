@@ -22,21 +22,23 @@ type Role = "teacher" | "head_teacher" | "admin";
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { session, loading: authLoading, roles: userRoles, profile } = useAuth();
   const resolveEmail = useServerFn(resolveTeacherEmail);
   const [role, setRole] = useState<Role>("teacher");
   const [teacherId, setTeacherId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (session) navigate({ to: "/dashboard", replace: true });
-  }, [session, navigate]);
+    if (!session || authLoading) return;
+    if (userRoles.length === 0 || !profile) return;
+    navigate({ to: "/dashboard", replace: true });
+  }, [session, authLoading, userRoles.length, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
     try {
       let signInEmail = email;
       if (role === "teacher") {
@@ -53,15 +55,14 @@ function LoginPage() {
         return;
       }
       toast.success("Welcome back");
-      navigate({ to: "/dashboard", replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Sign in failed");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const roles: { value: Role; label: string }[] = [
+  const roleOptions: { value: Role; label: string }[] = [
     { value: "teacher", label: "Teacher" },
     { value: "head_teacher", label: "Head Teacher" },
     { value: "admin", label: "Admin" },
@@ -109,7 +110,7 @@ function LoginPage() {
             <div className="space-y-1.5">
               <Label>Role</Label>
               <div className="grid grid-cols-3 gap-2">
-                {roles.map((r) => (
+                {roleOptions.map((r) => (
                   <button
                     key={r.value}
                     type="button"
@@ -156,8 +157,8 @@ function LoginPage() {
               </>
             )}
 
-            <Button type="submit" disabled={loading} className="w-full bg-gradient-primary hover:opacity-90">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
+            <Button type="submit" disabled={submitting} className="w-full bg-gradient-primary hover:opacity-90">
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
             </Button>
           </form>
 
