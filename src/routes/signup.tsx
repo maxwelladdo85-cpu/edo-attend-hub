@@ -138,7 +138,7 @@ function SignupPage() {
     navigate({ to: "/login", replace: true });
   };
 
-  const updateText = (k: "fullName" | "email" | "phone" | "password") =>
+  const updateText = (k: "fullName" | "teacherId" | "phone" | "password") =>
     (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
 
