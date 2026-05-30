@@ -32,6 +32,13 @@ function DashboardPage() {
     return () => { cancelled = true; };
   }, [loading, session, navigate]);
 
+  // Redirect admins to the dedicated admin section
+  useEffect(() => {
+    if (!loading && roles.length > 0 && primaryRole(roles) === "admin") {
+      navigate({ to: "/admin", replace: true });
+    }
+  }, [loading, roles, navigate]);
+
   if (loading || !session) {
     return (
       <div className="min-h-screen grid place-items-center">
@@ -51,11 +58,17 @@ function DashboardPage() {
   const role = primaryRole(roles);
   const label = roleLabelFor(role);
 
+  if (role === "admin") {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <DashboardShell nav={[]} roleLabel={label}>
-      {role === "admin" ? (
-        <AdminView />
-      ) : role === "head_teacher" ? (
+      {role === "head_teacher" ? (
         <>
           <TeacherView />
           <div className="mt-8">
@@ -79,6 +92,7 @@ function DashboardPage() {
     </DashboardShell>
   );
 }
+
 
 /* ----------------------- TEACHER ----------------------- */
 function TeacherView() {
