@@ -88,7 +88,9 @@ function TeacherView() {
   const [students, setStudents] = useState<any[]>([]);
   const [busy, setBusy] = useState<"arrival" | "departure" | null>(null);
 
-  const idLabel = primaryRole(roles) === "head_teacher" ? "Head Teacher ID" : "Teacher ID";
+  const isHead = primaryRole(roles) === "head_teacher";
+  const idLabel = isHead ? "Head Teacher ID" : "Teacher ID";
+  const cardBg = isHead ? "bg-head-teacher-card" : "bg-card";
 
   const load = async () => {
     if (!user) return;
