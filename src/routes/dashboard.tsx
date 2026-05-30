@@ -384,6 +384,12 @@ function AdminView() {
   const [schoolNames, setSchoolNames] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [liveTime, setLiveTime] = useState(new Date());
+
+  useEffect(() => {
+    const tick = setInterval(() => setLiveTime(new Date()), 1000);
+    return () => clearInterval(tick);
+  }, []);
 
   const refresh = async () => {
     const dateStr = new Date().toISOString().slice(0, 10);
@@ -446,11 +452,11 @@ function AdminView() {
             <h1 className="text-2xl md:text-3xl font-bold font-display">
               Welcome, {profile?.full_name?.split(" ")[0] ?? "Administrator"}
             </h1>
-            <p className="text-sm opacity-90 mt-1">EdoSUBEB statewide administration · {new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</p>
+            <p className="text-sm opacity-90 mt-1">EdoSUBEB statewide administration · {liveTime.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</p>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full bg-white/15 backdrop-blur px-3 py-1.5 text-xs font-medium">
             <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
-            Live · {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+            Live · {liveTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
           </div>
         </div>
       </div>
