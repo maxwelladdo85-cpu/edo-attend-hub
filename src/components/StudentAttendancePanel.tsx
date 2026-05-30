@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, GraduationCap, Loader2, MapPin, Sun, Sunset } from "lucide-react";
+import { CalendarIcon, GraduationCap, Loader2, MapPin, Sun, Sunset, Users } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { getCurrentPosition } from "@/lib/geo";
+import { StatCard } from "@/components/StatCard";
 
 type Mark = "present" | "late" | "absent";
 type Session = "morning" | "afternoon";
@@ -149,8 +150,25 @@ export function StudentAttendancePanel() {
     }
   };
 
+  const visible = isHead && classFilter !== "all" ? students.filter((s) => s.class === classFilter) : students;
+
+  const total = visible.length;
+  const amPresent = visible.filter((s) => rows[s.id]?.morning_status === "present").length;
+  const amAbsent = total - amPresent;
+  const pmPresent = visible.filter((s) => rows[s.id]?.afternoon_status === "present").length;
+  const pmAbsent = total - pmPresent;
+
   return (
     <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+      {isHead && total > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 p-5">
+          <StatCard icon={Users} label="Total Students" value={total} tone="default" />
+          <StatCard icon={Sun} label="AM Present" value={`${amPresent}`} hint={`${total > 0 ? Math.round((amPresent / total) * 100) : 0}%`} tone="success" />
+          <StatCard icon={Sun} label="AM Absent" value={`${amAbsent}`} hint={`${total > 0 ? Math.round((amAbsent / total) * 100) : 0}%`} tone="destructive" />
+          <StatCard icon={Sunset} label="PM Present" value={`${pmPresent}`} hint={`${total > 0 ? Math.round((pmPresent / total) * 100) : 0}%`} tone="success" />
+          <StatCard icon={Sunset} label="PM Absent" value={`${pmAbsent}`} hint={`${total > 0 ? Math.round((pmAbsent / total) * 100) : 0}%`} tone="destructive" />
+        </div>
+      )}
       <div className="p-5 border-b border-border flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <GraduationCap className="h-4 w-4 text-primary" />
@@ -201,7 +219,6 @@ export function StudentAttendancePanel() {
       ) : students.length === 0 ? (
         <div className="p-8 text-center text-muted-foreground text-sm">{isHead ? "No students enrolled in this school yet." : "No students in your class yet."}</div>
       ) : (() => {
-        const visible = isHead && classFilter !== "all" ? students.filter((s) => s.class === classFilter) : students;
         return (
         <div className="divide-y divide-border">
           {visible.map((s) => {
