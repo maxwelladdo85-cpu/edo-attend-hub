@@ -293,26 +293,28 @@ function StatusBadge({ status }: { status: string }) {
 
 /* ----------------------- HEAD TEACHER ----------------------- */
 function HeadTeacherView() {
-  const { profile } = useAuth();
-  const [records, setRecords] = useState<any[]>([]);
-  const [profiles, setProfiles] = useState<Record<string, any>>({});
+  const { profile, user } = useAuth();
+  const [school, setSchool] = useState<any>(null);
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [records, setRecords] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<string | null>(null);
 
   const load = async () => {
     if (!profile?.school_id) { setLoading(false); return; }
     const dateStr = new Date().toISOString().slice(0, 10);
-    const { data } = await supabase.from("teacher_attendance").select("*").eq("school_id", profile.school_id).eq("attendance_date", dateStr).order("arrival_time", { ascending: true });
-    const recs = data ?? [];
-    setRecords(recs);
-    const ids = [...new Set(recs.map((r) => r.teacher_user_id))];
-    if (ids.length) {
-      const { data: ps } = await supabase.from("profiles").select("user_id, full_name, designation").in("user_id", ids);
-      setProfiles(Object.fromEntries((ps ?? []).map((p: any) => [p.user_id, p])));
-    }
+    const [{ data: sc }, { data: ts }, { data: rs }] = await Promise.all([
+      supabase.from("schools").select("*").eq("id", profile.school_id).maybeSingle(),
+      supabase.from("profiles").select("user_id, full_name, designation, teacher_id, class_taught").eq("school_id", profile.school_id),
+      supabase.from("teacher_attendance").select("*").eq("school_id", profile.school_id).eq("attendance_date", dateStr),
+    ]);
+    setSchool(sc);
+    setTeachers((ts ?? []).filter((t: any) => t.user_id !== user?.id));
+    setRecords(Object.fromEntries((rs ?? []).map((r: any) => [r.teacher_user_id, r])));
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [profile?.school_id]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [profile?.school_id, user?.id]);
 
   const verify = async (id: string) => {
     const { error } = await supabase.from("teacher_attendance").update({ head_verified: true, head_verified_at: new Date().toISOString() }).eq("id", id);
@@ -321,10 +323,65 @@ function HeadTeacherView() {
     load();
   };
 
-  const present = records.filter((r) => r.arrival_time).length;
-  const late = records.filter((r) => r.arrival_status === "late").length;
-  const leftEarly = records.filter((r) => r.departure_status === "left_early").length;
-  const pending = records.filter((r) => r.arrival_time && !r.head_verified).length;
+  const markFor = async (teacher: any, kind: "arrival" | "departure") => {
+    if (!school || !user) return;
+    const key = `${teacher.user_id}-${kind}`;
+    setBusy(key);
+    try {
+      const now = new Date().toISOString();
+      const dateStr = now.slice(0, 10);
+      const existing = records[teacher.user_id];
+
+      if (kind === "arrival") {
+        const status = classifyArrival(now, school.resumption_time);
+        const { error } = await supabase.from("teacher_attendance").upsert(
+          {
+            teacher_user_id: teacher.user_id,
+            school_id: school.id,
+            attendance_date: dateStr,
+            arrival_time: now,
+            arrival_status: status,
+            arrival_verified: true,
+            head_verified: true,
+            head_verified_by: user.id,
+            head_verified_at: now,
+            device_info: `marked by head teacher (${profile?.full_name ?? user.id})`,
+          },
+          { onConflict: "teacher_user_id,attendance_date" },
+        );
+        if (error) throw error;
+        toast.success(`Arrival marked for ${teacher.full_name}`);
+      } else {
+        if (!existing?.arrival_time) {
+          toast.error("Mark arrival first");
+          return;
+        }
+        const status = classifyDeparture(now, school.closing_time);
+        const { error } = await supabase
+          .from("teacher_attendance")
+          .update({
+            departure_time: now,
+            departure_status: status,
+            departure_verified: true,
+          })
+          .eq("teacher_user_id", teacher.user_id)
+          .eq("attendance_date", dateStr);
+        if (error) throw error;
+        toast.success(`Departure marked for ${teacher.full_name}`);
+      }
+      await load();
+    } catch (e: any) {
+      toast.error(e.message ?? "Could not save");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const all = Object.values(records);
+  const present = all.filter((r: any) => r.arrival_time).length;
+  const late = all.filter((r: any) => r.arrival_status === "late").length;
+  const leftEarly = all.filter((r: any) => r.departure_status === "left_early").length;
+  const pending = all.filter((r: any) => r.arrival_time && !r.head_verified).length;
 
   return (
     <div className="space-y-6">
@@ -341,35 +398,60 @@ function HeadTeacherView() {
       </div>
 
       <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
-        <div className="p-5 border-b border-border"><h3 className="font-display font-semibold">Today's records</h3></div>
+        <div className="p-5 border-b border-border">
+          <h3 className="font-display font-semibold">Teachers in your school</h3>
+          <p className="text-xs text-muted-foreground mt-1">Mark on a teacher's behalf if they couldn't sign in.</p>
+        </div>
         {loading ? (
           <div className="p-8 text-center text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin inline" /></div>
-        ) : records.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground text-sm">No teachers have marked attendance yet today.</div>
+        ) : teachers.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground text-sm">No teachers assigned to this school yet.</div>
         ) : (
           <div className="divide-y divide-border">
-            {records.map((r) => {
-              const p = profiles[r.teacher_user_id];
+            {teachers.map((t) => {
+              const r = records[t.user_id];
               return (
-                <div key={r.id} className="p-4 flex flex-wrap items-center gap-3">
+                <div key={t.user_id} className="p-4 flex flex-wrap items-center gap-3">
                   <div className="flex-1 min-w-[180px]">
-                    <div className="font-medium">{p?.full_name ?? "Teacher"}</div>
-                    <div className="text-xs text-muted-foreground">{p?.designation ?? "—"}</div>
+                    <div className="font-medium">{t.full_name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {t.teacher_id ?? "—"}{t.class_taught ? ` · ${t.class_taught}` : ""}
+                    </div>
                   </div>
-                  <div className="text-sm">
+                  <div className="text-sm min-w-[120px]">
                     <div className="text-muted-foreground text-xs">Arrival</div>
-                    <div>{r.arrival_time ? new Date(r.arrival_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
+                    <div>{r?.arrival_time ? new Date(r.arrival_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
+                    {r?.arrival_status && <StatusBadge status={r.arrival_status} />}
                   </div>
-                  <div className="text-sm">
+                  <div className="text-sm min-w-[120px]">
                     <div className="text-muted-foreground text-xs">Departure</div>
-                    <div>{r.departure_time ? new Date(r.departure_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
+                    <div>{r?.departure_time ? new Date(r.departure_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
+                    {r?.departure_status && <StatusBadge status={r.departure_status} />}
                   </div>
-                  <div>{r.arrival_status && <StatusBadge status={r.arrival_status} />}</div>
-                  {r.head_verified ? (
-                    <Badge className="bg-success/15 text-success border-success/20"><CheckCircle2 className="h-3 w-3 mr-1" />Verified</Badge>
-                  ) : (
-                    <Button size="sm" onClick={() => verify(r.id)} className="bg-gradient-primary hover:opacity-90">Verify</Button>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant={r?.arrival_time ? "outline" : "default"}
+                      disabled={busy === `${t.user_id}-arrival` || !!r?.arrival_time}
+                      onClick={() => markFor(t, "arrival")}
+                      className={!r?.arrival_time ? "bg-gradient-primary hover:opacity-90" : ""}
+                    >
+                      {busy === `${t.user_id}-arrival` ? <Loader2 className="h-3 w-3 animate-spin" /> : r?.arrival_time ? "Arrived" : "Mark arrival"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busy === `${t.user_id}-departure` || !r?.arrival_time || !!r?.departure_time}
+                      onClick={() => markFor(t, "departure")}
+                    >
+                      {busy === `${t.user_id}-departure` ? <Loader2 className="h-3 w-3 animate-spin" /> : r?.departure_time ? "Left" : "Mark departure"}
+                    </Button>
+                    {r?.arrival_time && (r.head_verified ? (
+                      <Badge className="bg-success/15 text-success border-success/20"><CheckCircle2 className="h-3 w-3 mr-1" />Verified</Badge>
+                    ) : (
+                      <Button size="sm" variant="ghost" onClick={() => verify(r.id)}>Verify</Button>
+                    ))}
+                  </div>
                 </div>
               );
             })}
@@ -379,6 +461,7 @@ function HeadTeacherView() {
     </div>
   );
 }
+
 
 /* ----------------------- ADMIN ----------------------- */
 function AdminView() {
