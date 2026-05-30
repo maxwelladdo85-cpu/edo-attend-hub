@@ -179,6 +179,26 @@ export function StudentAttendancePanel() {
             const row = rows[s.id];
             return (
               <div key={s.id} className="p-4 flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="flex flex-col items-center gap-1 cursor-pointer select-none" title="Mark morning">
+                    <Checkbox
+                      checked={row?.morning_status === "present"}
+                      disabled={savingKey === `${s.id}-morning`}
+                      onCheckedChange={(v) => mark(s, "morning", v === true ? "present" : null)}
+                      className="h-6 w-6"
+                    />
+                    <span className="text-[10px] text-muted-foreground">AM</span>
+                  </label>
+                  <label className="flex flex-col items-center gap-1 cursor-pointer select-none" title="Mark afternoon">
+                    <Checkbox
+                      checked={row?.afternoon_status === "present"}
+                      disabled={savingKey === `${s.id}-afternoon`}
+                      onCheckedChange={(v) => mark(s, "afternoon", v === true ? "present" : null)}
+                      className="h-6 w-6"
+                    />
+                    <span className="text-[10px] text-muted-foreground">PM</span>
+                  </label>
+                </div>
                 <div className="h-9 w-9 rounded-lg bg-primary/10 grid place-items-center font-mono text-xs font-semibold text-primary">
                   {s.student_id}
                 </div>
