@@ -88,12 +88,13 @@ export function useSchools() {
   return useQuery({
     queryKey: ["admin", "schools"],
     queryFn: async () => {
-      return await fetchAllPaged<SchoolLite>((from, to) =>
-        supabase
+      return await fetchAllPaged<SchoolLite>(async (from, to) => {
+        const { data, error } = await supabase
           .from("schools")
           .select("id,name,lga,category,latitude,longitude")
-          .range(from, to),
-      );
+          .range(from, to);
+        return { data: data as SchoolLite[] | null, error };
+      });
     },
     staleTime: REF_STALE,
     gcTime: REF_GC,
