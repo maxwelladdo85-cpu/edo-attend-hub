@@ -180,16 +180,18 @@ export function useStudentAttendanceToday() {
   return useQuery({
     queryKey: ["admin", "student-attendance", todayStr()],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("student_attendance")
-        .select("student_id,school_id,morning_status,afternoon_status")
-        .eq("attendance_date", todayStr())
-        .limit(50000);
-      if (error) throw error;
+      const rows = await fetchAllPaged<StudentAttendanceLite>(async (from, to) => {
+        const { data, error } = await supabase
+          .from("student_attendance")
+          .select("student_id,school_id,morning_status,afternoon_status")
+          .eq("attendance_date", todayStr())
+          .range(from, to);
+        return { data: data as StudentAttendanceLite[] | null, error };
+      });
       // De-duplicate by student_id, merging morning + afternoon so a student
       // present in either slot is counted once.
       const byStudent = new Map<string, StudentAttendanceLite>();
-      for (const row of (data ?? []) as StudentAttendanceLite[]) {
+      for (const row of rows) {
         const existing = byStudent.get(row.student_id);
         if (!existing) {
           byStudent.set(row.student_id, { ...row });
