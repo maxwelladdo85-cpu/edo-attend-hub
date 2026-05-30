@@ -108,7 +108,7 @@ function AnalyticsPage() {
     for (const r of sAtt) {
       const c = schoolToCat.get(r.school_id); if (!c || !isStudentPresent(r)) continue; buckets.get(c)!.sPresent += 1;
     }
-    return Array.from(buckets.values()).map((r) => ({ name: r.name, Pupils: r.students ? Math.round((r.sPresent / r.students) * 100) : 0, Teachers: r.teachers ? Math.round((r.tPresent / r.teachers) * 100) : 0 }));
+    return Array.from(buckets.values()).map((r) => ({ name: r.name, Pupils: safePct(r.sPresent, r.students), Teachers: safePct(r.tPresent, r.teachers) }));
   }, [schools, teachers, students, tAtt, sAtt]);
 
   return (
