@@ -181,7 +181,7 @@ export function StudentAttendancePanel() {
                   <div className="font-medium truncate">{s.full_name}</div>
                   <div className="text-xs text-muted-foreground">{s.class}{s.gender ? ` · ${s.gender}` : ""}</div>
                 </div>
-                <SessionPicker
+                <SessionCheck
                   icon={Sun}
                   label="Morning"
                   current={row?.morning_status ?? null}
@@ -189,9 +189,9 @@ export function StudentAttendancePanel() {
                   lat={row?.morning_lat ?? null}
                   lng={row?.morning_lng ?? null}
                   saving={savingKey === `${s.id}-morning`}
-                  onPick={(v) => mark(s, "morning", v)}
+                  onToggle={(checked) => mark(s, "morning", checked ? "present" : null)}
                 />
-                <SessionPicker
+                <SessionCheck
                   icon={Sunset}
                   label="Afternoon"
                   current={row?.afternoon_status ?? null}
@@ -199,7 +199,7 @@ export function StudentAttendancePanel() {
                   lat={row?.afternoon_lat ?? null}
                   lng={row?.afternoon_lng ?? null}
                   saving={savingKey === `${s.id}-afternoon`}
-                  onPick={(v) => mark(s, "afternoon", v)}
+                  onToggle={(checked) => mark(s, "afternoon", checked ? "present" : null)}
                 />
               </div>
             );
@@ -210,39 +210,34 @@ export function StudentAttendancePanel() {
   );
 }
 
-function SessionPicker({ icon: Icon, label, current, markedAt, lat, lng, saving, onPick }: {
+function SessionCheck({ icon: Icon, label, current, markedAt, lat, lng, saving, onToggle }: {
   icon: any; label: string; current: Mark | null;
   markedAt: string | null; lat: number | null; lng: number | null;
-  saving: boolean; onPick: (v: Mark) => void;
+  saving: boolean; onToggle: (checked: boolean) => void;
 }) {
+  const checked = current === "present";
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
-        <Icon className="h-3 w-3" />{label}
+    <label className={cn(
+      "flex flex-col gap-1 rounded-lg border border-border px-3 py-2 cursor-pointer transition min-w-[140px]",
+      checked ? "bg-success/10 border-success/40" : "bg-background hover:bg-muted",
+      saving && "opacity-60 cursor-wait",
+    )}>
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={saving}
+          onChange={(e) => onToggle(e.target.checked)}
+          className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+        />
+        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+        <span className="text-xs font-medium">{label}</span>
+        {saving && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
       </div>
-      <div className="flex gap-1">
-        {MARKS.map((m) => {
-          const active = current === m.value;
-          return (
-            <button
-              key={m.value}
-              disabled={saving}
-              onClick={() => onPick(m.value)}
-              className={cn(
-                "px-2.5 py-1 text-xs font-medium rounded-md border border-border transition",
-                active ? m.cls : "bg-background hover:bg-muted text-muted-foreground",
-                saving && "opacity-50 cursor-not-allowed",
-              )}
-            >
-              {m.label[0]}
-            </button>
-          );
-        })}
-      </div>
-      {markedAt && (
-        <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+      {checked && markedAt && (
+        <div className="text-[10px] text-muted-foreground leading-tight pl-6">
           <div>
-            {new Date(markedAt).toLocaleDateString([], { day: "2-digit", month: "short" })}
+            {new Date(markedAt).toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" })}
             {" · "}
             {new Date(markedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </div>
@@ -251,6 +246,7 @@ function SessionPicker({ icon: Icon, label, current, markedAt, lat, lng, saving,
               href={`https://www.google.com/maps?q=${lat},${lng}`}
               target="_blank"
               rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
               className="inline-flex items-center gap-0.5 text-primary hover:underline"
             >
               <MapPin className="h-2.5 w-2.5" />{lat.toFixed(4)}, {lng.toFixed(4)}
@@ -260,6 +256,6 @@ function SessionPicker({ icon: Icon, label, current, markedAt, lat, lng, saving,
           )}
         </div>
       )}
-    </div>
+    </label>
   );
 }
