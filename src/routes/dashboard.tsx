@@ -411,30 +411,32 @@ function HeadTeacherView() {
             {teachers.map((t) => {
               const r = records[t.user_id];
               return (
-                <div key={t.user_id} className="p-4 flex flex-wrap items-center gap-3">
-                  <div className="flex-1 min-w-[180px]">
-                    <div className="font-medium">{t.full_name}</div>
-                    <div className="text-xs text-muted-foreground">
+                <div key={t.user_id} className="p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+                  <div className="flex-1 min-w-0 sm:min-w-[180px]">
+                    <div className="font-medium truncate">{t.full_name}</div>
+                    <div className="text-xs text-muted-foreground truncate">
                       {t.teacher_id ?? "—"}{t.class_taught ? ` · ${t.class_taught}` : ""}
                     </div>
                   </div>
-                  <div className="text-sm min-w-[120px]">
-                    <div className="text-muted-foreground text-xs">Arrival</div>
-                    <div>{r?.arrival_time ? new Date(r.arrival_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
-                    {r?.arrival_status && <StatusBadge status={r.arrival_status} />}
+                  <div className="grid grid-cols-2 gap-3 sm:flex sm:gap-4 text-sm">
+                    <div className="min-w-0 sm:min-w-[110px]">
+                      <div className="text-muted-foreground text-xs">Arrival</div>
+                      <div>{r?.arrival_time ? new Date(r.arrival_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
+                      {r?.arrival_status && <StatusBadge status={r.arrival_status} />}
+                    </div>
+                    <div className="min-w-0 sm:min-w-[110px]">
+                      <div className="text-muted-foreground text-xs">Departure</div>
+                      <div>{r?.departure_time ? new Date(r.departure_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
+                      {r?.departure_status && <StatusBadge status={r.departure_status} />}
+                    </div>
                   </div>
-                  <div className="text-sm min-w-[120px]">
-                    <div className="text-muted-foreground text-xs">Departure</div>
-                    <div>{r?.departure_time ? new Date(r.departure_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
-                    {r?.departure_status && <StatusBadge status={r.departure_status} />}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
                     <Button
                       size="sm"
                       variant={r?.arrival_time ? "outline" : "default"}
                       disabled={busy === `${t.user_id}-arrival` || !!r?.arrival_time}
                       onClick={() => markFor(t, "arrival")}
-                      className={!r?.arrival_time ? "bg-gradient-primary hover:opacity-90" : ""}
+                      className={!r?.arrival_time ? "bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none" : "flex-1 sm:flex-none"}
                     >
                       {busy === `${t.user_id}-arrival` ? <Loader2 className="h-3 w-3 animate-spin" /> : r?.arrival_time ? "Arrived" : "Mark arrival"}
                     </Button>
@@ -443,6 +445,7 @@ function HeadTeacherView() {
                       variant="outline"
                       disabled={busy === `${t.user_id}-departure` || !r?.arrival_time || !!r?.departure_time}
                       onClick={() => markFor(t, "departure")}
+                      className="flex-1 sm:flex-none"
                     >
                       {busy === `${t.user_id}-departure` ? <Loader2 className="h-3 w-3 animate-spin" /> : r?.departure_time ? "Left" : "Mark departure"}
                     </Button>
