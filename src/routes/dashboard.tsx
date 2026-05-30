@@ -399,7 +399,7 @@ function HeadTeacherView() {
         <StatCard icon={AlertCircle} label="Pending" value={pending} tone="gold" className="bg-head-teacher-card" />
       </div>
 
-      <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+      <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card overflow-hidden">
         <div className="p-5 border-b border-border">
           <h3 className="font-display font-semibold">Teachers in your school</h3>
           <p className="text-xs text-muted-foreground mt-1">Mark on a teacher's behalf if they couldn't sign in.</p>
