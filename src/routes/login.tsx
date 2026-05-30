@@ -43,9 +43,13 @@ function LoginPage() {
         const { email: resolved } = await resolveEmail({ data: { teacherId } });
         signInEmail = resolved;
       }
-      const { error } = await supabase.auth.signInWithPassword({ email: signInEmail, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: signInEmail, password });
       if (error) {
         toast.error(error.message);
+        return;
+      }
+      if (!data.session) {
+        toast.error("Sign in failed — no session returned");
         return;
       }
       toast.success("Welcome back");
