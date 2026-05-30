@@ -67,16 +67,33 @@ const ATT_STALE = 60_000;
 const ATT_GC = 10 * 60_000;
 const ATT_REFETCH = 90_000;
 
+// PostgREST caps responses at 1000 rows by default, so fetch in pages.
+async function fetchAllPaged<T>(
+  query: (from: number, to: number) => Promise<{ data: T[] | null; error: unknown }>,
+  pageSize = 1000,
+): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += pageSize) {
+    const to = from + pageSize - 1;
+    const { data, error } = await query(from, to);
+    if (error) throw error;
+    const rows = data ?? [];
+    out.push(...rows);
+    if (rows.length < pageSize) break;
+  }
+  return out;
+}
+
 export function useSchools() {
   return useQuery({
     queryKey: ["admin", "schools"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("schools")
-        .select("id,name,lga,category,latitude,longitude")
-        .limit(10000);
-      if (error) throw error;
-      return (data ?? []) as SchoolLite[];
+      return await fetchAllPaged<SchoolLite>((from, to) =>
+        supabase
+          .from("schools")
+          .select("id,name,lga,category,latitude,longitude")
+          .range(from, to),
+      );
     },
     staleTime: REF_STALE,
     gcTime: REF_GC,
