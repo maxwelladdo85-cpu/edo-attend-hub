@@ -16,6 +16,13 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  useSchools,
+  useTeacherProfiles,
+  useStudents,
+  useTeacherAttendanceToday,
+  useStudentAttendanceToday,
+} from "@/lib/admin-data";
 import { toast } from "sonner";
 
 const NAV = [
