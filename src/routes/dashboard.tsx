@@ -57,22 +57,27 @@ function TeacherView() {
   const { user, profile } = useAuth();
   const [school, setSchool] = useState<any>(null);
   const [today, setToday] = useState<any>(null);
+  const [students, setStudents] = useState<any[]>([]);
   const [busy, setBusy] = useState<"arrival" | "departure" | null>(null);
 
   const load = async () => {
     if (!user) return;
     const dateStr = new Date().toISOString().slice(0, 10);
-    const [{ data: s }, { data: a }] = await Promise.all([
+    const [{ data: s }, { data: a }, { data: st }] = await Promise.all([
       profile?.school_id
         ? supabase.from("schools").select("*").eq("id", profile.school_id).maybeSingle()
         : Promise.resolve({ data: null } as any),
       supabase.from("teacher_attendance").select("*").eq("teacher_user_id", user.id).eq("attendance_date", dateStr).maybeSingle(),
+      profile?.school_id && profile?.class_taught
+        ? supabase.from("students").select("*").eq("school_id", profile.school_id).eq("class", profile.class_taught).order("student_id", { ascending: true })
+        : Promise.resolve({ data: [] } as any),
     ]);
     setSchool(s);
     setToday(a);
+    setStudents(st ?? []);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id, profile?.school_id]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id, profile?.school_id, profile?.class_taught]);
 
   const mark = async (kind: "arrival" | "departure") => {
     if (!user || !profile?.school_id || !school) {
@@ -138,6 +143,18 @@ function TeacherView() {
       <div>
         <h1 className="text-2xl md:text-3xl font-bold">Welcome, {profile?.full_name?.split(" ")[0] ?? "Teacher"}</h1>
         <p className="text-sm text-muted-foreground mt-1">{school ? school.name : "No school assigned"} · {new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</p>
+        <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm">
+          <UserCheck className="h-4 w-4 text-primary" />
+          <span className="text-muted-foreground">Teacher ID:</span>
+          <span className="font-mono font-semibold text-foreground">{profile?.teacher_id ?? "—"}</span>
+          {profile?.class_taught && (
+            <>
+              <span className="text-border">|</span>
+              <span className="text-muted-foreground">Class:</span>
+              <span className="font-semibold text-foreground">{profile.class_taught}</span>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
@@ -189,6 +206,35 @@ function TeacherView() {
           </div>
         </div>
       )}
+
+      <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
+        <div className="p-5 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <GraduationIcon className="h-4 w-4 text-primary" />
+            <h3 className="font-display font-semibold">My students {profile?.class_taught ? `· ${profile.class_taught}` : ""}</h3>
+          </div>
+          <span className="text-xs text-muted-foreground">{students.length} total</span>
+        </div>
+        {students.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground text-sm">
+            {profile?.class_taught ? "No students in your class yet." : "Class not assigned yet."}
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {students.map((s) => (
+              <div key={s.id} className="p-4 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-lg bg-primary/10 grid place-items-center font-mono text-xs font-semibold text-primary">
+                  {s.student_id}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate">{s.full_name}</div>
+                  <div className="text-xs text-muted-foreground">{s.class}{s.gender ? ` · ${s.gender}` : ""}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
