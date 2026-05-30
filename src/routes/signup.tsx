@@ -113,8 +113,9 @@ function SignupPage() {
     }
     setLoading(true);
     const redirectUrl = `${window.location.origin}/dashboard`;
+    const authEmail = form.teacherId.includes("@") ? form.teacherId : `${form.teacherId}@edosubeb.gov.ng`;
     const { error } = await supabase.auth.signUp({
-      email: form.email,
+      email: authEmail,
       password: form.password,
       options: {
         emailRedirectTo: redirectUrl,
@@ -124,6 +125,7 @@ function SignupPage() {
           role: form.role,
           school_id: needsSchool ? form.schoolId : null,
           class_taught: needsSchool ? form.classTaught : null,
+          teacher_id: form.teacherId,
         },
       },
     });
