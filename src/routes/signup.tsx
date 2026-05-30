@@ -147,11 +147,14 @@ function SignupPage() {
           <div className="h-11 w-11 rounded-lg bg-white p-1 grid place-items-center">
             <Logo className="h-9 w-9" />
           </div>
-          <div className="font-display font-semibold">EdoSUBEB</div>
+          <div className="font-display font-semibold text-2xl leading-tight">
+            <div>EdoSUBEB</div>
+            <div className="text-sm tracking-widest font-medium text-primary-foreground/85">SMART ATTENDANCE</div>
+          </div>
         </div>
-        <div>
+        <div className="text-center">
           <h2 className="text-4xl font-bold leading-tight">Join the statewide attendance network.</h2>
-          <p className="mt-4 text-primary-foreground/85 max-w-md">
+          <p className="mt-4 text-primary-foreground/85 max-w-md mx-auto">
             Create your account to start marking attendance, verifying records, or supervising your school.
           </p>
         </div>
