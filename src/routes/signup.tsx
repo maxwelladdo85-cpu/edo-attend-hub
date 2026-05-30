@@ -210,7 +210,9 @@ function SignupPage() {
               </div>
             ) : (
               <div className="space-y-1.5">
-                <Label htmlFor="teacherId">Teacher ID</Label>
+                <Label htmlFor="teacherId">
+                  {form.role === "head_teacher" ? "Head Teacher ID" : "Teacher ID"}
+                </Label>
                 <Input id="teacherId" type="text" required value={form.teacherId} onChange={updateText("teacherId")} />
               </div>
             )}
