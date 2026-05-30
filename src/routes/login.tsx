@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { signInWithTeacherId } from "@/lib/teacher-auth.functions";
+import { resolveTeacherEmail } from "@/lib/teacher-auth.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -23,7 +23,7 @@ type Role = "teacher" | "head_teacher" | "admin";
 function LoginPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
-  const teacherSignIn = useServerFn(signInWithTeacherId);
+  const resolveEmail = useServerFn(resolveTeacherEmail);
   const [role, setRole] = useState<Role>("teacher");
   const [teacherId, setTeacherId] = useState("");
   const [email, setEmail] = useState("");
@@ -38,12 +38,12 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      let signInEmail = email;
       if (role === "teacher") {
-        const { actionLink } = await teacherSignIn({ data: { teacherId } });
-        window.location.href = actionLink;
-        return;
+        const { email: resolved } = await resolveEmail({ data: { teacherId } });
+        signInEmail = resolved;
       }
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email: signInEmail, password });
       if (error) {
         toast.error(error.message);
         return;
@@ -123,16 +123,22 @@ function LoginPage() {
             </div>
 
             {role === "teacher" ? (
-              <div className="space-y-1.5">
-                <Label htmlFor="teacherId">Teacher ID</Label>
-                <Input
-                  id="teacherId"
-                  required
-                  value={teacherId}
-                  onChange={(e) => setTeacherId(e.target.value)}
-                  placeholder="e.g. EDO/TCH/00123"
-                />
-              </div>
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="teacherId">Teacher ID</Label>
+                  <Input
+                    id="teacherId"
+                    required
+                    value={teacherId}
+                    onChange={(e) => setTeacherId(e.target.value)}
+                    placeholder="e.g. T1000"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="password">Password</Label>
+                  <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                </div>
+              </>
             ) : (
               <>
                 <div className="space-y-1.5">

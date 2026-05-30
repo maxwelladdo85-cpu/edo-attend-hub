@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-export const signInWithTeacherId = createServerFn({ method: "POST" })
+export const resolveTeacherEmail = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z
       .object({
@@ -25,13 +25,5 @@ export const signInWithTeacherId = createServerFn({ method: "POST" })
     if (userErr || !userResp?.user?.email)
       throw new Error("Unable to locate teacher account");
 
-    const { data: linkData, error: linkErr } =
-      await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
-        email: userResp.user.email,
-      });
-    if (linkErr || !linkData?.properties?.action_link)
-      throw new Error(linkErr?.message ?? "Failed to create sign-in link");
-
-    return { actionLink: linkData.properties.action_link };
+    return { email: userResp.user.email };
   });
