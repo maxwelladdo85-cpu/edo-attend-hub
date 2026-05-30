@@ -10,6 +10,7 @@ import { DashboardShell, roleLabelFor } from "@/components/DashboardShell";
 import { StatCard } from "@/components/StatCard";
 import { distanceMeters, getCurrentPosition, classifyArrival, classifyDeparture } from "@/lib/geo";
 import { AssignTeachersPanel } from "@/components/AssignTeachersPanel";
+import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — EdoSUBEB Smart Attendance" }] }),
@@ -239,34 +240,7 @@ function TeacherView() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
-        <div className="p-5 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <GraduationIcon className="h-4 w-4 text-primary" />
-            <h3 className="font-display font-semibold">My students {profile?.class_taught ? `· ${profile.class_taught}` : ""}</h3>
-          </div>
-          <span className="text-xs text-muted-foreground">{students.length} total</span>
-        </div>
-        {students.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground text-sm">
-            {profile?.class_taught ? "No students in your class yet." : "Class not assigned yet."}
-          </div>
-        ) : (
-          <div className="divide-y divide-border">
-            {students.map((s) => (
-              <div key={s.id} className="p-4 flex items-center gap-3">
-                <div className="h-9 w-9 rounded-lg bg-primary/10 grid place-items-center font-mono text-xs font-semibold text-primary">
-                  {s.student_id}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{s.full_name}</div>
-                  <div className="text-xs text-muted-foreground">{s.class}{s.gender ? ` · ${s.gender}` : ""}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <StudentAttendancePanel />
     </div>
   );
 }
