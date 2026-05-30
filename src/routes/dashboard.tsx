@@ -425,6 +425,8 @@ function AdminView() {
         <StatCard icon={AlertCircle} label="Absent today" value={Math.max(0, stats.absent)} tone="destructive" />
       </div>
 
+      <AssignTeachersPanel />
+
       <div className="rounded-2xl border border-border bg-card shadow-card overflow-hidden">
         <div className="p-5 border-b border-border flex items-center gap-2">
           <Activity className="h-4 w-4 text-primary" />
