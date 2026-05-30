@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { resolveTeacherEmail } from "@/lib/teacher-auth.functions";
+import authBg from "@/assets/auth-bg.png";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
