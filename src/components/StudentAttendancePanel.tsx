@@ -41,29 +41,40 @@ const MARKS: { value: Mark; label: string; cls: string }[] = [
 ];
 
 export function StudentAttendancePanel() {
-  const { user, profile } = useAuth();
+  const { user, profile, roles } = useAuth();
+  const isHead = primaryRole(roles) === "head_teacher";
   const [date, setDate] = useState<Date>(new Date());
   const [students, setStudents] = useState<Student[]>([]);
   const [rows, setRows] = useState<Record<string, AttendanceRow>>({});
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [classFilter, setClassFilter] = useState<string>("all");
 
   const dateStr = format(date, "yyyy-MM-dd");
 
   useEffect(() => {
     const load = async () => {
-      if (!profile?.school_id || !profile?.class_taught) {
+      if (!profile?.school_id) {
+        setLoading(false);
+        return;
+      }
+      // Teachers need a class assigned; head teachers see all classes in the school
+      if (!isHead && !profile?.class_taught) {
         setLoading(false);
         return;
       }
       setLoading(true);
+      let studentsQuery = supabase
+        .from("students")
+        .select("*")
+        .eq("school_id", profile.school_id)
+        .order("class", { ascending: true })
+        .order("student_id", { ascending: true });
+      if (!isHead) {
+        studentsQuery = studentsQuery.eq("class", profile.class_taught!);
+      }
       const [{ data: st }, { data: att }] = await Promise.all([
-        supabase
-          .from("students")
-          .select("*")
-          .eq("school_id", profile.school_id)
-          .eq("class", profile.class_taught)
-          .order("student_id", { ascending: true }),
+        studentsQuery,
         supabase
           .from("student_attendance")
           .select("*")
@@ -77,7 +88,7 @@ export function StudentAttendancePanel() {
       setLoading(false);
     };
     load();
-  }, [profile?.school_id, profile?.class_taught, dateStr]);
+  }, [profile?.school_id, profile?.class_taught, dateStr, isHead]);
 
   const mark = async (student: Student, session: Session, value: Mark | null) => {
     if (!user || !profile?.school_id) return;
