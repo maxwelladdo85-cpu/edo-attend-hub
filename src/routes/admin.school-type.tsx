@@ -11,6 +11,7 @@ import {
   useStudentAttendanceToday,
   isStudentPresent,
   prettyCategory,
+  safePct,
 } from "@/lib/admin-data";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
