@@ -1,0 +1,182 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo } from "react";
+import { BarChart3 } from "lucide-react";
+import { AdminPageHeader } from "@/components/AdminShell";
+import {
+  useSchools,
+  useTeacherProfiles,
+  useStudents,
+  useTeacherAttendanceToday,
+  useStudentAttendanceToday,
+  isStudentPresent,
+  prettyLga,
+  prettyCategory,
+} from "@/lib/admin-data";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+
+export const Route = createFileRoute("/admin/analytics")({
+  component: AnalyticsPage,
+});
+
+const COLORS = {
+  green: "oklch(0.45 0.13 150)",
+  brightGreen: "oklch(0.65 0.17 148)",
+  gold: "oklch(0.74 0.15 80)",
+  red: "oklch(0.55 0.21 27)",
+  muted: "oklch(0.85 0.02 150)",
+};
+
+function AnalyticsPage() {
+  const { data: schools = [] } = useSchools();
+  const { data: teachers = [] } = useTeacherProfiles();
+  const { data: students = [] } = useStudents();
+  const { data: tAtt = [] } = useTeacherAttendanceToday();
+  const { data: sAtt = [] } = useStudentAttendanceToday();
+
+  const teachersPresent = tAtt.filter((r) => r.arrival_time).length;
+  const teachersLate = tAtt.filter((r) => r.arrival_status === "late").length;
+  const teachersOnTime = tAtt.filter((r) => r.arrival_status === "on_time" || r.arrival_status === "early").length;
+  const teachersAbsent = Math.max(0, teachers.length - teachersPresent);
+
+  const studentsPresent = sAtt.filter(isStudentPresent).length;
+  const studentsAbsent = Math.max(0, students.length - studentsPresent);
+
+  const teacherPie = [
+    { name: "On time", value: teachersOnTime, fill: COLORS.brightGreen },
+    { name: "Late", value: teachersLate, fill: COLORS.gold },
+    { name: "Absent", value: teachersAbsent, fill: COLORS.red },
+  ];
+  const studentPie = [
+    { name: "Present", value: studentsPresent, fill: COLORS.brightGreen },
+    { name: "Not marked", value: studentsAbsent, fill: COLORS.muted },
+  ];
+
+  const lgaChart = useMemo(() => {
+    const schoolToLga = new Map(schools.map((s) => [s.id, s.lga]));
+    const lgas = new Map<string, { lga: string; teachers: number; tPresent: number; students: number; sPresent: number }>();
+    for (const s of schools) {
+      const cur = lgas.get(s.lga) ?? { lga: s.lga, teachers: 0, tPresent: 0, students: 0, sPresent: 0 };
+      lgas.set(s.lga, cur);
+    }
+    for (const t of teachers) {
+      const lga = t.school_id ? schoolToLga.get(t.school_id) : null;
+      if (!lga) continue; lgas.get(lga)!.teachers += 1;
+    }
+    for (const r of tAtt) {
+      const lga = r.school_id ? schoolToLga.get(r.school_id) : null;
+      if (!lga || !r.arrival_time) continue; lgas.get(lga)!.tPresent += 1;
+    }
+    for (const st of students) {
+      const lga = schoolToLga.get(st.school_id); if (!lga) continue; lgas.get(lga)!.students += 1;
+    }
+    for (const r of sAtt) {
+      const lga = schoolToLga.get(r.school_id); if (!lga || !isStudentPresent(r)) continue; lgas.get(lga)!.sPresent += 1;
+    }
+    return Array.from(lgas.values())
+      .map((r) => ({ name: prettyLga(r.lga), Pupils: r.students ? Math.round((r.sPresent / r.students) * 100) : 0, Teachers: r.teachers ? Math.round((r.tPresent / r.teachers) * 100) : 0 }))
+      .sort((a, b) => b.Pupils - a.Pupils)
+      .slice(0, 10);
+  }, [schools, teachers, students, tAtt, sAtt]);
+
+  const typeBar = useMemo(() => {
+    const schoolToCat = new Map(schools.map((s) => [s.id, s.category ?? "other"]));
+    const buckets = new Map<string, { name: string; teachers: number; tPresent: number; students: number; sPresent: number }>();
+    for (const s of schools) {
+      const c = s.category ?? "other";
+      buckets.set(c, buckets.get(c) ?? { name: prettyCategory(c), teachers: 0, tPresent: 0, students: 0, sPresent: 0 });
+    }
+    for (const t of teachers) {
+      const c = t.school_id ? schoolToCat.get(t.school_id) : null;
+      if (!c) continue; buckets.get(c)!.teachers += 1;
+    }
+    for (const r of tAtt) {
+      const c = r.school_id ? schoolToCat.get(r.school_id) : null;
+      if (!c || !r.arrival_time) continue; buckets.get(c)!.tPresent += 1;
+    }
+    for (const st of students) {
+      const c = schoolToCat.get(st.school_id); if (!c) continue; buckets.get(c)!.students += 1;
+    }
+    for (const r of sAtt) {
+      const c = schoolToCat.get(r.school_id); if (!c || !isStudentPresent(r)) continue; buckets.get(c)!.sPresent += 1;
+    }
+    return Array.from(buckets.values()).map((r) => ({ name: r.name, Pupils: r.students ? Math.round((r.sPresent / r.students) * 100) : 0, Teachers: r.teachers ? Math.round((r.tPresent / r.teachers) * 100) : 0 }));
+  }, [schools, teachers, students, tAtt, sAtt]);
+
+  return (
+    <div>
+      <AdminPageHeader title="Analytics" subtitle="Charts and insights across the Edo State network" icon={BarChart3} />
+
+      <div className="grid lg:grid-cols-2 gap-4 mb-6">
+        <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card p-4 sm:p-5">
+          <h3 className="font-display font-semibold mb-4">Teacher status today</h3>
+          <ChartContainer config={{}} className="aspect-auto h-72">
+            <PieChart>
+              <Pie data={teacherPie} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                {teacherPie.map((e, i) => <Cell key={i} fill={e.fill} />)}
+              </Pie>
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Legend />
+            </PieChart>
+          </ChartContainer>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card p-4 sm:p-5">
+          <h3 className="font-display font-semibold mb-4">Pupil status today</h3>
+          <ChartContainer config={{}} className="aspect-auto h-72">
+            <PieChart>
+              <Pie data={studentPie} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                {studentPie.map((e, i) => <Cell key={i} fill={e.fill} />)}
+              </Pie>
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Legend />
+            </PieChart>
+          </ChartContainer>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card p-4 sm:p-5 mb-6">
+        <h3 className="font-display font-semibold mb-1">Top 10 LGAs by pupil attendance</h3>
+        <p className="text-xs text-muted-foreground mb-4">Percentage present today</p>
+        <ChartContainer
+          config={{
+            Pupils: { label: "Pupils", color: COLORS.brightGreen },
+            Teachers: { label: "Teachers", color: COLORS.green },
+          }}
+          className="aspect-auto h-80"
+        >
+          <BarChart data={lgaChart} margin={{ top: 5, right: 10, left: 0, bottom: 60 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" angle={-30} textAnchor="end" interval={0} tick={{ fontSize: 11 }} height={70} />
+            <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Legend />
+            <Bar dataKey="Pupils" fill="var(--color-Pupils)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="Teachers" fill="var(--color-Teachers)" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ChartContainer>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card p-4 sm:p-5">
+        <h3 className="font-display font-semibold mb-4">School type comparison</h3>
+        <ChartContainer
+          config={{
+            Pupils: { label: "Pupils", color: COLORS.brightGreen },
+            Teachers: { label: "Teachers", color: COLORS.green },
+          }}
+          className="aspect-auto h-72"
+        >
+          <BarChart data={typeBar} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+            <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Legend />
+            <Bar dataKey="Pupils" fill="var(--color-Pupils)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="Teachers" fill="var(--color-Teachers)" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ChartContainer>
+      </div>
+    </div>
+  );
+}
