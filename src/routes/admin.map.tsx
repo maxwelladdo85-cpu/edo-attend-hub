@@ -11,6 +11,7 @@ import {
   isStudentPresent,
   prettyLga,
   prettyCategory,
+  safePct,
 } from "@/lib/admin-data";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import L from "leaflet";
