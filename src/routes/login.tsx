@@ -38,12 +38,12 @@ function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      let signInEmail = email;
       if (role === "teacher") {
-        const { actionLink } = await teacherSignIn({ data: { teacherId } });
-        window.location.href = actionLink;
-        return;
+        const { email: resolved } = await resolveEmail({ data: { teacherId } });
+        signInEmail = resolved;
       }
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email: signInEmail, password });
       if (error) {
         toast.error(error.message);
         return;
