@@ -222,11 +222,17 @@ function SessionCheck({ icon: Icon, label, current, markedAt, lat, lng, saving, 
 }) {
   const checked = current === "present";
   return (
-    <label className={cn(
-      "flex flex-col gap-1 rounded-lg border border-border px-3 py-2 cursor-pointer transition min-w-[140px]",
-      checked ? "bg-success/10 border-success/40" : "bg-background hover:bg-muted",
-      saving && "opacity-60 cursor-wait",
-    )}>
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => !saving && onToggle(!checked)}
+      onKeyDown={(e) => { if (!saving && (e.key === " " || e.key === "Enter")) { e.preventDefault(); onToggle(!checked); } }}
+      className={cn(
+        "flex flex-col gap-1 rounded-lg border border-border px-3 py-2 cursor-pointer transition min-w-[140px] select-none",
+        checked ? "bg-success/10 border-success/40" : "bg-background hover:bg-muted",
+        saving && "opacity-60 cursor-wait",
+      )}>
+
       <div className="flex items-center gap-2">
         <Checkbox
           checked={checked}
