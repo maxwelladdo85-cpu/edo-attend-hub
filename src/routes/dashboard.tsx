@@ -90,7 +90,7 @@ function TeacherView() {
 
   const isHead = primaryRole(roles) === "head_teacher";
   const idLabel = isHead ? "Head Teacher ID" : "Teacher ID";
-  const cardBg = isHead ? "bg-head-teacher-card" : "bg-card";
+  const cardBg = "bg-head-teacher-card";
 
   const load = async () => {
     if (!user) return;
