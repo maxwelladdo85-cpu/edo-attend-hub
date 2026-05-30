@@ -127,16 +127,16 @@ function LoginPage() {
               </div>
             </div>
 
-            {role === "teacher" ? (
+            {role === "teacher" || role === "head_teacher" ? (
               <>
                 <div className="space-y-1.5">
-                  <Label htmlFor="teacherId">Teacher ID</Label>
+                  <Label htmlFor="teacherId">{role === "head_teacher" ? "Head Teacher ID" : "Teacher ID"}</Label>
                   <Input
                     id="teacherId"
                     required
                     value={teacherId}
                     onChange={(e) => setTeacherId(e.target.value)}
-                    placeholder="e.g. T1000"
+                    placeholder={role === "head_teacher" ? "e.g. H1000" : "e.g. T1000"}
                   />
                 </div>
                 <div className="space-y-1.5">
