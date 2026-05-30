@@ -11,6 +11,7 @@ import {
   isStudentPresent,
   prettyLga,
   prettyCategory,
+  safePct,
 } from "@/lib/admin-data";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
