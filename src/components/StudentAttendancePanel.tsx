@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -221,18 +222,23 @@ function SessionCheck({ icon: Icon, label, current, markedAt, lat, lng, saving, 
 }) {
   const checked = current === "present";
   return (
-    <label className={cn(
-      "flex flex-col gap-1 rounded-lg border border-border px-3 py-2 cursor-pointer transition min-w-[140px]",
-      checked ? "bg-success/10 border-success/40" : "bg-background hover:bg-muted",
-      saving && "opacity-60 cursor-wait",
-    )}>
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => !saving && onToggle(!checked)}
+      onKeyDown={(e) => { if (!saving && (e.key === " " || e.key === "Enter")) { e.preventDefault(); onToggle(!checked); } }}
+      className={cn(
+        "flex flex-col gap-1 rounded-lg border border-border px-3 py-2 cursor-pointer transition min-w-[140px] select-none",
+        checked ? "bg-success/10 border-success/40" : "bg-background hover:bg-muted",
+        saving && "opacity-60 cursor-wait",
+      )}>
+
       <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={checked}
           disabled={saving}
-          onChange={(e) => onToggle(e.target.checked)}
-          className="h-4 w-4 rounded border-border accent-primary cursor-pointer"
+          onCheckedChange={(v) => onToggle(v === true)}
+          className="h-5 w-5"
         />
         <Icon className="h-3.5 w-3.5 text-muted-foreground" />
         <span className="text-xs font-medium">{label}</span>
@@ -260,6 +266,6 @@ function SessionCheck({ icon: Icon, label, current, markedAt, lat, lng, saving, 
           )}
         </div>
       )}
-    </label>
+    </div>
   );
 }
