@@ -54,7 +54,7 @@ function SignupPage() {
   const { session } = useAuth();
   const [form, setForm] = useState({
     fullName: "",
-    email: "",
+    teacherId: "",
     phone: "",
     password: "",
     role: "teacher" as Role,
@@ -113,8 +113,9 @@ function SignupPage() {
     }
     setLoading(true);
     const redirectUrl = `${window.location.origin}/dashboard`;
+    const authEmail = form.teacherId.includes("@") ? form.teacherId : `${form.teacherId}@edosubeb.gov.ng`;
     const { error } = await supabase.auth.signUp({
-      email: form.email,
+      email: authEmail,
       password: form.password,
       options: {
         emailRedirectTo: redirectUrl,
@@ -124,6 +125,7 @@ function SignupPage() {
           role: form.role,
           school_id: needsSchool ? form.schoolId : null,
           class_taught: needsSchool ? form.classTaught : null,
+          teacher_id: form.teacherId,
         },
       },
     });
@@ -136,7 +138,7 @@ function SignupPage() {
     navigate({ to: "/login", replace: true });
   };
 
-  const updateText = (k: "fullName" | "email" | "phone" | "password") =>
+  const updateText = (k: "fullName" | "teacherId" | "phone" | "password") =>
     (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -176,8 +178,8 @@ function SignupPage() {
               <Input id="fullName" required value={form.fullName} onChange={updateText("fullName")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" required value={form.email} onChange={updateText("email")} />
+              <Label htmlFor="teacherId">Teacher ID</Label>
+              <Input id="teacherId" type="text" required value={form.teacherId} onChange={updateText("teacherId")} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="phone">Phone</Label>
