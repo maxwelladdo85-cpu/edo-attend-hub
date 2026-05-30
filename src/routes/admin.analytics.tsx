@@ -82,7 +82,7 @@ function AnalyticsPage() {
       const lga = schoolToLga.get(r.school_id); if (!lga || !isStudentPresent(r)) continue; lgas.get(lga)!.sPresent += 1;
     }
     return Array.from(lgas.values())
-      .map((r) => ({ name: prettyLga(r.lga), Pupils: r.students ? Math.round((r.sPresent / r.students) * 100) : 0, Teachers: r.teachers ? Math.round((r.tPresent / r.teachers) * 100) : 0 }))
+      .map((r) => ({ name: prettyLga(r.lga), Pupils: safePct(r.sPresent, r.students), Teachers: safePct(r.tPresent, r.teachers) }))
       .sort((a, b) => b.Pupils - a.Pupils)
       .slice(0, 10);
   }, [schools, teachers, students, tAtt, sAtt]);
