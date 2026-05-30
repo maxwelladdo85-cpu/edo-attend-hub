@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, MapPin, LogIn, LogOut, Users, School, Clock, AlertCircle, CheckCircle2, UserCheck, Building2, Activity, GraduationCap as GraduationIcon } from "lucide-react";
+import { Loader2, MapPin, LogIn, LogOut, Clock, AlertCircle, CheckCircle2, UserCheck, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,6 @@ import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { DashboardShell, roleLabelFor } from "@/components/DashboardShell";
 import { StatCard } from "@/components/StatCard";
 import { distanceMeters, getCurrentPosition, classifyArrival, classifyDeparture } from "@/lib/geo";
-import { AssignTeachersPanel } from "@/components/AssignTeachersPanel";
 import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
 
 export const Route = createFileRoute("/dashboard")({
