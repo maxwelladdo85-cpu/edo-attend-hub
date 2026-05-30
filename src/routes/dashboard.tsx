@@ -37,17 +37,23 @@ function DashboardPage() {
 
   return (
     <DashboardShell nav={[]} roleLabel={label}>
-      {role === "teacher" && <TeacherView />}
-      {role === "head_teacher" && <HeadTeacherView />}
-      {role === "admin" && <AdminView />}
-      {!profile?.school_id && role !== "admin" && (
-        <div className="mt-6 rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm flex gap-3">
-          <AlertCircle className="h-5 w-5 text-warning-foreground flex-shrink-0" />
-          <div>
-            <div className="font-medium text-foreground">No school assigned yet</div>
-            <div className="text-muted-foreground mt-1">An EdoSUBEB administrator must assign you to a school before you can mark attendance.</div>
-          </div>
-        </div>
+      {role === "admin" ? (
+        <AdminView />
+      ) : role === "head_teacher" ? (
+        <HeadTeacherView />
+      ) : (
+        <>
+          <TeacherView />
+          {!profile?.school_id && (
+            <div className="mt-6 rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm flex gap-3">
+              <AlertCircle className="h-5 w-5 text-warning-foreground flex-shrink-0" />
+              <div>
+                <div className="font-medium text-foreground">No school assigned yet</div>
+                <div className="text-muted-foreground mt-1">An EdoSUBEB administrator must assign you to a school before you can mark attendance.</div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </DashboardShell>
   );
