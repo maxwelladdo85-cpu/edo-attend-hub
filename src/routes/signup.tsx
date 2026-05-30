@@ -117,7 +117,7 @@ function SignupPage() {
       toast.error("Please select your school");
       return;
     }
-    if (needsSchool && !form.classTaught) {
+    if (needsSchool && form.role === "teacher" && !form.classTaught) {
       toast.error("Please select the class you teach");
       return;
     }
@@ -139,7 +139,7 @@ function SignupPage() {
           phone: form.phone,
           role: form.role,
           school_id: needsSchool ? form.schoolId : null,
-          class_taught: needsSchool ? form.classTaught : null,
+          class_taught: needsSchool && form.role === "teacher" ? form.classTaught : null,
           teacher_id: form.role === "admin" ? null : form.teacherId,
         },
       },
@@ -293,31 +293,35 @@ function SignupPage() {
                   </Select>
                 </div>
 
-                <div className="space-y-1.5">
-                  <Label>Class taught</Label>
-                  <Select
-                    value={form.classTaught}
-                    onValueChange={(v) => setForm((f) => ({ ...f, classTaught: v }))}
-                    disabled={!form.category}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={form.category ? "Select class" : "Pick school type first"} />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-72">
-                      {form.category &&
-                        CLASS_GROUPS[form.category].map((group) => (
-                          <SelectGroup key={group.label}>
-                            <SelectLabel>{group.label}</SelectLabel>
-                            {group.options.map((opt) => (
-                              <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                            ))}
-                          </SelectGroup>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {form.role === "teacher" && (
+                  <div className="space-y-1.5">
+                    <Label>Class taught</Label>
+                    <Select
+                      value={form.classTaught}
+                      onValueChange={(v) => setForm((f) => ({ ...f, classTaught: v }))}
+                      disabled={!form.category}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={form.category ? "Select class" : "Pick school type first"} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        {form.category &&
+                          CLASS_GROUPS[form.category].map((group) => (
+                            <SelectGroup key={group.label}>
+                              <SelectLabel>{group.label}</SelectLabel>
+                              {group.options.map((opt) => (
+                                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                              ))}
+                            </SelectGroup>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </>
             )}
+
+
 
             <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
