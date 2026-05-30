@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
@@ -15,12 +15,6 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [{ title: "Sign in — EdoSUBEB Smart Attendance" }],
   }),
-  beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      throw redirect({ to: "/dashboard" });
-    }
-  },
   component: LoginPage,
 });
 
