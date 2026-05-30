@@ -318,6 +318,10 @@ function SignupPage() {
                     </Select>
                   </div>
                 )}
+              </>
+            )}
+
+
 
             <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
