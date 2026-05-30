@@ -7,12 +7,14 @@ export function StatCard({
   value,
   hint,
   tone = "default",
+  className,
 }: {
   icon: LucideIcon;
   label: string;
   value: ReactNode;
   hint?: string;
   tone?: "default" | "success" | "warning" | "destructive" | "gold";
+  className?: string;
 }) {
   const toneStyles = {
     default: "bg-primary/10 text-primary",
