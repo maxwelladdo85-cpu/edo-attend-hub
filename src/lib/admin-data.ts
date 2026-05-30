@@ -55,6 +55,18 @@ export function prettyCategory(c: string | null) {
   return c;
 }
 
+// Reference (entity) datasets — change rarely. Cache for 10 min, keep in
+// memory 30 min so navigating between admin tabs is instant after first load.
+const REF_STALE = 10 * 60_000;
+const REF_GC = 30 * 60_000;
+
+// Attendance — changes throughout the day. 60s stale, refetch every 90s
+// only when the tab is focused, so switching sidebar sections is instant
+// and background tabs don't spam the API.
+const ATT_STALE = 60_000;
+const ATT_GC = 10 * 60_000;
+const ATT_REFETCH = 90_000;
+
 export function useSchools() {
   return useQuery({
     queryKey: ["admin", "schools"],
@@ -66,7 +78,9 @@ export function useSchools() {
       if (error) throw error;
       return (data ?? []) as SchoolLite[];
     },
-    staleTime: 60_000,
+    staleTime: REF_STALE,
+    gcTime: REF_GC,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -88,7 +102,9 @@ export function useTeacherProfiles() {
       if (error) throw error;
       return (data ?? []) as TeacherProfileLite[];
     },
-    staleTime: 60_000,
+    staleTime: REF_STALE,
+    gcTime: REF_GC,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -103,7 +119,9 @@ export function useStudents() {
       if (error) throw error;
       return (data ?? []) as StudentLite[];
     },
-    staleTime: 60_000,
+    staleTime: REF_STALE,
+    gcTime: REF_GC,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -129,7 +147,11 @@ export function useTeacherAttendanceToday() {
       }
       return Array.from(byTeacher.values());
     },
-    refetchInterval: 30_000,
+    staleTime: ATT_STALE,
+    gcTime: ATT_GC,
+    refetchInterval: ATT_REFETCH,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -160,7 +182,11 @@ export function useStudentAttendanceToday() {
       }
       return Array.from(byStudent.values());
     },
-    refetchInterval: 30_000,
+    staleTime: ATT_STALE,
+    gcTime: ATT_GC,
+    refetchInterval: ATT_REFETCH,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
   });
 }
 

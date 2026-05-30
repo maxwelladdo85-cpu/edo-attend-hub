@@ -16,6 +16,13 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  useSchools,
+  useTeacherProfiles,
+  useStudents,
+  useTeacherAttendanceToday,
+  useStudentAttendanceToday,
+} from "@/lib/admin-data";
 import { toast } from "sonner";
 
 const NAV = [
@@ -32,6 +39,14 @@ export function AdminShell() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Warm the shared admin caches once the shell mounts so every sidebar
+  // section navigates instantly from cached data.
+  useSchools();
+  useTeacherProfiles();
+  useStudents();
+  useTeacherAttendanceToday();
+  useStudentAttendanceToday();
 
   useEffect(() => {
     if (loading) return;
