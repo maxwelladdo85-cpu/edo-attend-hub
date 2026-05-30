@@ -67,14 +67,14 @@ function OverviewPage() {
             <div className="text-xs uppercase tracking-wider opacity-80">Pupils present statewide</div>
             <div className="mt-2 flex items-baseline gap-3">
               <div className="text-5xl font-bold font-display">{studentPct}%</div>
-              <div className="text-sm opacity-90">{studentsPresent.toLocaleString()} of {students.length.toLocaleString()}</div>
+              <div className="text-sm opacity-90">{studentsPresent.toLocaleString()} of {studentDenom.toLocaleString()}</div>
             </div>
           </div>
           <div>
             <div className="text-xs uppercase tracking-wider opacity-80">Teachers present statewide</div>
             <div className="mt-2 flex items-baseline gap-3">
               <div className="text-5xl font-bold font-display">{teacherPct}%</div>
-              <div className="text-sm opacity-90">{teachersPresent.toLocaleString()} of {teachers.length.toLocaleString()}</div>
+              <div className="text-sm opacity-90">{teachersPresent.toLocaleString()} of {teacherDenom.toLocaleString()}</div>
             </div>
           </div>
         </div>
