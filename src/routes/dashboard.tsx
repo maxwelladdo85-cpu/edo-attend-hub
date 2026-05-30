@@ -253,7 +253,7 @@ function TeacherView() {
       </div>
 
       {school && (
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+        <div className={`rounded-2xl border border-border ${cardBg} p-6 shadow-card`}>
           <h3 className="font-display font-semibold mb-3">School details</h3>
           <div className="grid sm:grid-cols-2 gap-4 text-sm">
             <Info label="Resumption time" value={school.resumption_time?.slice(0,5)} icon={Clock} />
