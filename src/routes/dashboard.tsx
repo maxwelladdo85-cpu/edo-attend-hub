@@ -70,7 +70,7 @@ function DashboardPage() {
 
 /* ----------------------- TEACHER ----------------------- */
 function TeacherView() {
-  const { user, profile } = useAuth();
+  const { user, profile, refresh } = useAuth();
   const [school, setSchool] = useState<any>(null);
   const [today, setToday] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
@@ -92,6 +92,12 @@ function TeacherView() {
     setToday(a);
     setStudents(st ?? []);
   };
+
+  useEffect(() => {
+    if (user && (!profile?.school_id || !profile?.class_taught)) {
+      void refresh();
+    }
+  }, [user, profile?.school_id, profile?.class_taught, refresh]);
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id, profile?.school_id, profile?.class_taught]);
 
