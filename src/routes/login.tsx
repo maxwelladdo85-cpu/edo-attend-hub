@@ -23,7 +23,7 @@ type Role = "teacher" | "head_teacher" | "admin";
 function LoginPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
-  const teacherSignIn = useServerFn(signInWithTeacherId);
+  const resolveEmail = useServerFn(resolveTeacherEmail);
   const [role, setRole] = useState<Role>("teacher");
   const [teacherId, setTeacherId] = useState("");
   const [email, setEmail] = useState("");
