@@ -82,7 +82,13 @@ function OverviewPage() {
 
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Network</h2>
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
-        <StatCard icon={SchoolIcon} label="Schools" value={schools.length} className="bg-head-teacher-card" />
+        <StatCard
+          icon={SchoolIcon}
+          label="Schools"
+          value={schools.length}
+          hint={`${schools.filter((s) => s.category === "primary").length} Primary · ${schools.filter((s) => s.category === "junior_secondary").length} Junior Sec.`}
+          className="bg-head-teacher-card"
+        />
         <StatCard icon={Users} label="Teachers" value={teachers.length} className="bg-head-teacher-card" />
         <StatCard icon={GraduationCap} label="Students" value={students.length} tone="gold" className="bg-head-teacher-card" />
       </div>
