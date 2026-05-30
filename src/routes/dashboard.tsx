@@ -56,7 +56,12 @@ function DashboardPage() {
       {role === "admin" ? (
         <AdminView />
       ) : role === "head_teacher" ? (
-        <HeadTeacherView />
+        <>
+          <TeacherView />
+          <div className="mt-8">
+            <HeadTeacherView />
+          </div>
+        </>
       ) : (
         <>
           <TeacherView />
