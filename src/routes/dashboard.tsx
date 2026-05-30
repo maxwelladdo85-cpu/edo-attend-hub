@@ -378,6 +378,7 @@ function HeadTeacherView() {
 
 /* ----------------------- ADMIN ----------------------- */
 function AdminView() {
+  const { profile } = useAuth();
   const [stats, setStats] = useState({ schools: 0, teachers: 0, students: 0, present: 0, late: 0, absent: 0 });
   const [feed, setFeed] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -387,7 +388,7 @@ function AdminView() {
       const dateStr = new Date().toISOString().slice(0, 10);
       const [{ count: schools }, { count: teachers }, { count: students }, { data: att }] = await Promise.all([
         supabase.from("schools").select("*", { count: "exact", head: true }),
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
+        supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "teacher"),
         supabase.from("students").select("*", { count: "exact", head: true }),
         supabase.from("teacher_attendance").select("*").eq("attendance_date", dateStr).order("arrival_time", { ascending: false }).limit(20),
       ]);
