@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
@@ -15,6 +15,12 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [{ title: "Sign in — EdoSUBEB Smart Attendance" }],
   }),
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      throw redirect({ to: "/dashboard" });
+    }
+  },
   component: LoginPage,
 });
 
@@ -22,7 +28,7 @@ type Role = "teacher" | "head_teacher" | "admin";
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { session, loading, roles, profile } = useAuth();
   const resolveEmail = useServerFn(resolveTeacherEmail);
   const [role, setRole] = useState<Role>("teacher");
   const [teacherId, setTeacherId] = useState("");
@@ -31,8 +37,10 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (session) navigate({ to: "/dashboard", replace: true });
-  }, [session, navigate]);
+    if (!session || loading) return;
+    if (roles.length === 0 || !profile) return;
+    navigate({ to: "/dashboard", replace: true });
+  }, [session, loading, roles.length, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +61,6 @@ function LoginPage() {
         return;
       }
       toast.success("Welcome back");
-      navigate({ to: "/dashboard", replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Sign in failed");
     } finally {
