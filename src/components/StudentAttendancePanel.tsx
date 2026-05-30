@@ -259,7 +259,8 @@ export function StudentAttendancePanel() {
             );
           })}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
