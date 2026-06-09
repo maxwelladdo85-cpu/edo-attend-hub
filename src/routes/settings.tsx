@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, ShieldAlert, Trash2, ArrowLeft, User as UserIcon } from "lucide-react";
+import { Loader2, ShieldAlert, Trash2, ArrowLeft, User as UserIcon, Save, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,14 +27,33 @@ export const Route = createFileRoute("/settings")({
 });
 
 function SettingsPage() {
-  const { session, loading, profile, roles, signOut } = useAuth();
+  const { session, loading, profile, roles, signOut, refresh } = useAuth();
   const navigate = useNavigate();
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    full_name: "",
+    phone: "",
+    designation: "",
+    class_taught: "",
+  });
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/login", replace: true });
   }, [loading, session, navigate]);
+
+  useEffect(() => {
+    if (profile) {
+      setForm({
+        full_name: profile.full_name || "",
+        phone: profile.phone || "",
+        designation: profile.designation || "",
+        class_taught: profile.class_taught || "",
+      });
+    }
+  }, [profile]);
 
   if (loading || !session || !profile) {
     return (
@@ -46,6 +65,31 @@ function SettingsPage() {
 
   const role = primaryRole(roles);
   const label = roleLabelFor(role);
+
+  const handleSave = async () => {
+    if (!session?.user?.id) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: form.full_name.trim(),
+          phone: form.phone.trim() || null,
+          designation: form.designation.trim() || null,
+          class_taught: form.class_taught.trim() || null,
+        })
+        .eq("user_id", session.user.id);
+      if (error) throw error;
+      await refresh();
+      toast.success("Profile updated");
+      setEditing(false);
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message ?? "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (confirmText.trim().toUpperCase() !== "DELETE") {
@@ -78,32 +122,104 @@ function SettingsPage() {
       )}
 
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold font-display">Settings</h1>
+        <h1 className="text-2xl md:text-3xl font-bold font-display">My Profile</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Manage your account preferences and data.
+          View and edit your account information.
         </p>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <UserIcon className="h-4 w-4" /> Account
-          </CardTitle>
-          <CardDescription>Your account details</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <UserIcon className="h-4 w-4" /> Account
+            </CardTitle>
+            <CardDescription>Your account details</CardDescription>
+          </div>
+          {!editing ? (
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="tap-target">
+              <Pencil className="h-4 w-4 mr-1.5" /> Edit
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setEditing(false)} className="tap-target">
+                <X className="h-4 w-4 mr-1.5" /> Cancel
+              </Button>
+              <Button variant="default" size="sm" onClick={handleSave} disabled={saving} className="tap-target">
+                {saving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />}
+                Save
+              </Button>
+            </div>
+          )}
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <div className="flex justify-between gap-4">
-            <span className="text-muted-foreground">Name</span>
-            <span className="font-medium text-right">{profile.full_name}</span>
-          </div>
-          <div className="flex justify-between gap-4">
-            <span className="text-muted-foreground">Email</span>
-            <span className="font-medium text-right break-all">{session.user?.email ?? "—"}</span>
-          </div>
-          <div className="flex justify-between gap-4">
-            <span className="text-muted-foreground">Role</span>
-            <span className="font-medium text-right">{label}</span>
-          </div>
+        <CardContent className="space-y-4 text-sm">
+          {editing ? (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="full_name">Full name</Label>
+                <Input
+                  id="full_name"
+                  value={form.full_name}
+                  onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))}
+                  placeholder="Your full name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone number</Label>
+                <Input
+                  id="phone"
+                  value={form.phone}
+                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                  placeholder="Phone number"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="designation">Designation</Label>
+                <Input
+                  id="designation"
+                  value={form.designation}
+                  onChange={(e) => setForm((f) => ({ ...f, designation: e.target.value }))}
+                  placeholder="e.g. Classroom Teacher"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="class_taught">Class taught</Label>
+                <Input
+                  id="class_taught"
+                  value={form.class_taught}
+                  onChange={(e) => setForm((f) => ({ ...f, class_taught: e.target.value }))}
+                  placeholder="e.g. Primary 3"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Name</span>
+                <span className="font-medium text-right">{profile.full_name}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Email</span>
+                <span className="font-medium text-right break-all">{session.user?.email ?? "—"}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Role</span>
+                <span className="font-medium text-right">{label}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Phone</span>
+                <span className="font-medium text-right">{profile.phone ?? "—"}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Designation</span>
+                <span className="font-medium text-right">{profile.designation ?? "—"}</span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Class taught</span>
+                <span className="font-medium text-right">{profile.class_taught ?? "—"}</span>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
