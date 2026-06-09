@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LogOut, type LucideIcon } from "lucide-react";
+import { LogOut, Settings as SettingsIcon, type LucideIcon } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
@@ -48,6 +48,14 @@ export function DashboardShell({
               <div className="text-sm font-medium">{profile?.full_name ?? "—"}</div>
               <div className="text-xs text-muted-foreground">{profile?.designation ?? roleLabel}</div>
             </div>
+            <Link
+              to="/settings"
+              className="inline-flex items-center justify-center h-9 px-3 rounded-md text-sm hover:bg-muted text-muted-foreground hover:text-foreground tap-target"
+              aria-label="Settings"
+            >
+              <SettingsIcon className="h-4 w-4 md:mr-1.5" />
+              <span className="hidden md:inline">Settings</span>
+            </Link>
             <Button variant="ghost" size="sm" onClick={handleLogout} className="tap-target">
               <LogOut className="h-4 w-4 md:mr-1.5" />
               <span className="hidden md:inline">Sign out</span>
