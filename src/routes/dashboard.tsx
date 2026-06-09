@@ -178,10 +178,13 @@ function TeacherView() {
         if (error) throw error;
         const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
         if (verified) {
+          void haptic("success");
           toast.success(`Arrival marked at ${timeLabel} — ${status.replace("_", " ")}`);
         } else if (dist !== null) {
+          void haptic("warning");
           toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)}m from ${school.name} (unverified).`);
         } else {
+          void haptic("warning");
           toast.warning(`Arrival recorded at ${timeLabel} without location (unverified).`);
         }
       } else {
@@ -199,10 +202,12 @@ function TeacherView() {
           .eq("attendance_date", dateStr);
         if (error) throw error;
         const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        void haptic("success");
         toast.success(`Departure marked at ${timeLabel} — ${status.replace("_", " ")}`);
       }
       await load();
     } catch (e: any) {
+      void haptic("error");
       toast.error(e.message ?? "Could not save attendance");
     } finally {
       setBusy(null);
@@ -242,7 +247,7 @@ function TeacherView() {
               <LogIn className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <Button onClick={() => mark("arrival")} disabled={!!busy || !!today?.arrival_time || !school} className="w-full mt-5 bg-gradient-primary hover:opacity-90">
+          <Button onClick={() => mark("arrival")} disabled={!!busy || !!today?.arrival_time || !school} className="w-full mt-5 bg-gradient-primary hover:opacity-90 h-12 text-base">
             {busy === "arrival" ? <Loader2 className="h-4 w-4 animate-spin" /> : today?.arrival_time ? "Already marked" : (<><MapPin className="h-4 w-4 mr-2" />Mark arrival</>)}
           </Button>
         </div>
@@ -260,7 +265,7 @@ function TeacherView() {
               <LogOut className="h-6 w-6 text-gold-foreground" />
             </div>
           </div>
-          <Button onClick={() => mark("departure")} disabled={!!busy || !today?.arrival_time || !!today?.departure_time || !school} variant="outline" className="w-full mt-5">
+          <Button onClick={() => mark("departure")} disabled={!!busy || !today?.arrival_time || !!today?.departure_time || !school} variant="outline" className="w-full mt-5 h-12 text-base">
             {busy === "departure" ? <Loader2 className="h-4 w-4 animate-spin" /> : today?.departure_time ? "Already marked" : !today?.arrival_time ? "Mark arrival first" : (<><MapPin className="h-4 w-4 mr-2" />Mark departure</>)}
           </Button>
         </div>
