@@ -379,6 +379,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      resolve_teacher_email: { Args: { _teacher_id: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "head_teacher" | "teacher"
