@@ -5,7 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routeTree } from "./routeTree.gen";
 import { AuthProvider } from "./contexts/AuthContext";
 import { Toaster } from "./components/ui/sonner";
+import { initNativeShell } from "./lib/native-init";
 import "./styles.css";
+
+// Configure native status bar / keyboard if running inside Capacitor.
+void initNativeShell();
 
 const queryClient = new QueryClient();
 

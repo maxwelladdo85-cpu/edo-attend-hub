@@ -121,9 +121,9 @@ export function AdminShell() {
   );
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-dvh bg-background flex">
       {/* Desktop sidebar */}
-      <aside className="hidden md:block w-64 flex-shrink-0 bg-sidebar border-r border-sidebar-border sticky top-0 h-screen">
+      <aside className="hidden md:block w-64 flex-shrink-0 bg-sidebar border-r border-sidebar-border sticky top-0 h-dvh pt-safe pb-safe pl-safe">
         {SidebarBody}
       </aside>
 
@@ -131,9 +131,9 @@ export function AdminShell() {
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-          <aside className="relative w-72 max-w-[85%] bg-sidebar border-r border-sidebar-border h-full">
+          <aside className="relative w-72 max-w-[85%] bg-sidebar border-r border-sidebar-border h-full pt-safe pb-safe pl-safe">
             <button
-              className="absolute top-3 right-3 p-1 rounded-md hover:bg-sidebar-accent"
+              className="absolute top-3 right-3 p-1 rounded-md hover:bg-sidebar-accent tap-target"
               onClick={() => setMobileOpen(false)}
               aria-label="Close menu"
             >
@@ -146,9 +146,9 @@ export function AdminShell() {
 
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Mobile header */}
-        <header className="md:hidden sticky top-0 z-30 bg-card border-b border-border h-14 px-4 flex items-center justify-between">
+        <header className="md:hidden sticky top-0 z-30 bg-card border-b border-border h-14 px-4 pr-safe pl-safe pt-safe flex items-center justify-between">
           <button
-            className="p-2 -ml-2 rounded-md hover:bg-muted"
+            className="p-2 -ml-2 rounded-md hover:bg-muted tap-target"
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
           >
@@ -161,7 +161,7 @@ export function AdminShell() {
           <div className="w-8" />
         </header>
 
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 pr-safe pl-safe pb-[calc(env(safe-area-inset-bottom)+1rem)]">
           <Outlet />
         </main>
       </div>
