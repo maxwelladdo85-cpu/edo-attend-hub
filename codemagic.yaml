@@ -16,7 +16,7 @@ workflows:
       xcode: 16.2
       cocoapods: default
 
-    trigger:
+    triggering:
       events:
         - push
       branch_patterns:
@@ -87,17 +87,3 @@ workflows:
         key_id: $APP_STORE_CONNECT_API_KEY_ID
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         submit_to_app_store: true
-        beta_app_review:
-          contact_email: maxwelladdo85@gmail.com
-          contact_first_name: Maxwell
-          contact_last_name: Addo
-          contact_phone: ""
-          demo_account_name: ""
-          demo_account_password: ""
-          notes: "EdoSUBEB Smart Attendance System"
-        release_notes: |
-          - GPS-verified teacher attendance
-          - Student attendance tracking (AM/PM)
-          - Head teacher verification workflow
-          - Real-time admin dashboard
-        submit_to_beta: false
