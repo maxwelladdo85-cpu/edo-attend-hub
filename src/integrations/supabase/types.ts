@@ -44,6 +44,39 @@ export type Database = {
         }
         Relationships: []
       }
+      classes: {
+        Row: {
+          active: boolean
+          basic_number: number
+          created_at: string
+          id: string
+          level: string
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          basic_number: number
+          created_at?: string
+          id?: string
+          level: string
+          name: string
+          sort_order: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          basic_number?: number
+          created_at?: string
+          id?: string
+          level?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           class_taught: string | null
