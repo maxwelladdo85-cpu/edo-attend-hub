@@ -1,102 +1,103 @@
 ### Codemagic configuration for EdoSUBEB Attendance iOS build + App Store deploy
 ### https://docs.codemagic.io/yaml/
 
-name: EdoSUBEB Attendance iOS
+workflows:
+  edosubeb-ios:
+    name: EdoSUBEB Attendance iOS
+    max_build_duration: 60
 
-max_build_duration: 60
+    environment:
+      groups:
+        - app_store_credentials
+        - apple_certificate
+        - ios_signing
+        - supabase_env
+      node: 20
+      xcode: 16.2
+      cocoapods: default
 
-environment:
-  groups:
-    - app_store_credentials       # CONTAINS: APP_STORE_CONNECT_API_KEY_ID, APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_API_KEY (private key .p8 content)
-    - apple_certificate            # Contains: CERTIFICATE (base64 .p12), CERTIFICATE_PASSWORD
-    - ios_signing                  # Contains: KEYCHAIN_PASSWORD (any random string for temp keychain)
-    - supabase_env                 # Contains: VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY
-  node: 20
-  xcode: 16.2
-  cocoapods: default
+    trigger:
+      events:
+        - push
+      branch_patterns:
+        - pattern: "main"
+          include: true
+          source: true
 
-trigger:
-  events:
-    - push
-  branch_patterns:
-    - pattern: "main"
-      include: true
-      source: true
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm ci
 
-scripts:
-  - name: Install dependencies
-    script: |
-      npm ci
+      - name: Build web assets
+        script: |
+          npx vite build
 
-  - name: Build web assets
-    script: |
-      npx vite build
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios/App
+          pod install --repo-update
 
-  - name: Install CocoaPods dependencies
-    script: |
-      cd ios/App
-      pod install --repo-update
+      - name: Build iOS project
+        script: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath $CM_BUILD_DIR/build/App.xcarchive \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$APP_STORE_CONNECT_API_KEY_PATH" \
+            archive
 
-  - name: Build iOS project
-    script: |
-      cd ios/App
-      xcodebuild -workspace App.xcworkspace \
-        -scheme App \
-        -configuration Release \
-        -archivePath $CM_BUILD_DIR/build/App.xcarchive \
-        -allowProvisioningUpdates \
-        -authenticationKeyPath "$APP_STORE_CONNECT_API_KEY_PATH" \
-        archive
+      - name: Export IPA
+        script: |
+          cd ios/App
+          cat > ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>$APPLE_TEAM_ID</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>compileBitcode</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
 
-  - name: Export IPA
-    script: |
-      cd ios/App
-      cat > ExportOptions.plist << EOF
-      <?xml version="1.0" encoding="UTF-8"?>
-      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-      <plist version="1.0">
-      <dict>
-        <key>method</key>
-        <string>app-store</string>
-        <key>teamID</key>
-        <string>$APPLE_TEAM_ID</string>
-        <key>uploadBitcode</key>
-        <false/>
-        <key>uploadSymbols</key>
-        <true/>
-        <key>compileBitcode</key>
-        <false/>
-      </dict>
-      </plist>
-      EOF
+          xcodebuild -exportArchive \
+            -archivePath $CM_BUILD_DIR/build/App.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath $CM_BUILD_DIR/build/ipa \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$APP_STORE_CONNECT_API_KEY_PATH"
 
-      xcodebuild -exportArchive \
-        -archivePath $CM_BUILD_DIR/build/App.xcarchive \
-        -exportOptionsPlist ExportOptions.plist \
-        -exportPath $CM_BUILD_DIR/build/ipa \
-        -allowProvisioningUpdates \
-        -authenticationKeyPath "$APP_STORE_CONNECT_API_KEY_PATH"
+    artifacts:
+      - ios/App/build/ipa/*.ipa
 
-artifacts:
-  - ios/App/build/ipa/*.ipa
-
-publishing:
-  app_store_connect:
-    api_key: $APP_STORE_CONNECT_API_KEY
-    key_id: $APP_STORE_CONNECT_API_KEY_ID
-    issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-    submit_to_app_store: true
-    beta_app_review:
-      contact_email: maxwelladdo85@gmail.com
-      contact_first_name: Maxwell
-      contact_last_name: Addo
-      contact_phone: ""
-      demo_account_name: ""
-      demo_account_password: ""
-      notes: "EdoSUBEB Smart Attendance System"
-    release_notes: |
-      - GPS-verified teacher attendance
-      - Student attendance tracking (AM/PM)
-      - Head teacher verification workflow
-      - Real-time admin dashboard
-    submit_to_beta: false
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_API_KEY
+        key_id: $APP_STORE_CONNECT_API_KEY_ID
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_app_store: true
+        beta_app_review:
+          contact_email: maxwelladdo85@gmail.com
+          contact_first_name: Maxwell
+          contact_last_name: Addo
+          contact_phone: ""
+          demo_account_name: ""
+          demo_account_password: ""
+          notes: "EdoSUBEB Smart Attendance System"
+        release_notes: |
+          - GPS-verified teacher attendance
+          - Student attendance tracking (AM/PM)
+          - Head teacher verification workflow
+          - Real-time admin dashboard
+        submit_to_beta: false
