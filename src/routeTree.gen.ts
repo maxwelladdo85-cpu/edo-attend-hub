@@ -8,153 +8,153 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root"
-import { Route as SignupRouteImport } from "./routes/signup"
-import { Route as LoginRouteImport } from "./routes/login"
-import { Route as DashboardRouteImport } from "./routes/dashboard"
-import { Route as AdminRouteImport } from "./routes/admin"
-import { Route as IndexRouteImport } from "./routes/index"
-import { Route as AdminIndexRouteImport } from "./routes/admin.index"
-import { Route as AdminSchoolTypeRouteImport } from "./routes/admin.school-type"
-import { Route as AdminMapRouteImport } from "./routes/admin.map"
-import { Route as AdminLgaRouteImport } from "./routes/admin.lga"
-import { Route as AdminAssignRouteImport } from "./routes/admin.assign"
-import { Route as AdminAnalyticsRouteImport } from "./routes/admin.analytics"
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminSchoolTypeRouteImport } from './routes/admin.school-type'
+import { Route as AdminMapRouteImport } from './routes/admin.map'
+import { Route as AdminLgaRouteImport } from './routes/admin.lga'
+import { Route as AdminAssignRouteImport } from './routes/admin.assign'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 
 const SignupRoute = SignupRouteImport.update({
-  id: "/signup",
-  path: "/signup",
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
-  id: "/login",
-  path: "/login",
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
-  id: "/dashboard",
-  path: "/dashboard",
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
-  id: "/admin",
-  path: "/admin",
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSchoolTypeRoute = AdminSchoolTypeRouteImport.update({
-  id: "/school-type",
-  path: "/school-type",
+  id: '/school-type',
+  path: '/school-type',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminMapRoute = AdminMapRouteImport.update({
-  id: "/map",
-  path: "/map",
+  id: '/map',
+  path: '/map',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminLgaRoute = AdminLgaRouteImport.update({
-  id: "/lga",
-  path: "/lga",
+  id: '/lga',
+  path: '/lga',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAssignRoute = AdminAssignRouteImport.update({
-  id: "/assign",
-  path: "/assign",
+  id: '/assign',
+  path: '/assign',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
-  id: "/analytics",
-  path: "/analytics",
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute
-  "/admin": typeof AdminRouteWithChildren
-  "/dashboard": typeof DashboardRoute
-  "/login": typeof LoginRoute
-  "/signup": typeof SignupRoute
-  "/admin/analytics": typeof AdminAnalyticsRoute
-  "/admin/assign": typeof AdminAssignRoute
-  "/admin/lga": typeof AdminLgaRoute
-  "/admin/map": typeof AdminMapRoute
-  "/admin/school-type": typeof AdminSchoolTypeRoute
-  "/admin/": typeof AdminIndexRoute
+  '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/assign': typeof AdminAssignRoute
+  '/admin/lga': typeof AdminLgaRoute
+  '/admin/map': typeof AdminMapRoute
+  '/admin/school-type': typeof AdminSchoolTypeRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute
-  "/dashboard": typeof DashboardRoute
-  "/login": typeof LoginRoute
-  "/signup": typeof SignupRoute
-  "/admin/analytics": typeof AdminAnalyticsRoute
-  "/admin/assign": typeof AdminAssignRoute
-  "/admin/lga": typeof AdminLgaRoute
-  "/admin/map": typeof AdminMapRoute
-  "/admin/school-type": typeof AdminSchoolTypeRoute
-  "/admin": typeof AdminIndexRoute
+  '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/assign': typeof AdminAssignRoute
+  '/admin/lga': typeof AdminLgaRoute
+  '/admin/map': typeof AdminMapRoute
+  '/admin/school-type': typeof AdminSchoolTypeRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  "/": typeof IndexRoute
-  "/admin": typeof AdminRouteWithChildren
-  "/dashboard": typeof DashboardRoute
-  "/login": typeof LoginRoute
-  "/signup": typeof SignupRoute
-  "/admin/analytics": typeof AdminAnalyticsRoute
-  "/admin/assign": typeof AdminAssignRoute
-  "/admin/lga": typeof AdminLgaRoute
-  "/admin/map": typeof AdminMapRoute
-  "/admin/school-type": typeof AdminSchoolTypeRoute
-  "/admin/": typeof AdminIndexRoute
+  '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/dashboard': typeof DashboardRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/assign': typeof AdminAssignRoute
+  '/admin/lga': typeof AdminLgaRoute
+  '/admin/map': typeof AdminMapRoute
+  '/admin/school-type': typeof AdminSchoolTypeRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/admin"
-    | "/dashboard"
-    | "/login"
-    | "/signup"
-    | "/admin/analytics"
-    | "/admin/assign"
-    | "/admin/lga"
-    | "/admin/map"
-    | "/admin/school-type"
-    | "/admin/"
+    | '/'
+    | '/admin'
+    | '/dashboard'
+    | '/login'
+    | '/signup'
+    | '/admin/analytics'
+    | '/admin/assign'
+    | '/admin/lga'
+    | '/admin/map'
+    | '/admin/school-type'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | "/dashboard"
-    | "/login"
-    | "/signup"
-    | "/admin/analytics"
-    | "/admin/assign"
-    | "/admin/lga"
-    | "/admin/map"
-    | "/admin/school-type"
-    | "/admin"
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/signup'
+    | '/admin/analytics'
+    | '/admin/assign'
+    | '/admin/lga'
+    | '/admin/map'
+    | '/admin/school-type'
+    | '/admin'
   id:
-    | "__root__"
-    | "/"
-    | "/admin"
-    | "/dashboard"
-    | "/login"
-    | "/signup"
-    | "/admin/analytics"
-    | "/admin/assign"
-    | "/admin/lga"
-    | "/admin/map"
-    | "/admin/school-type"
-    | "/admin/"
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/dashboard'
+    | '/login'
+    | '/signup'
+    | '/admin/analytics'
+    | '/admin/assign'
+    | '/admin/lga'
+    | '/admin/map'
+    | '/admin/school-type'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -165,82 +165,82 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/signup": {
-      id: "/signup"
-      path: "/signup"
-      fullPath: "/signup"
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/login": {
-      id: "/login"
-      path: "/login"
-      fullPath: "/login"
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/dashboard": {
-      id: "/dashboard"
-      path: "/dashboard"
-      fullPath: "/dashboard"
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/admin": {
-      id: "/admin"
-      path: "/admin"
-      fullPath: "/admin"
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/": {
-      id: "/"
-      path: "/"
-      fullPath: "/"
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/admin/": {
-      id: "/admin/"
-      path: "/"
-      fullPath: "/admin/"
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    "/admin/school-type": {
-      id: "/admin/school-type"
-      path: "/school-type"
-      fullPath: "/admin/school-type"
+    '/admin/school-type': {
+      id: '/admin/school-type'
+      path: '/school-type'
+      fullPath: '/admin/school-type'
       preLoaderRoute: typeof AdminSchoolTypeRouteImport
       parentRoute: typeof AdminRoute
     }
-    "/admin/map": {
-      id: "/admin/map"
-      path: "/map"
-      fullPath: "/admin/map"
+    '/admin/map': {
+      id: '/admin/map'
+      path: '/map'
+      fullPath: '/admin/map'
       preLoaderRoute: typeof AdminMapRouteImport
       parentRoute: typeof AdminRoute
     }
-    "/admin/lga": {
-      id: "/admin/lga"
-      path: "/lga"
-      fullPath: "/admin/lga"
+    '/admin/lga': {
+      id: '/admin/lga'
+      path: '/lga'
+      fullPath: '/admin/lga'
       preLoaderRoute: typeof AdminLgaRouteImport
       parentRoute: typeof AdminRoute
     }
-    "/admin/assign": {
-      id: "/admin/assign"
-      path: "/assign"
-      fullPath: "/admin/assign"
+    '/admin/assign': {
+      id: '/admin/assign'
+      path: '/assign'
+      fullPath: '/admin/assign'
       preLoaderRoute: typeof AdminAssignRouteImport
       parentRoute: typeof AdminRoute
     }
-    "/admin/analytics": {
-      id: "/admin/analytics"
-      path: "/analytics"
-      fullPath: "/admin/analytics"
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
       preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
@@ -277,13 +277,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
