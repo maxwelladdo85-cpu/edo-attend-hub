@@ -29,6 +29,65 @@ export function getCurrentPosition(): Promise<GeolocationPosition> {
   });
 }
 
+export type LocationStatus = "granted" | "denied" | "unsupported" | "unavailable" | "timeout";
+
+export type LocationResult =
+  | { status: "granted"; position: GeolocationPosition }
+  | { status: Exclude<LocationStatus, "granted">; errorMessage: string };
+
+/**
+ * Best-effort permission state lookup. Falls back to `"unknown"` when the
+ * Permissions API isn't available (iOS Safari prior to 16, some embedded
+ * webviews). Callers should treat `"unknown"` the same as `"prompt"`.
+ */
+export async function getLocationPermissionState(): Promise<
+  "granted" | "denied" | "prompt" | "unknown"
+> {
+  if (typeof navigator === "undefined" || !("geolocation" in navigator)) return "unknown";
+  const perms = (navigator as Navigator & { permissions?: Permissions }).permissions;
+  if (!perms?.query) return "unknown";
+  try {
+    const status = await perms.query({ name: "geolocation" as PermissionName });
+    return status.state;
+  } catch {
+    return "unknown";
+  }
+}
+
+/** Request a single position, returning a structured result instead of throwing. */
+export async function requestLocation(): Promise<LocationResult> {
+  if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
+    return { status: "unsupported", errorMessage: "Geolocation is not supported by this device." };
+  }
+  try {
+    const position = await getCurrentPosition();
+    return { status: "granted", position };
+  } catch (e) {
+    const err = e as GeolocationPositionError | Error;
+    // GeolocationPositionError has a numeric `code`
+    if ("code" in err) {
+      if (err.code === 1) {
+        return {
+          status: "denied",
+          errorMessage:
+            "Location permission was denied. Re-enable it from your browser or device settings to verify attendance.",
+        };
+      }
+      if (err.code === 3) {
+        return {
+          status: "timeout",
+          errorMessage: "Couldn't get a location fix in time. Step outside or check your GPS signal and try again.",
+        };
+      }
+      return {
+        status: "unavailable",
+        errorMessage: "Your location is unavailable right now. Check your GPS or network signal and try again.",
+      };
+    }
+    return { status: "unavailable", errorMessage: err.message ?? "Location unavailable." };
+  }
+}
+
 export function classifyArrival(
   arrivalISO: string,
   resumptionTime: string, // 'HH:MM' or 'HH:MM:SS'
