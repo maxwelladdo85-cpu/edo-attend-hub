@@ -1,6 +1,3 @@
-### Codemagic configuration for EdoSUBEB Attendance iOS build + App Store deploy
-### https://docs.codemagic.io/yaml/
-
 workflows:
   edosubeb-ios:
     name: EdoSUBEB Attendance iOS
@@ -8,8 +5,8 @@ workflows:
 
     environment:
       groups:
-        - app_store_credentials
         - supabase_env
+        - ios_signing
       node: 20
       xcode: 16.2
       cocoapods: default
