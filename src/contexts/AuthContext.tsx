@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import type { Session, User } from "@/integrations/supabase/client";
 
 export type AppRole = "admin" | "head_teacher" | "teacher";
 
@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let currentUserId: string | null = null;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, newSession: Session | null) => {
       setSession(newSession);
       const nextUserId = newSession?.user?.id ?? null;
 
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
       setSession(data.session);
       currentUserId = data.session?.user?.id ?? null;
       if (data.session?.user) {

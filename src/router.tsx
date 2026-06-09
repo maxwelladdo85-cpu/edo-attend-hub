@@ -14,3 +14,5 @@ export const getRouter = () => {
 
   return router;
 };
+
+export type Router = ReturnType<typeof getRouter>;

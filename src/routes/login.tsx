@@ -1,6 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
@@ -9,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { resolveTeacherEmail } from "@/lib/teacher-auth.functions";
 import authBg from "@/assets/auth-bg.png";
 
 export const Route = createFileRoute("/login")({
@@ -24,7 +22,6 @@ type Role = "teacher" | "head_teacher" | "admin";
 function LoginPage() {
   const navigate = useNavigate();
   const { session, loading: authLoading, roles: userRoles, profile } = useAuth();
-  const resolveEmail = useServerFn(resolveTeacherEmail);
   const [role, setRole] = useState<Role>("teacher");
   const [teacherId, setTeacherId] = useState("");
   const [email, setEmail] = useState("");
@@ -43,10 +40,16 @@ function LoginPage() {
     try {
       let signInEmail = email;
       if (role === "teacher" || role === "head_teacher") {
-        const { email: resolved } = await resolveEmail({ data: { teacherId } });
-        signInEmail = resolved;
+        const { data, error } = await supabase.rpc("resolve_teacher_email" as any, {
+          _teacher_id: teacherId,
+        });
+        if (error) throw new Error(error.message);
+        signInEmail = data as string;
       }
-      const { data, error } = await supabase.auth.signInWithPassword({ email: signInEmail, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: signInEmail,
+        password,
+      });
       if (error) {
         toast.error(error.message);
         return;

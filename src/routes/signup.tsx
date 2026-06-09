@@ -87,16 +87,16 @@ function SignupPage() {
     },
   });
 
-  const lgas = useMemo(() => {
-    const set = new Set(schools.map((s) => s.lga));
+  const lgas: string[] = useMemo(() => {
+    const set = new Set<string>(schools.map((s: any) => String(s.lga)));
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [schools]);
 
-  const filteredSchools = useMemo(() => {
+  const filteredSchools: any[] = useMemo(() => {
     if (!form.category || !form.lga) return [];
     return schools
-      .filter((s) => s.category === form.category && s.lga === form.lga)
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .filter((s: any) => s.category === form.category && s.lga === form.lga)
+      .sort((a: any, b: any) => a.name.localeCompare(b.name));
   }, [schools, form.category, form.lga]);
 
   const handleSubmit = async (e: React.FormEvent) => {

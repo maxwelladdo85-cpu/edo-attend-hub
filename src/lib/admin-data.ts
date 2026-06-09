@@ -111,7 +111,7 @@ export function useTeacherProfiles() {
         .select("user_id")
         .eq("role", "teacher");
       if (rerr) throw rerr;
-      const ids = (roleRows ?? []).map((r) => r.user_id);
+      const ids = (roleRows ?? []).map((r: any) => r.user_id);
       if (ids.length === 0) return [] as TeacherProfileLite[];
       const { data, error } = await supabase
         .from("profiles")

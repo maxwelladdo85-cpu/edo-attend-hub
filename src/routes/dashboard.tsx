@@ -25,7 +25,7 @@ function DashboardPage() {
     // Race guard: the AuthContext may not have processed the SIGNED_IN event yet
     // right after sign-in. Re-check Supabase directly before bouncing to /login.
     let cancelled = false;
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }: { data: { session: any } }) => {
       if (!cancelled && !data.session) navigate({ to: "/login", replace: true });
     });
     return () => { cancelled = true; };
