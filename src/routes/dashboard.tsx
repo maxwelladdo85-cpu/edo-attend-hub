@@ -8,8 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { DashboardShell, roleLabelFor } from "@/components/DashboardShell";
 import { StatCard } from "@/components/StatCard";
-import { distanceMeters, getCurrentPosition, classifyArrival, classifyDeparture } from "@/lib/geo";
+import { distanceMeters, classifyArrival, classifyDeparture, type LocationResult } from "@/lib/geo";
 import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
+import { LocationPermissionGate } from "@/components/LocationPermissionGate";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — EdoSUBEB Smart Attendance" }] }),
@@ -132,30 +133,26 @@ function TeacherView() {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id, profile?.school_id, profile?.class_taught]);
 
-  const mark = async (kind: "arrival" | "departure") => {
+  const mark = async (kind: "arrival" | "departure", locationResult: LocationResult | null) => {
     if (!user || !profile?.school_id || !school) {
       toast.error("Your school is not configured");
       return;
     }
     setBusy(kind);
     try {
-      // Capture the exact timestamp the moment the button is pressed
+      // Capture the exact timestamp the moment the action started
       const now = new Date().toISOString();
       const dateStr = now.slice(0, 10);
 
-      // Best-effort location capture — does NOT block saving the time
       let lat: number | null = null;
       let lng: number | null = null;
       let verified = false;
       let dist: number | null = null;
-      try {
-        const pos = await getCurrentPosition();
-        lat = pos.coords.latitude;
-        lng = pos.coords.longitude;
+      if (locationResult?.status === "granted") {
+        lat = locationResult.position.coords.latitude;
+        lng = locationResult.position.coords.longitude;
         dist = distanceMeters(lat, lng, school.latitude, school.longitude);
         verified = dist <= (school.radius_meters ?? 100);
-      } catch {
-        // Location unavailable — still record the time, just unverified
       }
 
       if (kind === "arrival") {
@@ -180,6 +177,8 @@ function TeacherView() {
           toast.success(`Arrival marked at ${timeLabel} — ${status.replace("_", " ")}`);
         } else if (dist !== null) {
           toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)}m from ${school.name} (unverified).`);
+        } else if (locationResult && locationResult.status !== "granted") {
+          toast.warning(`Arrival recorded at ${timeLabel} without location: ${locationResult.errorMessage}`);
         } else {
           toast.warning(`Arrival recorded at ${timeLabel} without location (unverified).`);
         }
@@ -198,7 +197,13 @@ function TeacherView() {
           .eq("attendance_date", dateStr);
         if (error) throw error;
         const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-        toast.success(`Departure marked at ${timeLabel} — ${status.replace("_", " ")}`);
+        if (verified) {
+          toast.success(`Departure marked at ${timeLabel} — ${status.replace("_", " ")}`);
+        } else if (dist !== null) {
+          toast.warning(`Departure recorded at ${timeLabel}, but you are ${Math.round(dist)}m from ${school.name} (unverified).`);
+        } else {
+          toast.warning(`Departure recorded at ${timeLabel} without location (unverified).`);
+        }
       }
       await load();
     } catch (e: any) {
@@ -241,9 +246,11 @@ function TeacherView() {
               <LogIn className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <Button onClick={() => mark("arrival")} disabled={!!busy || !!today?.arrival_time || !school} className="w-full mt-5 bg-gradient-primary hover:opacity-90">
-            {busy === "arrival" ? <Loader2 className="h-4 w-4 animate-spin" /> : today?.arrival_time ? "Already marked" : (<><MapPin className="h-4 w-4 mr-2" />Mark arrival</>)}
-          </Button>
+          <LocationPermissionGate actionLabel="Mark arrival" onResolved={(r) => mark("arrival", r)}>
+            <Button disabled={!!busy || !!today?.arrival_time || !school} className="w-full mt-5 bg-gradient-primary hover:opacity-90">
+              {busy === "arrival" ? <Loader2 className="h-4 w-4 animate-spin" /> : today?.arrival_time ? "Already marked" : (<><MapPin className="h-4 w-4 mr-2" />Mark arrival</>)}
+            </Button>
+          </LocationPermissionGate>
         </div>
 
         <div className={`rounded-2xl border border-border ${cardBg} p-6 shadow-card`}>
@@ -259,9 +266,11 @@ function TeacherView() {
               <LogOut className="h-6 w-6 text-gold-foreground" />
             </div>
           </div>
-          <Button onClick={() => mark("departure")} disabled={!!busy || !today?.arrival_time || !!today?.departure_time || !school} variant="outline" className="w-full mt-5">
-            {busy === "departure" ? <Loader2 className="h-4 w-4 animate-spin" /> : today?.departure_time ? "Already marked" : !today?.arrival_time ? "Mark arrival first" : (<><MapPin className="h-4 w-4 mr-2" />Mark departure</>)}
-          </Button>
+          <LocationPermissionGate actionLabel="Mark departure" onResolved={(r) => mark("departure", r)}>
+            <Button disabled={!!busy || !today?.arrival_time || !!today?.departure_time || !school} variant="outline" className="w-full mt-5">
+              {busy === "departure" ? <Loader2 className="h-4 w-4 animate-spin" /> : today?.departure_time ? "Already marked" : !today?.arrival_time ? "Mark arrival first" : (<><MapPin className="h-4 w-4 mr-2" />Mark departure</>)}
+            </Button>
+          </LocationPermissionGate>
         </div>
       </div>
 
