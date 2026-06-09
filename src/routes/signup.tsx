@@ -67,6 +67,7 @@ function SignupPage() {
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   useEffect(() => {
     if (session) navigate({ to: "/dashboard", replace: true });
@@ -101,6 +102,10 @@ function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!acceptedTerms) {
+      toast.error("Please agree to the Terms and Privacy Policy");
+      return;
+    }
     if (form.password.length < 8) {
       toast.error("Password must be at least 8 characters");
       return;
@@ -353,7 +358,21 @@ function SignupPage() {
                 </button>
               </div>
             </div>
-            <Button type="submit" disabled={loading} className="w-full bg-gradient-primary hover:opacity-90">
+            <label className="flex items-start gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+              />
+              <span>
+                I agree to the{" "}
+                <Link to="/terms" className="text-primary underline">Terms of Service</Link>{" "}
+                and{" "}
+                <Link to="/privacy" className="text-primary underline">Privacy Policy</Link>.
+              </span>
+            </label>
+            <Button type="submit" disabled={loading || !acceptedTerms} className="w-full bg-gradient-primary hover:opacity-90">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign Up"}
             </Button>
           </form>

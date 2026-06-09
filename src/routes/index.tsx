@@ -73,9 +73,18 @@ function Landing() {
       </div>
 
       <footer className="border-t border-border/60 py-8">
-        <div className="container mx-auto px-4 text-xs text-muted-foreground flex flex-wrap items-center justify-between gap-2">
-          <span>© {new Date().getFullYear()} Edo State Universal Basic Education Board</span>
-          <span>Strength · Achievement · Excellence</span>
+        <div className="container mx-auto px-4 flex flex-col gap-4 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
+            <Link to="/terms" className="hover:text-foreground">Terms of Service</Link>
+            <Link to="/cookies" className="hover:text-foreground">Cookie Policy</Link>
+            <Link to="/data-deletion" className="hover:text-foreground">Data Deletion</Link>
+            <Link to="/support" className="hover:text-foreground">Support</Link>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span>© {new Date().getFullYear()} Edo State Universal Basic Education Board</span>
+            <span>Strength · Achievement · Excellence</span>
+          </div>
         </div>
       </footer>
     </div>
