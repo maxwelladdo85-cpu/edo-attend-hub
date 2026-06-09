@@ -371,6 +371,7 @@ export type Database = {
     }
     Functions: {
       current_user_school: { Args: never; Returns: string }
+      delete_my_account: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
