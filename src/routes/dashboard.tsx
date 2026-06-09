@@ -9,6 +9,7 @@ import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { DashboardShell, roleLabelFor } from "@/components/DashboardShell";
 import { StatCard } from "@/components/StatCard";
 import { distanceMeters, getCurrentPosition, classifyArrival, classifyDeparture } from "@/lib/geo";
+import { haptic } from "@/lib/haptics";
 import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
 
 export const Route = createFileRoute("/dashboard")({

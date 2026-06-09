@@ -32,10 +32,10 @@ export function DashboardShell({
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-dvh bg-background flex flex-col">
       {/* Top bar */}
-      <header className="border-b border-border/60 bg-card sticky top-0 z-40">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+      <header className="border-b border-border/60 bg-card sticky top-0 z-40 pt-safe">
+        <div className="container mx-auto px-4 pl-safe pr-safe h-16 flex items-center justify-between">
           <Link to="/dashboard" className="flex items-center gap-2.5">
             <Logo className="h-10 w-10" />
             <div className="leading-tight">
@@ -48,14 +48,14 @@ export function DashboardShell({
               <div className="text-sm font-medium">{profile?.full_name ?? "—"}</div>
               <div className="text-xs text-muted-foreground">{profile?.designation ?? roleLabel}</div>
             </div>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="tap-target">
               <LogOut className="h-4 w-4 md:mr-1.5" />
               <span className="hidden md:inline">Sign out</span>
             </Button>
           </div>
         </div>
         {nav.length > 0 && (
-          <nav className="container mx-auto px-4 flex gap-1 overflow-x-auto">
+          <nav className="container mx-auto px-4 pl-safe pr-safe flex gap-1 overflow-x-auto">
             {nav.map((item) => {
               const active = pathname === item.to;
               const Icon = item.icon;
@@ -63,7 +63,7 @@ export function DashboardShell({
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`flex items-center gap-1.5 px-3 py-2.5 text-sm border-b-2 transition-colors whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 px-3 py-2.5 text-sm border-b-2 transition-colors whitespace-nowrap tap-target ${
                     active
                       ? "border-primary text-primary font-medium"
                       : "border-transparent text-muted-foreground hover:text-foreground"
@@ -78,7 +78,9 @@ export function DashboardShell({
         )}
       </header>
 
-      <main className="flex-1 container mx-auto px-4 py-6 md:py-8">{children}</main>
+      <main className="flex-1 container mx-auto px-4 pl-safe pr-safe py-6 md:py-8 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
+        {children}
+      </main>
     </div>
   );
 }
