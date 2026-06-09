@@ -9,8 +9,6 @@ workflows:
     environment:
       groups:
         - app_store_credentials
-        - apple_certificate
-        - ios_signing
         - supabase_env
       node: 20
       xcode: 16.2
@@ -38,48 +36,20 @@ workflows:
           cd ios/App
           pod install --repo-update
 
+      - name: Setup iOS signing
+        script: |
+          cd ios/App
+          xcode-project use-profiles
+
       - name: Build iOS project
         script: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -archivePath $CM_BUILD_DIR/build/App.xcarchive \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$APP_STORE_CONNECT_API_KEY_PATH" \
-            archive
-
-      - name: Export IPA
-        script: |
-          cd ios/App
-          cat > ExportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>$APPLE_TEAM_ID</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>compileBitcode</key>
-            <false/>
-          </dict>
-          </plist>
-          EOF
-
-          xcodebuild -exportArchive \
-            -archivePath $CM_BUILD_DIR/build/App.xcarchive \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath $CM_BUILD_DIR/build/ipa \
-            -allowProvisioningUpdates \
-            -authenticationKeyPath "$APP_STORE_CONNECT_API_KEY_PATH"
+          xcode-project build-ipa \
+            --workspace App.xcworkspace \
+            --scheme App
 
     artifacts:
-      - ios/App/build/ipa/*.ipa
+      - ios/App/build/ios/ipa/*.ipa
 
     publishing:
       app_store_connect:
