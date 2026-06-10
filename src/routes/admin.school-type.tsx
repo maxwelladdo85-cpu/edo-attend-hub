@@ -15,6 +15,7 @@ import {
 } from "@/lib/admin-data";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { ExportButton } from "@/components/ExportButton";
 
 export const Route = createFileRoute("/admin/school-type")({
   component: BySchoolTypePage,
