@@ -114,7 +114,27 @@ function AnalyticsPage() {
 
   return (
     <div>
-      <AdminPageHeader title="Analytics" subtitle="Charts and insights across the Edo State network" icon={BarChart3} />
+      <AdminPageHeader
+        title="Analytics"
+        subtitle="Charts and insights across the Edo State network"
+        icon={BarChart3}
+        actions={
+          <ExportButton
+            filename="analytics-summary"
+            title="Analytics Summary"
+            rows={[
+              ...lgaChart.map((r) => ({ section: "Top LGAs", name: r.name, pupils: `${r.Pupils}%`, teachers: `${r.Teachers}%` })),
+              ...typeBar.map((r) => ({ section: "School type", name: r.name, pupils: `${r.Pupils}%`, teachers: `${r.Teachers}%` })),
+            ]}
+            columns={[
+              { header: "Section", accessor: (r) => r.section },
+              { header: "Name", accessor: (r) => r.name },
+              { header: "Pupils present %", accessor: (r) => r.pupils },
+              { header: "Teachers present %", accessor: (r) => r.teachers },
+            ]}
+          />
+        }
+      />
 
       <div className="grid lg:grid-cols-2 gap-4 mb-6">
         <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card p-4 sm:p-5">
