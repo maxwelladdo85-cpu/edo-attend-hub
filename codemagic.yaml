@@ -125,6 +125,4 @@ workflows:
     artifacts:
       - $CM_BUILD_DIR/build/ios/ipa/*.ipa
 
-    publishing:
-      artifacts:
-        - $CM_BUILD_DIR/build/ios/ipa/*.ipa
+    publishing: {}
