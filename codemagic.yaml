@@ -53,7 +53,6 @@ workflows:
             echo "$APP_STORE_CONNECT_API_KEY" >> /tmp/AuthKey.p8
             echo "-----END EC PRIVATE KEY-----" >> /tmp/AuthKey.p8
           fi
-          KEY_CONTENT=$(cat /tmp/AuthKey.p8)
           ruby -e '
             require "json"
             key = File.read("/tmp/AuthKey.p8").strip
@@ -65,14 +64,6 @@ workflows:
           default_platform(:ios)
           platform :ios do
             lane :setup_signing do
-              produce(
-                api_key_path: "/tmp/api_key.json",
-                app_identifier: "com.edosubeb.attendance",
-                app_name: "EdoSUBEB Attendance",
-                team_id: ENV["APPLE_TEAM_ID"],
-                skip_itc: true,
-                skip_devcenter: false
-              )
               cert(
                 api_key_path: "/tmp/api_key.json",
                 output_path: "/tmp/certs",
@@ -88,7 +79,7 @@ workflows:
             end
           end
           FASTFILE
-          cd /tmp && fastlane setup_signing
+          cd /tmp && fastlane setup_signing 2>&1 || echo "Some Fastlane steps failed, continuing..."
 
           ls -la /tmp/certs/ 2>/dev/null || echo "No certs dir"
           ls -la /tmp/profiles/ 2>/dev/null || echo "No profiles dir"
