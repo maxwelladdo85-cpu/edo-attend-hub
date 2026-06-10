@@ -64,6 +64,14 @@ workflows:
                 duration: 1200,
                 in_house: false
               )
+              produce(
+                api_key: api_key,
+                app_identifier: "com.edosubeb.attendance",
+                app_name: "EdoSUBEB Attendance",
+                team_id: ENV["APPLE_TEAM_ID"],
+                skip_creation: false,
+                force: true
+              )
               cert(api_key: api_key, output_path: "/tmp/certs", force: true)
               sigh(api_key: api_key, app_identifier: "com.edosubeb.attendance", output_path: "/tmp/profiles", force: true, development: false)
             end
@@ -92,7 +100,6 @@ workflows:
       - name: Build & Archive
         script: |
           cd ios/App
-          PROFILE_UUID=$(ls ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1 | xargs -I{} basename {} .mobileprovision)
           cat > ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -102,13 +109,6 @@ workflows:
             <string>app-store</string>
             <key>teamID</key>
             <string>$APPLE_TEAM_ID</string>
-            <key>signingStyle</key>
-            <string>manual</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.edosubeb.attendance</key>
-              <string>${PROFILE_UUID}</string>
-            </dict>
             <key>uploadBitcode</key>
             <false/>
             <key>uploadSymbols</key>
@@ -119,14 +119,18 @@ workflows:
           </plist>
           EOF
 
+          security list-keychains -d user -s build.keychain-db login.keychain-db
+          security default-keychain -s build.keychain-db
+          security unlock-keychain -p "" build.keychain-db
+
           xcodebuild archive \
             -workspace App.xcworkspace \
             -scheme App \
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath $CM_BUILD_DIR/build/ios/xcarchive/App.xcarchive \
-            CODE_SIGN_STYLE=Manual \
-            PROVISIONING_PROFILE_SPECIFIER="${PROFILE_UUID}" \
+            -allowProvisioningUpdates \
+            CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM=$APPLE_TEAM_ID
 
       - name: Export IPA
@@ -135,7 +139,8 @@ workflows:
           xcodebuild -exportArchive \
             -archivePath $CM_BUILD_DIR/build/ios/xcarchive/App.xcarchive \
             -exportOptionsPlist ExportOptions.plist \
-            -exportPath $CM_BUILD_DIR/build/ios/ipa
+            -exportPath $CM_BUILD_DIR/build/ios/ipa \
+            -allowProvisioningUpdates
 
     artifacts:
       - $CM_BUILD_DIR/build/ios/ipa/*.ipa
