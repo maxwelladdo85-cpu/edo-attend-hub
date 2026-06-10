@@ -15,8 +15,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { distanceMeters } from "@/lib/geo";
 import { ExportButton } from "@/components/ExportButton";
-import { DateRangeFilter } from "@/components/DateRangeFilter";
-import { useAdminDateRange } from "@/contexts/AdminDateRangeContext";
 
 export const Route = createFileRoute("/admin/flagged")({
   head: () => ({ meta: [{ title: "Flagged Teachers — EdoSAS" }] }),
@@ -49,17 +47,16 @@ type Profile = {
   phone: string | null;
 };
 
-function useFlagged(from: string, to: string) {
+function useFlagged(date: string) {
   return useQuery({
-    queryKey: ["admin", "flagged", from, to],
+    queryKey: ["admin", "flagged", date],
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from("teacher_attendance")
         .select(
           "id,teacher_user_id,school_id,attendance_date,arrival_time,arrival_status,arrival_lat,arrival_lng",
         )
-        .gte("attendance_date", from)
-        .lte("attendance_date", to)
+        .eq("attendance_date", date)
         .not("arrival_time", "is", null);
       if (error) throw error;
       const attendance = (rows ?? []) as Row[];
@@ -126,12 +123,12 @@ function todayStr() {
 }
 
 function FlaggedPage() {
-  const { from, to } = useAdminDateRange();
+  const [date, setDate] = useState(todayStr());
   const [filter, setFilter] = useState<"all" | "late" | "range">("all");
   const [q, setQ] = useState("");
   const [schoolType, setSchoolType] = useState<string>("all");
   const [lga, setLga] = useState<string>("all");
-  const { data = [], isLoading } = useFlagged(from, to);
+  const { data = [], isLoading } = useFlagged(date);
 
   const filtered = useMemo(() => {
     return data.filter((x) => {
@@ -187,8 +184,8 @@ function FlaggedPage() {
         icon={AlertTriangle}
         actions={
           <ExportButton
-            filename={`flagged-teachers-${from}_to_${to}`}
-            title={`Flagged Teachers · ${from} → ${to}`}
+            filename={`flagged-teachers-${date}`}
+            title={`Flagged Teachers · ${date}`}
             rows={filtered}
             columns={[
               { header: "Teacher", accessor: (x) => x.profile?.full_name ?? "Unknown" },
@@ -208,7 +205,17 @@ function FlaggedPage() {
       />
 
       <div className="flex flex-wrap items-end gap-3 mb-4">
-        <DateRangeFilter />
+        <div>
+          <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-1">
+            Date
+          </label>
+          <Input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-44"
+          />
+        </div>
         <div className="flex gap-2">
           <Button
             variant={filter === "all" ? "default" : "outline"}

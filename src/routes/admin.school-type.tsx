@@ -7,8 +7,8 @@ import {
   useSchools,
   useTeacherProfiles,
   useStudents,
-  useTeacherAttendanceRange,
-  useStudentAttendanceRange,
+  useTeacherAttendanceToday,
+  useStudentAttendanceToday,
   isStudentPresent,
   prettyCategory,
   safePct,
@@ -16,20 +16,17 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { ExportButton } from "@/components/ExportButton";
-import { DateRangeFilter } from "@/components/DateRangeFilter";
-import { useAdminDateRange } from "@/contexts/AdminDateRangeContext";
 
 export const Route = createFileRoute("/admin/school-type")({
   component: BySchoolTypePage,
 });
 
 function BySchoolTypePage() {
-  const { from, to } = useAdminDateRange();
   const { data: schools = [] } = useSchools();
   const { data: teachers = [] } = useTeacherProfiles();
   const { data: students = [] } = useStudents();
-  const { data: tAtt = [] } = useTeacherAttendanceRange(from, to);
-  const { data: sAtt = [] } = useStudentAttendanceRange(from, to);
+  const { data: tAtt = [] } = useTeacherAttendanceToday();
+  const { data: sAtt = [] } = useStudentAttendanceToday();
 
   const rows = useMemo(() => {
     const schoolToCat = new Map(schools.map((s) => [s.id, s.category ?? "other"]));
@@ -90,24 +87,21 @@ function BySchoolTypePage() {
         subtitle="Comparison of Primary vs Junior Secondary schools"
         icon={SchoolIcon}
         actions={
-          <div className="flex flex-wrap items-end gap-3">
-            <DateRangeFilter />
-            <ExportButton
-              filename={`attendance-by-school-type-${from}_to_${to}`}
-              title={`Attendance by School Type · ${from} → ${to}`}
-              rows={rows}
-              columns={[
-                { header: "School type", accessor: (r) => prettyCategory(r.category) },
-                { header: "Schools", accessor: (r) => r.schools },
-                { header: "Teachers", accessor: (r) => r.teachers },
-                { header: "Teachers present", accessor: (r) => r.teachersPresent },
-                { header: "Teachers present %", accessor: (r) => `${r.teacherPct}%` },
-                { header: "Pupils", accessor: (r) => r.students },
-                { header: "Pupils present", accessor: (r) => r.studentsPresent },
-                { header: "Pupils present %", accessor: (r) => `${r.studentPct}%` },
-              ]}
-            />
-          </div>
+          <ExportButton
+            filename="attendance-by-school-type"
+            title="Attendance by School Type"
+            rows={rows}
+            columns={[
+              { header: "School type", accessor: (r) => prettyCategory(r.category) },
+              { header: "Schools", accessor: (r) => r.schools },
+              { header: "Teachers", accessor: (r) => r.teachers },
+              { header: "Teachers present", accessor: (r) => r.teachersPresent },
+              { header: "Teachers present %", accessor: (r) => `${r.teacherPct}%` },
+              { header: "Pupils", accessor: (r) => r.students },
+              { header: "Pupils present", accessor: (r) => r.studentsPresent },
+              { header: "Pupils present %", accessor: (r) => `${r.studentPct}%` },
+            ]}
+          />
         }
       />
 

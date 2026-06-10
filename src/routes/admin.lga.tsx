@@ -6,8 +6,8 @@ import {
   useSchools,
   useTeacherProfiles,
   useStudents,
-  useTeacherAttendanceRange,
-  useStudentAttendanceRange,
+  useTeacherAttendanceToday,
+  useStudentAttendanceToday,
   isStudentPresent,
   prettyLga,
   safePct,
@@ -15,20 +15,17 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { ExportButton } from "@/components/ExportButton";
-import { DateRangeFilter } from "@/components/DateRangeFilter";
-import { useAdminDateRange } from "@/contexts/AdminDateRangeContext";
 
 export const Route = createFileRoute("/admin/lga")({
   component: ByLgaPage,
 });
 
 function ByLgaPage() {
-  const { from, to } = useAdminDateRange();
   const { data: schools = [] } = useSchools();
   const { data: teachers = [] } = useTeacherProfiles();
   const { data: students = [] } = useStudents();
-  const { data: tAtt = [] } = useTeacherAttendanceRange(from, to);
-  const { data: sAtt = [] } = useStudentAttendanceRange(from, to);
+  const { data: tAtt = [] } = useTeacherAttendanceToday();
+  const { data: sAtt = [] } = useStudentAttendanceToday();
 
   const rows = useMemo(() => {
     const schoolToLga = new Map(schools.map((s) => [s.id, s.lga]));
@@ -91,24 +88,21 @@ function ByLgaPage() {
         subtitle="Live attendance broken down by Local Government Area"
         icon={Building2}
         actions={
-          <div className="flex flex-wrap items-end gap-3">
-            <DateRangeFilter />
-            <ExportButton
-              filename={`attendance-by-lga-${from}_to_${to}`}
-              title={`Attendance by LGA · ${from} → ${to}`}
-              rows={rows}
-              columns={[
-                { header: "LGA", accessor: (r) => prettyLga(r.lga) },
-                { header: "Schools", accessor: (r) => r.schools },
-                { header: "Teachers", accessor: (r) => r.teachers },
-                { header: "Teachers present", accessor: (r) => r.teachersPresent },
-                { header: "Teachers present %", accessor: (r) => `${r.teacherPct}%` },
-                { header: "Pupils", accessor: (r) => r.students },
-                { header: "Pupils present", accessor: (r) => r.studentsPresent },
-                { header: "Pupils present %", accessor: (r) => `${r.studentPct}%` },
-              ]}
-            />
-          </div>
+          <ExportButton
+            filename="attendance-by-lga"
+            title="Attendance by LGA"
+            rows={rows}
+            columns={[
+              { header: "LGA", accessor: (r) => prettyLga(r.lga) },
+              { header: "Schools", accessor: (r) => r.schools },
+              { header: "Teachers", accessor: (r) => r.teachers },
+              { header: "Teachers present", accessor: (r) => r.teachersPresent },
+              { header: "Teachers present %", accessor: (r) => `${r.teacherPct}%` },
+              { header: "Pupils", accessor: (r) => r.students },
+              { header: "Pupils present", accessor: (r) => r.studentsPresent },
+              { header: "Pupils present %", accessor: (r) => `${r.studentPct}%` },
+            ]}
+          />
         }
       />
 

@@ -13,8 +13,6 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportButton } from "@/components/ExportButton";
-import { DateRangeFilter } from "@/components/DateRangeFilter";
-import { useAdminDateRange } from "@/contexts/AdminDateRangeContext";
 
 export const Route = createFileRoute("/admin/students")({
   head: () => ({ meta: [{ title: "Admitted Pupils — EdoSAS" }] }),
@@ -60,7 +58,6 @@ function useAllStudents() {
 
 function StudentsPage() {
   const { data = [], isLoading } = useAllStudents();
-  const { from, to } = useAdminDateRange();
   const [q, setQ] = useState("");
   const [schoolType, setSchoolType] = useState<string>("all");
   const [lga, setLga] = useState<string>("all");
@@ -86,20 +83,15 @@ function StudentsPage() {
 
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase();
-    // End of day for the "to" date so the full day is inclusive.
-    const fromMs = from ? new Date(`${from}T00:00:00`).getTime() : -Infinity;
-    const toMs = to ? new Date(`${to}T23:59:59.999`).getTime() : Infinity;
     return data.filter((s) => {
       if (schoolType !== "all" && s.school?.category !== schoolType) return false;
       if (lga !== "all" && s.school?.lga !== lga) return false;
-      const created = new Date(s.created_at).getTime();
-      if (created < fromMs || created > toMs) return false;
       if (!term) return true;
       return [s.full_name, s.student_id, s.class, s.school?.name, s.school?.lga, s.parent_contact, s.parent_nin]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(term));
     });
-  }, [data, q, schoolType, lga, from, to]);
+  }, [data, q, schoolType, lga]);
 
   return (
     <div>
@@ -108,26 +100,23 @@ function StudentsPage() {
         subtitle={`All students admitted by teachers · ${data.length.toLocaleString()} total`}
         icon={GraduationCap}
         actions={
-          <div className="flex flex-wrap items-end gap-3">
-            <DateRangeFilter />
-            <ExportButton
-              filename={`admitted-pupils-${from}_to_${to}`}
-              title={`Admitted Pupils · ${from} → ${to}`}
-              rows={rows}
-              columns={[
-                { header: "Student", accessor: (s) => s.full_name },
-                { header: "Student ID", accessor: (s) => s.student_id },
-                { header: "Class", accessor: (s) => s.class },
-                { header: "Gender", accessor: (s) => s.gender ?? "" },
-                { header: "School", accessor: (s) => s.school?.name ?? "" },
-                { header: "LGA", accessor: (s) => s.school?.lga ?? "" },
-                { header: "School Type", accessor: (s) => prettyCategory(s.school?.category ?? null) },
-                { header: "Parent Contact", accessor: (s) => s.parent_contact ?? "" },
-                { header: "Parent NIN", accessor: (s) => s.parent_nin ?? "" },
-                { header: "Admitted", accessor: (s) => new Date(s.created_at).toLocaleDateString() },
-              ]}
-            />
-          </div>
+          <ExportButton
+            filename="admitted-pupils"
+            title="Admitted Pupils"
+            rows={rows}
+            columns={[
+              { header: "Student", accessor: (s) => s.full_name },
+              { header: "Student ID", accessor: (s) => s.student_id },
+              { header: "Class", accessor: (s) => s.class },
+              { header: "Gender", accessor: (s) => s.gender ?? "" },
+              { header: "School", accessor: (s) => s.school?.name ?? "" },
+              { header: "LGA", accessor: (s) => s.school?.lga ?? "" },
+              { header: "School Type", accessor: (s) => prettyCategory(s.school?.category ?? null) },
+              { header: "Parent Contact", accessor: (s) => s.parent_contact ?? "" },
+              { header: "Parent NIN", accessor: (s) => s.parent_nin ?? "" },
+              { header: "Admitted", accessor: (s) => new Date(s.created_at).toLocaleDateString() },
+            ]}
+          />
         }
       />
 

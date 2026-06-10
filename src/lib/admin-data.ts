@@ -144,24 +144,24 @@ export function useStudents() {
   });
 }
 
-export function useTeacherAttendanceRange(from: string, to: string) {
+export function useTeacherAttendanceToday() {
   return useQuery({
-    queryKey: ["admin", "teacher-attendance", from, to],
+    queryKey: ["admin", "teacher-attendance", todayStr()],
     queryFn: async () => {
-      const rows = await fetchAllPaged<TeacherAttendanceLite>(async (start, end) => {
+      const rows = await fetchAllPaged<TeacherAttendanceLite>(async (from, to) => {
         const { data, error } = await supabase
           .from("teacher_attendance")
           .select("id,school_id,teacher_user_id,arrival_time,arrival_status,departure_time,head_verified")
-          .gte("attendance_date", from)
-          .lte("attendance_date", to)
-          .range(start, end);
+          .eq("attendance_date", todayStr())
+          .range(from, to);
         return { data: data as TeacherAttendanceLite[] | null, error };
       });
-      // De-duplicate by teacher_user_id across the range so a teacher is
-      // counted once regardless of how many days they were marked present.
+      // De-duplicate by teacher_user_id so a teacher with multiple rows in a
+      // single day cannot be counted more than once.
       const byTeacher = new Map<string, TeacherAttendanceLite>();
       for (const row of rows) {
         const existing = byTeacher.get(row.teacher_user_id);
+        // Prefer the row with an arrival_time, otherwise keep the first.
         if (!existing || (!existing.arrival_time && row.arrival_time)) {
           byTeacher.set(row.teacher_user_id, row);
         }
@@ -176,19 +176,20 @@ export function useTeacherAttendanceRange(from: string, to: string) {
   });
 }
 
-export function useStudentAttendanceRange(from: string, to: string) {
+export function useStudentAttendanceToday() {
   return useQuery({
-    queryKey: ["admin", "student-attendance", from, to],
+    queryKey: ["admin", "student-attendance", todayStr()],
     queryFn: async () => {
-      const rows = await fetchAllPaged<StudentAttendanceLite>(async (start, end) => {
+      const rows = await fetchAllPaged<StudentAttendanceLite>(async (from, to) => {
         const { data, error } = await supabase
           .from("student_attendance")
           .select("student_id,school_id,morning_status,afternoon_status")
-          .gte("attendance_date", from)
-          .lte("attendance_date", to)
-          .range(start, end);
+          .eq("attendance_date", todayStr())
+          .range(from, to);
         return { data: data as StudentAttendanceLite[] | null, error };
       });
+      // De-duplicate by student_id, merging morning + afternoon so a student
+      // present in either slot is counted once.
       const byStudent = new Map<string, StudentAttendanceLite>();
       for (const row of rows) {
         const existing = byStudent.get(row.student_id);
@@ -210,17 +211,6 @@ export function useStudentAttendanceRange(from: string, to: string) {
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
   });
-}
-
-// Convenience wrappers for "today" — keep existing call sites working.
-export function useTeacherAttendanceToday() {
-  const t = todayStr();
-  return useTeacherAttendanceRange(t, t);
-}
-
-export function useStudentAttendanceToday() {
-  const t = todayStr();
-  return useStudentAttendanceRange(t, t);
 }
 
 /** Round a ratio to a whole percentage, clamped to [0, 100]. */

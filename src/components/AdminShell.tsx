@@ -13,6 +13,7 @@ import {
   Loader2,
   Settings as SettingsIcon,
   GraduationCap,
+  Clock,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,6 @@ import {
 } from "@/lib/admin-data";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
-import { AdminDateRangeProvider } from "@/contexts/AdminDateRangeContext";
 
 const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
@@ -35,6 +35,7 @@ const NAV = [
   { to: "/admin/school-type", label: "By School Type", icon: SchoolIcon, end: false },
   { to: "/admin/flagged", label: "Late & Out of Range", icon: AlertTriangle, end: false },
   { to: "/admin/students", label: "Admitted Pupils", icon: GraduationCap, end: false },
+  { to: "/admin/pupil-attendance", label: "Pupil Attendance", icon: Clock, end: false },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3, end: false },
   { to: "/admin/map", label: "Map", icon: Map, end: false },
   { to: "/admin/assign", label: "Assign Teachers", icon: UserPlus, end: false },
@@ -175,9 +176,7 @@ export function AdminShell() {
         </header>
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 pr-safe pl-safe pb-[calc(env(safe-area-inset-bottom)+1rem)]">
-          <AdminDateRangeProvider>
-            <Outlet />
-          </AdminDateRangeProvider>
+          <Outlet />
         </main>
       </div>
     </div>

@@ -20,6 +20,7 @@ import { Route as IndexRouteImport } from "./routes/index"
 import { Route as AdminIndexRouteImport } from "./routes/admin.index"
 import { Route as AdminStudentsRouteImport } from "./routes/admin.students"
 import { Route as AdminSchoolTypeRouteImport } from "./routes/admin.school-type"
+import { Route as AdminPupilAttendanceRouteImport } from "./routes/admin.pupil-attendance"
 import { Route as AdminMapRouteImport } from "./routes/admin.map"
 import { Route as AdminLgaRouteImport } from "./routes/admin.lga"
 import { Route as AdminFlaggedRouteImport } from "./routes/admin.flagged"
@@ -81,6 +82,11 @@ const AdminSchoolTypeRoute = AdminSchoolTypeRouteImport.update({
   path: "/school-type",
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminPupilAttendanceRoute = AdminPupilAttendanceRouteImport.update({
+  id: "/pupil-attendance",
+  path: "/pupil-attendance",
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMapRoute = AdminMapRouteImport.update({
   id: "/map",
   path: "/map",
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   "/admin/flagged": typeof AdminFlaggedRoute
   "/admin/lga": typeof AdminLgaRoute
   "/admin/map": typeof AdminMapRoute
+  "/admin/pupil-attendance": typeof AdminPupilAttendanceRoute
   "/admin/school-type": typeof AdminSchoolTypeRoute
   "/admin/students": typeof AdminStudentsRoute
   "/admin/": typeof AdminIndexRoute
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   "/admin/flagged": typeof AdminFlaggedRoute
   "/admin/lga": typeof AdminLgaRoute
   "/admin/map": typeof AdminMapRoute
+  "/admin/pupil-attendance": typeof AdminPupilAttendanceRoute
   "/admin/school-type": typeof AdminSchoolTypeRoute
   "/admin/students": typeof AdminStudentsRoute
   "/admin": typeof AdminIndexRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   "/admin/flagged": typeof AdminFlaggedRoute
   "/admin/lga": typeof AdminLgaRoute
   "/admin/map": typeof AdminMapRoute
+  "/admin/pupil-attendance": typeof AdminPupilAttendanceRoute
   "/admin/school-type": typeof AdminSchoolTypeRoute
   "/admin/students": typeof AdminStudentsRoute
   "/admin/": typeof AdminIndexRoute
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | "/admin/flagged"
     | "/admin/lga"
     | "/admin/map"
+    | "/admin/pupil-attendance"
     | "/admin/school-type"
     | "/admin/students"
     | "/admin/"
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | "/admin/flagged"
     | "/admin/lga"
     | "/admin/map"
+    | "/admin/pupil-attendance"
     | "/admin/school-type"
     | "/admin/students"
     | "/admin"
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | "/admin/flagged"
     | "/admin/lga"
     | "/admin/map"
+    | "/admin/pupil-attendance"
     | "/admin/school-type"
     | "/admin/students"
     | "/admin/"
@@ -307,6 +319,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AdminSchoolTypeRouteImport
       parentRoute: typeof AdminRoute
     }
+    "/admin/pupil-attendance": {
+      id: "/admin/pupil-attendance"
+      path: "/pupil-attendance"
+      fullPath: "/admin/pupil-attendance"
+      preLoaderRoute: typeof AdminPupilAttendanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
     "/admin/map": {
       id: "/admin/map"
       path: "/map"
@@ -351,6 +370,7 @@ interface AdminRouteChildren {
   AdminFlaggedRoute: typeof AdminFlaggedRoute
   AdminLgaRoute: typeof AdminLgaRoute
   AdminMapRoute: typeof AdminMapRoute
+  AdminPupilAttendanceRoute: typeof AdminPupilAttendanceRoute
   AdminSchoolTypeRoute: typeof AdminSchoolTypeRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -362,6 +382,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFlaggedRoute: AdminFlaggedRoute,
   AdminLgaRoute: AdminLgaRoute,
   AdminMapRoute: AdminMapRoute,
+  AdminPupilAttendanceRoute: AdminPupilAttendanceRoute,
   AdminSchoolTypeRoute: AdminSchoolTypeRoute,
   AdminStudentsRoute: AdminStudentsRoute,
   AdminIndexRoute: AdminIndexRoute,

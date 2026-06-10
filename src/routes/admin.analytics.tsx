@@ -6,8 +6,8 @@ import {
   useSchools,
   useTeacherProfiles,
   useStudents,
-  useTeacherAttendanceRange,
-  useStudentAttendanceRange,
+  useTeacherAttendanceToday,
+  useStudentAttendanceToday,
   isStudentPresent,
   prettyLga,
   prettyCategory,
@@ -16,8 +16,6 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { ExportButton } from "@/components/ExportButton";
-import { DateRangeFilter } from "@/components/DateRangeFilter";
-import { useAdminDateRange } from "@/contexts/AdminDateRangeContext";
 
 export const Route = createFileRoute("/admin/analytics")({
   component: AnalyticsPage,
@@ -32,12 +30,11 @@ const COLORS = {
 };
 
 function AnalyticsPage() {
-  const { from, to } = useAdminDateRange();
   const { data: schools = [] } = useSchools();
   const { data: teachers = [] } = useTeacherProfiles();
   const { data: students = [] } = useStudents();
-  const { data: tAtt = [] } = useTeacherAttendanceRange(from, to);
-  const { data: sAtt = [] } = useStudentAttendanceRange(from, to);
+  const { data: tAtt = [] } = useTeacherAttendanceToday();
+  const { data: sAtt = [] } = useStudentAttendanceToday();
 
   // Denominator includes any teacher who appears in attendance but isn't in
   // the teacher profile list, so percentages never exceed 100%.
@@ -122,23 +119,20 @@ function AnalyticsPage() {
         subtitle="Charts and insights across the Edo State network"
         icon={BarChart3}
         actions={
-          <div className="flex flex-wrap items-end gap-3">
-            <DateRangeFilter />
-            <ExportButton
-              filename={`analytics-summary-${from}_to_${to}`}
-              title={`Analytics Summary · ${from} → ${to}`}
-              rows={[
-                ...lgaChart.map((r) => ({ section: "Top LGAs", name: r.name, pupils: `${r.Pupils}%`, teachers: `${r.Teachers}%` })),
-                ...typeBar.map((r) => ({ section: "School type", name: r.name, pupils: `${r.Pupils}%`, teachers: `${r.Teachers}%` })),
-              ]}
-              columns={[
-                { header: "Section", accessor: (r) => r.section },
-                { header: "Name", accessor: (r) => r.name },
-                { header: "Pupils present %", accessor: (r) => r.pupils },
-                { header: "Teachers present %", accessor: (r) => r.teachers },
-              ]}
-            />
-          </div>
+          <ExportButton
+            filename="analytics-summary"
+            title="Analytics Summary"
+            rows={[
+              ...lgaChart.map((r) => ({ section: "Top LGAs", name: r.name, pupils: `${r.Pupils}%`, teachers: `${r.Teachers}%` })),
+              ...typeBar.map((r) => ({ section: "School type", name: r.name, pupils: `${r.Pupils}%`, teachers: `${r.Teachers}%` })),
+            ]}
+            columns={[
+              { header: "Section", accessor: (r) => r.section },
+              { header: "Name", accessor: (r) => r.name },
+              { header: "Pupils present %", accessor: (r) => r.pupils },
+              { header: "Teachers present %", accessor: (r) => r.teachers },
+            ]}
+          />
         }
       />
 
