@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { Users, GraduationCap, School as SchoolIcon, UserCheck, AlertCircle, Activity, ShieldCheck } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Users, GraduationCap, School as SchoolIcon, UserCheck, AlertCircle, Activity, ShieldCheck, Filter, X } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { AdminPageHeader } from "@/components/AdminShell";
 import {
@@ -11,8 +11,18 @@ import {
   useStudentAttendanceToday,
   useStaffProfiles,
   isStudentPresent,
+  prettyLga,
+  prettyCategory,
 } from "@/lib/admin-data";
 import { ExportButton } from "@/components/ExportButton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/admin/")({
   component: OverviewPage,
@@ -31,25 +41,81 @@ function OverviewPage() {
   const { data: tAtt = [] } = useTeacherAttendanceToday();
   const { data: sAtt = [] } = useStudentAttendanceToday();
 
+  const [selectedLga, setSelectedLga] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  // Unique filter options
+  const lgaOptions = useMemo(() => {
+    const set = new Set(schools.map((s) => s.lga).filter(Boolean));
+    return Array.from(set).sort();
+  }, [schools]);
+
+  const categoryOptions = useMemo(() => {
+    const set = new Set(schools.map((s) => s.category).filter((c): c is string => Boolean(c)));
+    return Array.from(set).sort();
+  }, [schools]);
+
+  // Filter schools
+  const filteredSchools = useMemo(() => {
+    return schools.filter((s) => {
+      if (selectedLga !== "all" && s.lga !== selectedLga) return false;
+      if (selectedCategory !== "all" && s.category !== selectedCategory) return false;
+      return true;
+    });
+  }, [schools, selectedLga, selectedCategory]);
+
+  const filteredSchoolIds = useMemo(
+    () => new Set(filteredSchools.map((s) => s.id)),
+    [filteredSchools],
+  );
+
+  // Filter staff to those in selected schools
+  const filteredStaff = useMemo(
+    () => staff.filter((s) => !s.school_id || filteredSchoolIds.has(s.school_id)),
+    [staff, filteredSchoolIds],
+  );
+
+  // Filter teachers
+  const filteredTeachers = useMemo(
+    () => teachers.filter((t) => !t.school_id || filteredSchoolIds.has(t.school_id)),
+    [teachers, filteredSchoolIds],
+  );
+
+  // Filter students
+  const filteredStudents = useMemo(
+    () => students.filter((s) => filteredSchoolIds.has(s.school_id)),
+    [students, filteredSchoolIds],
+  );
+
+  // Filter attendance to selected schools
+  const filteredTAtt = useMemo(
+    () => tAtt.filter((r) => !r.school_id || filteredSchoolIds.has(r.school_id)),
+    [tAtt, filteredSchoolIds],
+  );
+  const filteredSAtt = useMemo(
+    () => sAtt.filter((r) => filteredSchoolIds.has(r.school_id)),
+    [sAtt, filteredSchoolIds],
+  );
+
   // Split staff into head teachers vs teachers (by role from user_roles).
   const headTeacherIds = useMemo(
-    () => new Set(staff.filter((s) => s.role === "head_teacher").map((s) => s.user_id)),
-    [staff],
+    () => new Set(filteredStaff.filter((s) => s.role === "head_teacher").map((s) => s.user_id)),
+    [filteredStaff],
   );
   const teacherOnlyIds = useMemo(
-    () => new Set(staff.filter((s) => s.role === "teacher").map((s) => s.user_id)),
-    [staff],
+    () => new Set(filteredStaff.filter((s) => s.role === "teacher").map((s) => s.user_id)),
+    [filteredStaff],
   );
 
   // De-duplicate by teacher to avoid multiple attendance rows inflating counts.
   const presentTeacherIds = new Set(
-    tAtt.filter((r) => r.arrival_time).map((r) => r.teacher_user_id),
+    filteredTAtt.filter((r) => r.arrival_time).map((r) => r.teacher_user_id),
   );
   const lateTeacherIds = new Set(
-    tAtt.filter((r) => r.arrival_status === "late").map((r) => r.teacher_user_id),
+    filteredTAtt.filter((r) => r.arrival_status === "late").map((r) => r.teacher_user_id),
   );
   const presentStudentIds = new Set(
-    sAtt.filter(isStudentPresent).map((r) => r.student_id),
+    filteredSAtt.filter(isStudentPresent).map((r) => r.student_id),
   );
 
   // Head-teacher-specific attendance buckets (teacher_attendance covers both roles).
@@ -67,14 +133,14 @@ function OverviewPage() {
   // Denominator is the union of registered teachers and any teacher with an
   // attendance row today, so the percentage can never exceed 100%.
   const teacherDenom = new Set<string>([
-    ...teachers.map((t) => t.user_id),
-    ...tAtt.filter((r) => !headTeacherIds.has(r.teacher_user_id)).map((r) => r.teacher_user_id),
+    ...filteredTeachers.map((t) => t.user_id),
+    ...filteredTAtt.filter((r) => !headTeacherIds.has(r.teacher_user_id)).map((r) => r.teacher_user_id),
   ]).size;
   const headDenom = new Set<string>([
     ...headTeacherIds,
-    ...tAtt.filter((r) => headTeacherIds.has(r.teacher_user_id)).map((r) => r.teacher_user_id),
+    ...filteredTAtt.filter((r) => headTeacherIds.has(r.teacher_user_id)).map((r) => r.teacher_user_id),
   ]).size;
-  const studentDenom = Math.max(students.length, presentStudentIds.size);
+  const studentDenom = Math.max(filteredStudents.length, presentStudentIds.size);
 
   const teachersPresent = Math.min(presentTeacherOnlyIds.size, teacherDenom);
   const teachersLate = lateTeacherOnlyIds.size;
@@ -86,23 +152,32 @@ function OverviewPage() {
   const headPct = pct(headsPresent, headDenom);
   const studentPct = pct(studentsPresent, studentDenom);
 
+  // Build subtitle based on active filters
+  const activeFilters: string[] = [];
+  if (selectedLga !== "all") activeFilters.push(prettyLga(selectedLga));
+  if (selectedCategory !== "all") activeFilters.push(prettyCategory(selectedCategory));
+
+  const subtitleText = activeFilters.length
+    ? `Filtered: ${activeFilters.join(" · ")} · ${new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}`
+    : `Live attendance across Edo State · ${new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}`;
+
   return (
     <div>
       <AdminPageHeader
         title="State-wide Overview"
-        subtitle={`Live attendance across Edo State · ${new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}`}
+        subtitle={subtitleText}
         icon={Activity}
         actions={
           <ExportButton
             filename={`statewide-overview-${new Date().toISOString().slice(0, 10)}`}
             title="State-wide Overview"
             rows={[
-              { metric: "Schools", value: schools.length },
-              { metric: "Primary schools", value: schools.filter((s) => s.category === "primary").length },
-              { metric: "Junior Secondary schools", value: schools.filter((s) => s.category === "junior_secondary").length },
+              { metric: "Schools", value: filteredSchools.length },
+              { metric: "Primary schools", value: filteredSchools.filter((s) => s.category === "primary").length },
+              { metric: "Junior Secondary schools", value: filteredSchools.filter((s) => s.category === "junior_secondary").length },
               { metric: "Head teachers (registered)", value: headDenom },
               { metric: "Teachers (registered)", value: teacherDenom },
-              { metric: "Pupils (registered)", value: students.length },
+              { metric: "Pupils (registered)", value: filteredStudents.length },
               { metric: "Head teachers present today", value: headsPresent },
               { metric: "Head teachers present %", value: `${headPct}%` },
               { metric: "Head teachers late today", value: headsLate },
@@ -111,7 +186,7 @@ function OverviewPage() {
               { metric: "Teachers late today", value: teachersLate },
               { metric: "Pupils present today", value: studentsPresent },
               { metric: "Pupils present %", value: `${studentPct}%` },
-              { metric: "Pupils not marked", value: Math.max(0, students.length - studentsPresent) },
+              { metric: "Pupils not marked", value: Math.max(0, filteredStudents.length - studentsPresent) },
             ]}
             columns={[
               { header: "Metric", accessor: (r) => r.metric },
@@ -121,17 +196,69 @@ function OverviewPage() {
         }
       />
 
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Filter className="h-4 w-4" />
+          <span className="font-medium">Filters</span>
+        </div>
+        <Select value={selectedLga} onValueChange={setSelectedLga}>
+          <SelectTrigger className="w-[200px] bg-background">
+            <SelectValue placeholder="All LGAs" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All LGAs</SelectItem>
+            {lgaOptions.map((lga) => (
+              <SelectItem key={lga} value={lga}>
+                {prettyLga(lga)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-[200px] bg-background">
+            <SelectValue placeholder="All School Types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All School Types</SelectItem>
+            {categoryOptions.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {prettyCategory(cat)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {(selectedLga !== "all" || selectedCategory !== "all") && (
+          <button
+            onClick={() => { setSelectedLga("all"); setSelectedCategory("all"); }}
+            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+            Clear filters
+          </button>
+        )}
+        {activeFilters.length > 0 && (
+          <div className="flex items-center gap-1.5 ml-auto">
+            {activeFilters.map((label) => (
+              <Badge key={label} variant="secondary" className="text-xs">
+                {label}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="rounded-2xl p-6 bg-gradient-to-br from-primary via-primary/90 to-gold text-primary-foreground shadow-card mb-6">
         <div className="grid sm:grid-cols-2 gap-6">
           <div>
-            <div className="text-xs uppercase tracking-wider opacity-80">Pupils present statewide</div>
+            <div className="text-xs uppercase tracking-wider opacity-80">Pupils present {activeFilters.length ? "(filtered)" : "statewide"}</div>
             <div className="mt-2 flex items-baseline gap-3">
               <div className="text-5xl font-bold font-display">{studentPct}%</div>
               <div className="text-sm opacity-90">{studentsPresent.toLocaleString()} of {studentDenom.toLocaleString()}</div>
             </div>
           </div>
           <div>
-            <div className="text-xs uppercase tracking-wider opacity-80">Teachers present statewide</div>
+            <div className="text-xs uppercase tracking-wider opacity-80">Teachers present {activeFilters.length ? "(filtered)" : "statewide"}</div>
             <div className="mt-2 flex items-baseline gap-3">
               <div className="text-5xl font-bold font-display">{teacherPct}%</div>
               <div className="text-sm opacity-90">{teachersPresent.toLocaleString()} of {teacherDenom.toLocaleString()}</div>
@@ -145,13 +272,13 @@ function OverviewPage() {
         <StatCard
           icon={SchoolIcon}
           label="Schools"
-          value={schools.length}
-          hint={`${schools.filter((s) => s.category === "primary").length} Primary · ${schools.filter((s) => s.category === "junior_secondary").length} Junior Sec.`}
+          value={filteredSchools.length}
+          hint={`${filteredSchools.filter((s) => s.category === "primary").length} Primary · ${filteredSchools.filter((s) => s.category === "junior_secondary").length} Junior Sec.`}
           className="bg-head-teacher-card"
         />
         <StatCard icon={ShieldCheck} label="Head Teachers" value={headDenom} className="bg-head-teacher-card" />
         <StatCard icon={Users} label="Teachers" value={teacherDenom} className="bg-head-teacher-card" />
-        <StatCard icon={GraduationCap} label="Students" value={students.length} tone="gold" className="bg-head-teacher-card" />
+        <StatCard icon={GraduationCap} label="Students" value={filteredStudents.length} tone="gold" className="bg-head-teacher-card" />
       </div>
 
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Today</h2>
@@ -161,7 +288,7 @@ function OverviewPage() {
         <StatCard icon={UserCheck} label="Pupils present" value={studentsPresent} tone="success" hint={`${studentPct}%`} className="bg-head-teacher-card" />
         <StatCard icon={AlertCircle} label="Head teachers late" value={headsLate} tone="warning" className="bg-head-teacher-card" />
         <StatCard icon={AlertCircle} label="Teachers late" value={teachersLate} tone="warning" className="bg-head-teacher-card" />
-        <StatCard icon={AlertCircle} label="Pupils not marked" value={Math.max(0, students.length - studentsPresent)} tone="destructive" className="bg-head-teacher-card" />
+        <StatCard icon={AlertCircle} label="Pupils not marked" value={Math.max(0, filteredStudents.length - studentsPresent)} tone="destructive" className="bg-head-teacher-card" />
       </div>
     </div>
   );
