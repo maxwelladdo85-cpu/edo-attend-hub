@@ -170,6 +170,15 @@ export function AdmitStudentCard({ schoolName, onAdded }: Props) {
               placeholder="Phone or email"
             />
           </div>
+          <div className="space-y-1 sm:col-span-2">
+            <Label htmlFor="adm-nin">Parent NIN (optional)</Label>
+            <Input
+              id="adm-nin"
+              value={parentNin}
+              onChange={(e) => setParentNin(e.target.value)}
+              placeholder="National Identification Number"
+            />
+          </div>
           <div className="sm:col-span-2 flex gap-2 justify-end pt-1">
             <Button
               type="button"
