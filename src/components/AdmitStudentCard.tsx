@@ -28,6 +28,8 @@ export function AdmitStudentCard({ schoolName, onAdded }: Props) {
   const [klass, setKlass] = useState(profile?.class_taught ?? "");
   const [gender, setGender] = useState<string>("");
   const [parentContact, setParentContact] = useState("");
+  const [parentNin, setParentNin] = useState("");
+
 
   const canAdmit = !!profile?.school_id;
 
@@ -37,7 +39,9 @@ export function AdmitStudentCard({ schoolName, onAdded }: Props) {
     setKlass(profile?.class_taught ?? "");
     setGender("");
     setParentContact("");
+    setParentNin("");
   };
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +64,9 @@ export function AdmitStudentCard({ schoolName, onAdded }: Props) {
         class: klass.trim(),
         gender: gender || null,
         parent_contact: parentContact.trim() || null,
+        parent_nin: parentNin.trim() || null,
       });
+
       if (error) throw error;
       toast.success(`${fullName.trim()} admitted to ${klass.trim()}`);
       reset();
