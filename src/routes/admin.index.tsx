@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { Users, GraduationCap, School as SchoolIcon, UserCheck, AlertCircle, Activity, ShieldCheck } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { AdminPageHeader } from "@/components/AdminShell";
@@ -12,7 +13,6 @@ import {
   isStudentPresent,
 } from "@/lib/admin-data";
 import { ExportButton } from "@/components/ExportButton";
-import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/admin/")({
   component: OverviewPage,
@@ -31,6 +31,16 @@ function OverviewPage() {
   const { data: tAtt = [] } = useTeacherAttendanceToday();
   const { data: sAtt = [] } = useStudentAttendanceToday();
 
+  // Split staff into head teachers vs teachers (by role from user_roles).
+  const headTeacherIds = useMemo(
+    () => new Set(staff.filter((s) => s.role === "head_teacher").map((s) => s.user_id)),
+    [staff],
+  );
+  const teacherOnlyIds = useMemo(
+    () => new Set(staff.filter((s) => s.role === "teacher").map((s) => s.user_id)),
+    [staff],
+  );
+
   // De-duplicate by teacher to avoid multiple attendance rows inflating counts.
   const presentTeacherIds = new Set(
     tAtt.filter((r) => r.arrival_time).map((r) => r.teacher_user_id),
@@ -42,19 +52,38 @@ function OverviewPage() {
     sAtt.filter(isStudentPresent).map((r) => r.student_id),
   );
 
+  // Head-teacher-specific attendance buckets (teacher_attendance covers both roles).
+  const presentHeadIds = new Set(
+    [...presentTeacherIds].filter((id) => headTeacherIds.has(id)),
+  );
+  const lateHeadIds = new Set([...lateTeacherIds].filter((id) => headTeacherIds.has(id)));
+  const presentTeacherOnlyIds = new Set(
+    [...presentTeacherIds].filter((id) => teacherOnlyIds.has(id) || (!headTeacherIds.has(id))),
+  );
+  const lateTeacherOnlyIds = new Set(
+    [...lateTeacherIds].filter((id) => teacherOnlyIds.has(id) || (!headTeacherIds.has(id))),
+  );
+
   // Denominator is the union of registered teachers and any teacher with an
   // attendance row today, so the percentage can never exceed 100%.
   const teacherDenom = new Set<string>([
     ...teachers.map((t) => t.user_id),
-    ...tAtt.map((r) => r.teacher_user_id),
+    ...tAtt.filter((r) => !headTeacherIds.has(r.teacher_user_id)).map((r) => r.teacher_user_id),
+  ]).size;
+  const headDenom = new Set<string>([
+    ...headTeacherIds,
+    ...tAtt.filter((r) => headTeacherIds.has(r.teacher_user_id)).map((r) => r.teacher_user_id),
   ]).size;
   const studentDenom = Math.max(students.length, presentStudentIds.size);
 
-  const teachersPresent = Math.min(presentTeacherIds.size, teacherDenom);
-  const teachersLate = lateTeacherIds.size;
+  const teachersPresent = Math.min(presentTeacherOnlyIds.size, teacherDenom);
+  const teachersLate = lateTeacherOnlyIds.size;
+  const headsPresent = Math.min(presentHeadIds.size, headDenom);
+  const headsLate = lateHeadIds.size;
   const studentsPresent = Math.min(presentStudentIds.size, studentDenom);
 
   const teacherPct = pct(teachersPresent, teacherDenom);
+  const headPct = pct(headsPresent, headDenom);
   const studentPct = pct(studentsPresent, studentDenom);
 
   return (
@@ -71,8 +100,12 @@ function OverviewPage() {
               { metric: "Schools", value: schools.length },
               { metric: "Primary schools", value: schools.filter((s) => s.category === "primary").length },
               { metric: "Junior Secondary schools", value: schools.filter((s) => s.category === "junior_secondary").length },
-              { metric: "Teachers (registered)", value: teachers.length },
+              { metric: "Head teachers (registered)", value: headDenom },
+              { metric: "Teachers (registered)", value: teacherDenom },
               { metric: "Pupils (registered)", value: students.length },
+              { metric: "Head teachers present today", value: headsPresent },
+              { metric: "Head teachers present %", value: `${headPct}%` },
+              { metric: "Head teachers late today", value: headsLate },
               { metric: "Teachers present today", value: teachersPresent },
               { metric: "Teachers present %", value: `${teacherPct}%` },
               { metric: "Teachers late today", value: teachersLate },
@@ -108,7 +141,7 @@ function OverviewPage() {
       </div>
 
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Network</h2>
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <StatCard
           icon={SchoolIcon}
           label="Schools"
@@ -116,143 +149,20 @@ function OverviewPage() {
           hint={`${schools.filter((s) => s.category === "primary").length} Primary · ${schools.filter((s) => s.category === "junior_secondary").length} Junior Sec.`}
           className="bg-head-teacher-card"
         />
-        <StatCard icon={Users} label="Teachers" value={teachers.length} className="bg-head-teacher-card" />
+        <StatCard icon={ShieldCheck} label="Head Teachers" value={headDenom} className="bg-head-teacher-card" />
+        <StatCard icon={Users} label="Teachers" value={teacherDenom} className="bg-head-teacher-card" />
         <StatCard icon={GraduationCap} label="Students" value={students.length} tone="gold" className="bg-head-teacher-card" />
       </div>
 
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Today</h2>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+        <StatCard icon={UserCheck} label="Head teachers present" value={headsPresent} tone="success" hint={`${headPct}%`} className="bg-head-teacher-card" />
         <StatCard icon={UserCheck} label="Teachers present" value={teachersPresent} tone="success" hint={`${teacherPct}%`} className="bg-head-teacher-card" />
-        <StatCard icon={AlertCircle} label="Teachers late" value={teachersLate} tone="warning" className="bg-head-teacher-card" />
         <StatCard icon={UserCheck} label="Pupils present" value={studentsPresent} tone="success" hint={`${studentPct}%`} className="bg-head-teacher-card" />
+        <StatCard icon={AlertCircle} label="Head teachers late" value={headsLate} tone="warning" className="bg-head-teacher-card" />
+        <StatCard icon={AlertCircle} label="Teachers late" value={teachersLate} tone="warning" className="bg-head-teacher-card" />
         <StatCard icon={AlertCircle} label="Pupils not marked" value={Math.max(0, students.length - studentsPresent)} tone="destructive" className="bg-head-teacher-card" />
       </div>
-
-      <StaffDirectory staff={staff} schools={schools} />
-    </div>
-  );
-}
-
-function StaffDirectory({
-  staff,
-  schools,
-}: {
-  staff: import("@/lib/admin-data").StaffProfile[];
-  schools: import("@/lib/admin-data").SchoolLite[];
-}) {
-  const schoolName = (id: string | null) =>
-    schools.find((s) => s.id === id)?.name ?? "—";
-
-  const headTeachers = staff
-    .filter((s) => s.role === "head_teacher")
-    .sort((a, b) => (a.full_name || "").localeCompare(b.full_name || ""));
-  const teachers = staff
-    .filter((s) => s.role === "teacher")
-    .sort((a, b) => (a.full_name || "").localeCompare(b.full_name || ""));
-
-  return (
-    <div className="mt-8 space-y-6">
-      <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4" /> Head Teachers
-          <span className="ml-1 text-xs font-normal normal-case text-muted-foreground/80">
-            ({headTeachers.length})
-          </span>
-        </h2>
-        {headTeachers.length === 0 ? (
-          <PlaceholderCard label="No head teacher accounts yet" />
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {headTeachers.map((h) => (
-              <StaffCard key={h.user_id} person={h} schoolName={schoolName(h.school_id)} />
-            ))}
-            <PlaceholderCard label="Add another head teacher" dashed />
-          </div>
-        )}
-      </div>
-
-      <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
-          <Users className="h-4 w-4" /> Teachers
-          <span className="ml-1 text-xs font-normal normal-case text-muted-foreground/80">
-            ({teachers.length})
-          </span>
-        </h2>
-        {teachers.length === 0 ? (
-          <PlaceholderCard label="No teacher accounts yet" />
-        ) : (
-          <div className="rounded-xl border border-border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/60 text-muted-foreground">
-                <tr className="text-left">
-                  <th className="px-4 py-2 font-medium">Name</th>
-                  <th className="px-4 py-2 font-medium">Teacher ID</th>
-                  <th className="px-4 py-2 font-medium">Class</th>
-                  <th className="px-4 py-2 font-medium">School</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teachers.map((t) => (
-                  <tr key={t.user_id} className="border-t border-border">
-                    <td className="px-4 py-2 font-medium text-foreground">{t.full_name}</td>
-                    <td className="px-4 py-2 text-muted-foreground">{t.teacher_id ?? "—"}</td>
-                    <td className="px-4 py-2 text-muted-foreground">{t.class_taught ?? "—"}</td>
-                    <td className="px-4 py-2 text-muted-foreground">{schoolName(t.school_id)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function StaffCard({
-  person,
-  schoolName,
-}: {
-  person: import("@/lib/admin-data").StaffProfile;
-  schoolName: string;
-}) {
-  const initials = (person.full_name || "?")
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((s) => s[0]?.toUpperCase())
-    .join("");
-  return (
-    <div className="rounded-xl border border-border bg-card p-4 flex items-start gap-3">
-      <div className="h-10 w-10 rounded-full bg-primary/10 text-primary grid place-items-center font-semibold">
-        {initials}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="font-medium text-foreground truncate">{person.full_name}</div>
-        <div className="text-xs text-muted-foreground truncate">{schoolName}</div>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {person.teacher_id && (
-            <Badge variant="secondary" className="font-mono text-[10px]">
-              {person.teacher_id}
-            </Badge>
-          )}
-          {person.class_taught && (
-            <Badge variant="outline" className="text-[10px]">
-              {person.class_taught}
-            </Badge>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PlaceholderCard({ label, dashed = false }: { label: string; dashed?: boolean }) {
-  return (
-    <div
-      className={`rounded-xl ${dashed ? "border border-dashed" : "border"} border-border bg-muted/30 p-4 grid place-items-center text-sm text-muted-foreground min-h-[88px]`}
-    >
-      {label}
     </div>
   );
 }
