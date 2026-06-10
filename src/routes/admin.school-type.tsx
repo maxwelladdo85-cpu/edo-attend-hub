@@ -24,11 +24,12 @@ export const Route = createFileRoute("/admin/school-type")({
 });
 
 function BySchoolTypePage() {
+  const { from, to } = useAdminDateRange();
   const { data: schools = [] } = useSchools();
   const { data: teachers = [] } = useTeacherProfiles();
   const { data: students = [] } = useStudents();
-  const { data: tAtt = [] } = useTeacherAttendanceToday();
-  const { data: sAtt = [] } = useStudentAttendanceToday();
+  const { data: tAtt = [] } = useTeacherAttendanceRange(from, to);
+  const { data: sAtt = [] } = useStudentAttendanceRange(from, to);
 
   const rows = useMemo(() => {
     const schoolToCat = new Map(schools.map((s) => [s.id, s.category ?? "other"]));
