@@ -6,8 +6,8 @@ import {
   useSchools,
   useTeacherProfiles,
   useStudents,
-  useTeacherAttendanceToday,
-  useStudentAttendanceToday,
+  useTeacherAttendanceRange,
+  useStudentAttendanceRange,
   isStudentPresent,
   prettyLga,
   safePct,
@@ -15,6 +15,8 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { ExportButton } from "@/components/ExportButton";
+import { DateRangeFilter } from "@/components/DateRangeFilter";
+import { useAdminDateRange } from "@/contexts/AdminDateRangeContext";
 
 export const Route = createFileRoute("/admin/lga")({
   component: ByLgaPage,
