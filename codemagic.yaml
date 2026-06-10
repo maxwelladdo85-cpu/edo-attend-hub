@@ -36,28 +36,41 @@ workflows:
       - name: Install Fastlane & setup signing
         script: |
           gem install fastlane -q --no-document
-          echo "${APP_STORE_CONNECT_API_KEY}" | base64 -d > /tmp/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+          printf '%s' "$APP_STORE_CONNECT_API_KEY" > /tmp/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
           ruby -e '
             require "json"
-            key = File.read("/tmp/AuthKey_'$APP_STORE_CONNECT_API_KEY_ID'.p8")
-            j = {key_id: "'$APP_STORE_CONNECT_API_KEY_ID'", issuer_id: "'$APP_STORE_CONNECT_ISSUER_ID'", key: key, in_house: false, duration: 1200}
+            key = File.read("/tmp/AuthKey_'$APP_STORE_CONNECT_API_KEY_ID'.p8").strip
+            j = {"key_id" => "'$APP_STORE_CONNECT_API_KEY_ID'", "issuer_id" => "'$APP_STORE_CONNECT_ISSUER_ID'", "key" => key, "in_house" => false, "duration" => 1200}
             File.write("/tmp/api_key.json", JSON.generate(j))
-          '
+          ' 2>&1 || {
+            echo "JSON generate failed, trying manual JSON construction..."
+            cat > /tmp/api_key.json << KEYEOF
+          {"key_id":"'$APP_STORE_CONNECT_API_KEY_ID'","issuer_id":"'$APP_STORE_CONNECT_ISSUER_ID'","key":"$(cat /tmp/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8 | tr -d '\n' | sed 's/"/\\"/g')","in_house":false,"duration":1200}
+          KEYEOF
+          }
+          cat /tmp/api_key.json | head -c 200
+          echo ""
+          echo "---"
+          echo "Key ID: $APP_STORE_CONNECT_API_KEY_ID"
+          echo "Issuer ID: $APPLE_TEAM_ID"
 
           fastlane cert \
             --api_key_path /tmp/api_key.json \
             --team_id $APPLE_TEAM_ID \
             --output_path /tmp/certs \
-            --force
+            --force 2>&1 || echo "cert failed, continuing..."
 
           fastlane sigh \
             --app_identifier com.edosubeb.attendance \
             --api_key_path /tmp/api_key.json \
             --team_id $APPLE_TEAM_ID \
             --output_path /tmp/profiles \
-            --force
+            --force 2>&1 || echo "sigh failed, continuing..."
 
-          security create-keychain -p "" build.keychain
+          ls -la /tmp/certs/ 2>/dev/null || echo "No certs dir"
+          ls -la /tmp/profiles/ 2>/dev/null || echo "No profiles dir"
+
+          security create-keychain -p "" build.keychain 2>/dev/null || true
           security default-keychain -s build.keychain
           security unlock-keychain -p "" build.keychain
           security set-keychain-settings -t 3600 -u build.keychain
@@ -70,6 +83,7 @@ workflows:
 
           mkdir -p ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles
           cp /tmp/profiles/*.mobileprovision ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/ 2>/dev/null || true
+          ls ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/ 2>/dev/null || echo "No profiles installed"
 
       - name: Build & Archive
         script: |
