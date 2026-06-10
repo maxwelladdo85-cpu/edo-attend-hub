@@ -530,11 +530,33 @@ function HeadTeacherView() {
                       <div className="text-muted-foreground text-xs">Arrival</div>
                       <div>{r?.arrival_time ? new Date(r.arrival_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
                       {r?.arrival_status && <StatusBadge status={r.arrival_status} />}
+                      {r?.arrival_lat != null && r?.arrival_lng != null && (
+                        <a
+                          href={`https://www.google.com/maps?q=${r.arrival_lat},${r.arrival_lng}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 flex items-center gap-1 text-[11px] text-primary font-mono hover:underline"
+                        >
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <span className="break-all">{r.arrival_lat.toFixed(4)}, {r.arrival_lng.toFixed(4)}</span>
+                        </a>
+                      )}
                     </div>
                     <div className="min-w-0 sm:min-w-[110px]">
                       <div className="text-muted-foreground text-xs">Departure</div>
                       <div>{r?.departure_time ? new Date(r.departure_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
                       {r?.departure_status && <StatusBadge status={r.departure_status} />}
+                      {r?.departure_lat != null && r?.departure_lng != null && (
+                        <a
+                          href={`https://www.google.com/maps?q=${r.departure_lat},${r.departure_lng}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 flex items-center gap-1 text-[11px] text-primary font-mono hover:underline"
+                        >
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <span className="break-all">{r.departure_lat.toFixed(4)}, {r.departure_lng.toFixed(4)}</span>
+                        </a>
+                      )}
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
