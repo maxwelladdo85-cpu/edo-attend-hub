@@ -280,6 +280,11 @@ function TeacherView() {
                   {today.arrival_lat.toFixed(6)}, {today.arrival_lng.toFixed(6)}
                 </div>
               )}
+              {today?.arrival_lat != null && today?.arrival_lng != null && school?.latitude != null && school?.longitude != null && (
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  Distance: {Math.round(distanceMeters(today.arrival_lat, today.arrival_lng, school.latitude, school.longitude)).toLocaleString()} m from school
+                </div>
+              )}
             </div>
             <div className="h-12 w-12 rounded-xl bg-primary/10 grid place-items-center">
               <LogIn className="h-6 w-6 text-primary" />
@@ -302,6 +307,11 @@ function TeacherView() {
                 <div className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground font-mono">
                   <MapPin className="h-3 w-3" />
                   {today.departure_lat.toFixed(6)}, {today.departure_lng.toFixed(6)}
+                </div>
+              )}
+              {today?.departure_lat != null && today?.departure_lng != null && school?.latitude != null && school?.longitude != null && (
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  Distance: {Math.round(distanceMeters(today.departure_lat, today.departure_lng, school.latitude, school.longitude)).toLocaleString()} m from school
                 </div>
               )}
             </div>
