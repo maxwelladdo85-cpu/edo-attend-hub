@@ -51,7 +51,7 @@ function OverviewPage() {
   }, [schools]);
 
   const categoryOptions = useMemo(() => {
-    const set = new Set(schools.map((s) => s.category).filter(Boolean));
+    const set = new Set(schools.map((s) => s.category).filter((c): c is string => Boolean(c)));
     return Array.from(set).sort();
   }, [schools]);
 
