@@ -104,7 +104,9 @@ function TeacherView() {
   const [busy, setBusy] = useState<"arrival" | "departure" | null>(null);
   const [distanceWarning, setDistanceWarning] = useState<string | null>(null);
 
-  const MAX_DISTANCE_M = 1;
+  // Default allowed radius (meters) when a school has not configured one.
+  // GPS accuracy on phones is typically 5-30m, so 100m is a sensible floor.
+  const DEFAULT_RADIUS_M = 100;
 
   const isHead = primaryRole(roles) === "head_teacher";
   const idLabel = isHead ? "Head Teacher ID" : "Teacher ID";
@@ -172,19 +174,20 @@ function TeacherView() {
         return;
       }
       dist = distanceMeters(lat, lng, school.latitude, school.longitude);
-      verified = dist <= (school.radius_meters ?? 1);
+      const allowedRadius = school.radius_meters ?? DEFAULT_RADIUS_M;
+      verified = dist <= allowedRadius;
 
       // Out-of-range: still record the attendance as unverified, but show a
       // clear message. For head teachers, address them directly without asking
       // to remove the record. For regular teachers, ask them to contact the
       // head teacher to remove today's record and re-mark it from within range.
-      if (dist > MAX_DISTANCE_M) {
+      if (!verified) {
         const teacherName = profile?.full_name ?? "Teacher";
         if (isHead) {
-          const msg = `Dear Head Teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school). Please ensure you are within the school premises when marking attendance.`;
+          const msg = `Dear Head Teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m). Please ensure you are within the school premises when marking attendance.`;
           setDistanceWarning(msg);
         } else {
-          const msg = `Dear teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school). Please ask your head teacher to remove the data marked for today and allow them to mark the attendance again from within the school.`;
+          const msg = `Dear teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m). Please ask your head teacher to remove the data marked for today and allow them to mark the attendance again from within the school.`;
           setDistanceWarning(msg);
         }
       } else {
