@@ -255,6 +255,16 @@ function TeacherView() {
         </div>
       </div>
 
+      {distanceWarning && (
+        <div className="rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm flex gap-3">
+          <AlertCircle className="h-5 w-5 text-warning-foreground flex-shrink-0 mt-0.5" />
+          <div>
+            <div className="font-medium text-foreground">Attendance not recorded</div>
+            <div className="text-muted-foreground mt-1">{distanceWarning}</div>
+          </div>
+        </div>
+      )}
+
       <div className="grid md:grid-cols-2 gap-4">
         <div className={`rounded-2xl border border-border ${cardBg} p-6 shadow-card`}>
           <div className="flex items-center justify-between">
