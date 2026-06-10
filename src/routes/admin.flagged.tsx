@@ -208,17 +208,7 @@ function FlaggedPage() {
       />
 
       <div className="flex flex-wrap items-end gap-3 mb-4">
-        <div>
-          <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-1">
-            Date
-          </label>
-          <Input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-44"
-          />
-        </div>
+        <DateRangeFilter />
         <div className="flex gap-2">
           <Button
             variant={filter === "all" ? "default" : "outline"}
