@@ -173,6 +173,17 @@ function TeacherView() {
       dist = distanceMeters(lat, lng, school.latitude, school.longitude);
       verified = dist <= (school.radius_meters ?? 100);
 
+      // Enforce strict 1-metre proximity rule.
+      if (dist > MAX_DISTANCE_M) {
+        void haptic("warning");
+        const teacherName = profile?.full_name ?? "Teacher";
+        const msg = `Dear teacher ${teacherName}, you marked your attendance ${Math.round(dist)} metres from your school location.`;
+        setDistanceWarning(msg);
+        toast.warning(msg);
+        return;
+      }
+      setDistanceWarning(null);
+
       if (kind === "arrival") {
         const status = classifyArrival(now, school.resumption_time);
         const { error } = await supabase.from("teacher_attendance").upsert(
