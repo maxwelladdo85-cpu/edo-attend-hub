@@ -58,7 +58,8 @@ workflows:
                 git_branch: "match-certs",
                 api_key: api_key,
                 force_for_new_devices: true,
-                force: true
+                force: true,
+                generate_apple_certs: false
               )
             end
           end
