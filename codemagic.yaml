@@ -54,6 +54,8 @@ workflows:
               match(
                 type: "appstore",
                 app_identifier: "com.edosubeb.attendance",
+                git_url: "https://github.com/maxwelladdo85-cpu/edo-attend-hub.git",
+                git_branch: "match-certs",
                 api_key: api_key,
                 force_for_new_devices: true,
                 force: true
