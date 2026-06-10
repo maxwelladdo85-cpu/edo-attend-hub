@@ -225,8 +225,13 @@ function TeacherView() {
           .eq("attendance_date", dateStr);
         if (error) throw error;
         const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-        void haptic("success");
-        toast.success(`Departure marked at ${timeLabel} — ${status.replace("_", " ")}`);
+        if (verified) {
+          void haptic("success");
+          toast.success(`Departure marked at ${timeLabel} — ${status.replace("_", " ")}`);
+        } else {
+          void haptic("warning");
+          toast.warning(`Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please ask your head teacher to remove today's record so it can be marked again from within the school.`);
+        }
       }
       await load();
     } catch (e: any) {
