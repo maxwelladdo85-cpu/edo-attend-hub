@@ -32,6 +32,16 @@ export type TeacherProfileLite = {
   school_id: string | null;
 };
 
+export type StaffProfile = {
+  user_id: string;
+  full_name: string;
+  teacher_id: string | null;
+  class_taught: string | null;
+  school_id: string | null;
+  role: "teacher" | "head_teacher";
+  created_at?: string | null;
+};
+
 export type StudentLite = {
   id: string;
   school_id: string;
@@ -119,6 +129,43 @@ export function useTeacherProfiles() {
         .in("user_id", ids);
       if (error) throw error;
       return (data ?? []) as TeacherProfileLite[];
+    },
+    staleTime: REF_STALE,
+    gcTime: REF_GC,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useStaffProfiles() {
+  return useQuery({
+    queryKey: ["admin", "staff-profiles"],
+    queryFn: async () => {
+      const { data: roleRows, error: rerr } = await supabase
+        .from("user_roles")
+        .select("user_id,role")
+        .in("role", ["teacher", "head_teacher"]);
+      if (rerr) throw rerr;
+      const roleMap = new Map<string, "teacher" | "head_teacher">();
+      for (const r of (roleRows ?? []) as { user_id: string; role: "teacher" | "head_teacher" }[]) {
+        // head_teacher wins if a user somehow has both
+        if (r.role === "head_teacher" || !roleMap.has(r.user_id)) roleMap.set(r.user_id, r.role);
+      }
+      const ids = Array.from(roleMap.keys());
+      if (ids.length === 0) return [] as StaffProfile[];
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("user_id,full_name,teacher_id,class_taught,school_id,created_at")
+        .in("user_id", ids);
+      if (error) throw error;
+      return (data ?? []).map((p: any) => ({
+        user_id: p.user_id,
+        full_name: p.full_name,
+        teacher_id: p.teacher_id,
+        class_taught: p.class_taught,
+        school_id: p.school_id,
+        created_at: p.created_at ?? null,
+        role: roleMap.get(p.user_id) ?? "teacher",
+      })) as StaffProfile[];
     },
     staleTime: REF_STALE,
     gcTime: REF_GC,
