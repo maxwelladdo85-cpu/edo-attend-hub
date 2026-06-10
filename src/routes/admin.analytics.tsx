@@ -32,11 +32,12 @@ const COLORS = {
 };
 
 function AnalyticsPage() {
+  const { from, to } = useAdminDateRange();
   const { data: schools = [] } = useSchools();
   const { data: teachers = [] } = useTeacherProfiles();
   const { data: students = [] } = useStudents();
-  const { data: tAtt = [] } = useTeacherAttendanceToday();
-  const { data: sAtt = [] } = useStudentAttendanceToday();
+  const { data: tAtt = [] } = useTeacherAttendanceRange(from, to);
+  const { data: sAtt = [] } = useStudentAttendanceRange(from, to);
 
   // Denominator includes any teacher who appears in attendance but isn't in
   // the teacher profile list, so percentages never exceed 100%.
