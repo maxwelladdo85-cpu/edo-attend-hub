@@ -6,11 +6,13 @@ import {
   useSchools,
   useTeacherProfiles,
   useStudents,
-  useTeacherAttendanceToday,
-  useStudentAttendanceToday,
+  useTeacherAttendanceRange,
+  useStudentAttendanceRange,
   isStudentPresent,
 } from "@/lib/admin-data";
 import { ExportButton } from "@/components/ExportButton";
+import { DateRangeFilter } from "@/components/DateRangeFilter";
+import { useAdminDateRange } from "@/contexts/AdminDateRangeContext";
 
 export const Route = createFileRoute("/admin/")({
   component: OverviewPage,
