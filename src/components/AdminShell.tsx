@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   Loader2,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -113,6 +114,12 @@ export function AdminShell() {
           <div className="text-sm font-medium truncate">{profile.full_name}</div>
           <div className="text-xs text-muted-foreground truncate">{profile.designation ?? "Administrator"}</div>
         </div>
+        <Link
+          to="/settings"
+          className="flex items-center gap-2 px-3 py-2 mb-2 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent"
+        >
+          <SettingsIcon className="h-4 w-4" /> Settings
+        </Link>
         <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
           <LogOut className="h-4 w-4 mr-1.5" /> Sign out
         </Button>

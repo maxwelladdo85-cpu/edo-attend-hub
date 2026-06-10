@@ -44,6 +44,39 @@ export type Database = {
         }
         Relationships: []
       }
+      classes: {
+        Row: {
+          active: boolean
+          basic_number: number
+          created_at: string
+          id: string
+          level: string
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          basic_number: number
+          created_at?: string
+          id?: string
+          level: string
+          name: string
+          sort_order: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          basic_number?: number
+          created_at?: string
+          id?: string
+          level?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           class_taught: string | null
@@ -371,6 +404,7 @@ export type Database = {
     }
     Functions: {
       current_user_school: { Args: never; Returns: string }
+      delete_my_account: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -378,6 +412,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      resolve_teacher_email: { Args: { _teacher_id: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "head_teacher" | "teacher"

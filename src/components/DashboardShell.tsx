@@ -1,15 +1,23 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LogOut, type LucideIcon } from "lucide-react";
+import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState, type ReactNode } from "react";
+import {
+  LogOut,
+  Settings as SettingsIcon,
+  LayoutDashboard,
+  UserCircle,
+  Menu,
+  X,
+  Loader2,
+} from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import type { ReactNode } from "react";
 
 export interface NavItem {
   to: string;
   label: string;
-  icon: LucideIcon;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 export function DashboardShell({
@@ -24,6 +32,7 @@ export function DashboardShell({
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => {
     await signOut();
@@ -31,56 +40,100 @@ export function DashboardShell({
     navigate({ to: "/login", replace: true });
   };
 
-  return (
-    <div className="min-h-dvh bg-background flex flex-col">
-      {/* Top bar */}
-      <header className="border-b border-border/60 bg-card sticky top-0 z-40 pt-safe">
-        <div className="container mx-auto px-4 pl-safe pr-safe h-16 flex items-center justify-between">
-          <Link to="/dashboard" className="flex items-center gap-2.5">
-            <Logo className="h-10 w-10" />
-            <div className="leading-tight">
-              <div className="font-display font-bold text-sm">EdoSUBEB</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{roleLabel}</div>
-            </div>
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="hidden md:block text-right leading-tight">
-              <div className="text-sm font-medium">{profile?.full_name ?? "—"}</div>
-              <div className="text-xs text-muted-foreground">{profile?.designation ?? roleLabel}</div>
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="tap-target">
-              <LogOut className="h-4 w-4 md:mr-1.5" />
-              <span className="hidden md:inline">Sign out</span>
-            </Button>
-          </div>
-        </div>
-        {nav.length > 0 && (
-          <nav className="container mx-auto px-4 pl-safe pr-safe flex gap-1 overflow-x-auto">
-            {nav.map((item) => {
-              const active = pathname === item.to;
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`flex items-center gap-1.5 px-3 py-2.5 text-sm border-b-2 transition-colors whitespace-nowrap tap-target ${
-                    active
-                      ? "border-primary text-primary font-medium"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        )}
-      </header>
+  const isActive = (to: string) => pathname === to || pathname.startsWith(to + "/");
 
-      <main className="flex-1 container mx-auto px-4 pl-safe pr-safe py-6 md:py-8 pb-[calc(env(safe-area-inset-bottom)+1.5rem)]">
-        {children}
-      </main>
+  const sidebarNav: NavItem[] = [
+    { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/settings", label: "My Profile", icon: UserCircle },
+    ...nav,
+  ];
+
+  const SidebarBody = (
+    <div className="flex flex-col h-full">
+      <div className="px-5 py-5 border-b border-sidebar-border flex items-center gap-2.5">
+        <Logo className="h-9 w-9" />
+        <div className="leading-tight">
+          <div className="font-display font-bold text-sm">EdoSUBEB</div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{roleLabel}</div>
+        </div>
+      </div>
+      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        {sidebarNav.map((item) => {
+          const active = isActive(item.to);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                active
+                  ? "bg-primary text-primary-foreground font-medium shadow-card"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent"
+              }`}
+            >
+              <Icon className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="border-t border-sidebar-border p-3">
+        <div className="px-2 py-1.5 mb-2 leading-tight">
+          <div className="text-sm font-medium truncate">{profile?.full_name ?? "—"}</div>
+          <div className="text-xs text-muted-foreground truncate">{profile?.designation ?? roleLabel}</div>
+        </div>
+        <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
+          <LogOut className="h-4 w-4 mr-1.5" /> Sign out
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-dvh bg-background flex">
+      {/* Desktop sidebar */}
+      <aside className="hidden md:block w-64 flex-shrink-0 bg-sidebar border-r border-sidebar-border sticky top-0 h-dvh pt-safe pb-safe pl-safe">
+        {SidebarBody}
+      </aside>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
+          <aside className="relative w-72 max-w-[85%] bg-sidebar border-r border-sidebar-border h-full pt-safe pb-safe pl-safe">
+            <button
+              className="absolute top-3 right-3 p-1 rounded-md hover:bg-sidebar-accent tap-target"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            {SidebarBody}
+          </aside>
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0 flex flex-col">
+        {/* Mobile header */}
+        <header className="md:hidden sticky top-0 z-30 bg-card border-b border-border h-14 px-4 pr-safe pl-safe pt-safe flex items-center justify-between">
+          <button
+            className="p-2 -ml-2 rounded-md hover:bg-muted tap-target"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            <Logo className="h-7 w-7" />
+            <span className="font-display font-bold text-sm">EdoSUBEB</span>
+          </div>
+          <div className="w-8" />
+        </header>
+
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 pr-safe pl-safe pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
