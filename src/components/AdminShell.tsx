@@ -13,6 +13,7 @@ import {
   Loader2,
   Settings as SettingsIcon,
   GraduationCap,
+  Clock,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
