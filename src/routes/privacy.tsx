@@ -189,6 +189,7 @@ function PrivacyPage() {
           <div className="flex gap-4">
             <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
             <Link to="/terms" className="hover:text-foreground">Terms</Link>
+            <Link to="/cookies" className="hover:text-foreground">Cookies</Link>
           </div>
         </div>
       </footer>
