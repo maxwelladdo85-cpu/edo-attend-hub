@@ -124,12 +124,12 @@ function todayStr() {
 }
 
 function FlaggedPage() {
-  const [date, setDate] = useState(todayStr());
+  const { from, to } = useAdminDateRange();
   const [filter, setFilter] = useState<"all" | "late" | "range">("all");
   const [q, setQ] = useState("");
   const [schoolType, setSchoolType] = useState<string>("all");
   const [lga, setLga] = useState<string>("all");
-  const { data = [], isLoading } = useFlagged(date);
+  const { data = [], isLoading } = useFlagged(from, to);
 
   const filtered = useMemo(() => {
     return data.filter((x) => {
