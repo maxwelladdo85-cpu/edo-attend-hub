@@ -191,12 +191,9 @@ function TeacherView() {
         if (verified) {
           void haptic("success");
           toast.success(`Arrival marked at ${timeLabel} — ${status.replace("_", " ")}`);
-        } else if (dist !== null) {
-          void haptic("warning");
-          toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)}m from ${school.name} (unverified).`);
         } else {
           void haptic("warning");
-          toast.warning(`Arrival recorded at ${timeLabel} without location (unverified).`);
+          toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)}m from ${school.name} (unverified).`);
         }
       } else {
         const status = classifyDeparture(now, school.closing_time);
