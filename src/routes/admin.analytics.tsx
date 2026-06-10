@@ -6,8 +6,8 @@ import {
   useSchools,
   useTeacherProfiles,
   useStudents,
-  useTeacherAttendanceToday,
-  useStudentAttendanceToday,
+  useTeacherAttendanceRange,
+  useStudentAttendanceRange,
   isStudentPresent,
   prettyLga,
   prettyCategory,
@@ -16,6 +16,8 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 import { ExportButton } from "@/components/ExportButton";
+import { DateRangeFilter } from "@/components/DateRangeFilter";
+import { useAdminDateRange } from "@/contexts/AdminDateRangeContext";
 
 export const Route = createFileRoute("/admin/analytics")({
   component: AnalyticsPage,
