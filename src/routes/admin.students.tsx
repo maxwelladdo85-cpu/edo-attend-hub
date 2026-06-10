@@ -60,6 +60,7 @@ function useAllStudents() {
 
 function StudentsPage() {
   const { data = [], isLoading } = useAllStudents();
+  const { from, to } = useAdminDateRange();
   const [q, setQ] = useState("");
   const [schoolType, setSchoolType] = useState<string>("all");
   const [lga, setLga] = useState<string>("all");
@@ -85,15 +86,20 @@ function StudentsPage() {
 
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase();
+    // End of day for the "to" date so the full day is inclusive.
+    const fromMs = from ? new Date(`${from}T00:00:00`).getTime() : -Infinity;
+    const toMs = to ? new Date(`${to}T23:59:59.999`).getTime() : Infinity;
     return data.filter((s) => {
       if (schoolType !== "all" && s.school?.category !== schoolType) return false;
       if (lga !== "all" && s.school?.lga !== lga) return false;
+      const created = new Date(s.created_at).getTime();
+      if (created < fromMs || created > toMs) return false;
       if (!term) return true;
       return [s.full_name, s.student_id, s.class, s.school?.name, s.school?.lga, s.parent_contact, s.parent_nin]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(term));
     });
-  }, [data, q, schoolType, lga]);
+  }, [data, q, schoolType, lga, from, to]);
 
   return (
     <div>
