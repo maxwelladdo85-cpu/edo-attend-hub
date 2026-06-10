@@ -122,6 +122,19 @@ workflows:
             -exportOptionsPlist /tmp/exportOptions.plist \
             -exportPath "$CM_BUILD_DIR/build/ios/ipa"
 
+      - name: Upload to App Store Connect
+        script: |
+          pip3 install --upgrade codemagic-cli-tools
+          echo "${APP_STORE_CONNECT_API_KEY}" | tr -d '\n' | base64 --decode | openssl pkey -inform DER -outform PEM > /tmp/AuthKey.pem
+          echo "Key header:"
+          head -1 /tmp/AuthKey.pem
+          app-store-connect publish \
+            --path "$CM_BUILD_DIR/build/ios/ipa/App.ipa" \
+            --key "$APP_STORE_CONNECT_API_KEY_ID" \
+            --issuer "$APP_STORE_CONNECT_ISSUER_ID" \
+            --private-key @file:/tmp/AuthKey.pem \
+            --app-store
+
     artifacts:
       - $CM_BUILD_DIR/build/ios/ipa/*.ipa
 
