@@ -53,27 +53,38 @@ workflows:
             echo "$APP_STORE_CONNECT_API_KEY" >> /tmp/AuthKey.p8
             echo "-----END EC PRIVATE KEY-----" >> /tmp/AuthKey.p8
           fi
+          KEY_CONTENT=$(cat /tmp/AuthKey.p8)
+          ruby -e '
+            require "json"
+            key = File.read("/tmp/AuthKey.p8").strip
+            key_id = ENV["APP_STORE_CONNECT_API_KEY_ID"]
+            issuer_id = ENV["APP_STORE_CONNECT_ISSUER_ID"]
+            File.write("/tmp/api_key.json", JSON.generate({key_id: key_id, issuer_id: issuer_id, key: key, in_house: false, duration: 1200}))
+          '
           cat > /tmp/fastlane/Fastfile << 'FASTFILE'
           default_platform(:ios)
           platform :ios do
             lane :setup_signing do
-              api_key = app_store_connect_api_key(
-                key_content: File.read("/tmp/AuthKey.p8"),
-                key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
-                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
-                duration: 1200,
-                in_house: false
-              )
               produce(
-                api_key: api_key,
+                api_key_path: "/tmp/api_key.json",
                 app_identifier: "com.edosubeb.attendance",
                 app_name: "EdoSUBEB Attendance",
                 team_id: ENV["APPLE_TEAM_ID"],
-                skip_creation: false,
+                skip_itc: true,
+                skip_devcenter: false
+              )
+              cert(
+                api_key_path: "/tmp/api_key.json",
+                output_path: "/tmp/certs",
                 force: true
               )
-              cert(api_key: api_key, output_path: "/tmp/certs", force: true)
-              sigh(api_key: api_key, app_identifier: "com.edosubeb.attendance", output_path: "/tmp/profiles", force: true, development: false)
+              sigh(
+                api_key_path: "/tmp/api_key.json",
+                app_identifier: "com.edosubeb.attendance",
+                output_path: "/tmp/profiles",
+                force: true,
+                development: false
+              )
             end
           end
           FASTFILE
