@@ -14,6 +14,7 @@ import {
 } from "@/lib/admin-data";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
+import { ExportButton } from "@/components/ExportButton";
 
 export const Route = createFileRoute("/admin/lga")({
   component: ByLgaPage,
@@ -82,7 +83,28 @@ function ByLgaPage() {
 
   return (
     <div>
-      <AdminPageHeader title="Attendance by LGA" subtitle="Live attendance broken down by Local Government Area" icon={Building2} />
+      <AdminPageHeader
+        title="Attendance by LGA"
+        subtitle="Live attendance broken down by Local Government Area"
+        icon={Building2}
+        actions={
+          <ExportButton
+            filename="attendance-by-lga"
+            title="Attendance by LGA"
+            rows={rows}
+            columns={[
+              { header: "LGA", accessor: (r) => prettyLga(r.lga) },
+              { header: "Schools", accessor: (r) => r.schools },
+              { header: "Teachers", accessor: (r) => r.teachers },
+              { header: "Teachers present", accessor: (r) => r.teachersPresent },
+              { header: "Teachers present %", accessor: (r) => `${r.teacherPct}%` },
+              { header: "Pupils", accessor: (r) => r.students },
+              { header: "Pupils present", accessor: (r) => r.studentsPresent },
+              { header: "Pupils present %", accessor: (r) => `${r.studentPct}%` },
+            ]}
+          />
+        }
+      />
 
       <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card p-4 sm:p-5 mb-6">
         <h3 className="font-display font-semibold mb-4">Present today (%)</h3>
