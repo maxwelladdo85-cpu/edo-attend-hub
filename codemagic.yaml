@@ -33,26 +33,49 @@ workflows:
           cd ios/App
           pod install --repo-update
 
-      - name: Setup iOS signing
+      - name: Install Fastlane & setup signing
         script: |
-          cd ios/App
-          xcode-project use-profiles
+          gem install fastlane -q --no-document
+          echo "${APP_STORE_CONNECT_API_KEY}" | base64 -d > /tmp/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+          ruby -e '
+            require "json"
+            key = File.read("/tmp/AuthKey_'$APP_STORE_CONNECT_API_KEY_ID'.p8")
+            j = {key_id: "'$APP_STORE_CONNECT_API_KEY_ID'", issuer_id: "'$APP_STORE_CONNECT_ISSUER_ID'", key: key, in_house: false, duration: 1200}
+            File.write("/tmp/api_key.json", JSON.generate(j))
+          '
 
-      - name: Build iOS project
-        script: |
-          cd ios/App
-          xcodebuild -workspace App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -destination 'generic/platform=iOS' \
-            -archivePath $CM_BUILD_DIR/build/ios/xcarchive/App.xcarchive \
-            -allowProvisioningUpdates \
-            archive
+          fastlane cert \
+            --api_key_path /tmp/api_key.json \
+            --team_id $APPLE_TEAM_ID \
+            --output_path /tmp/certs \
+            --force
 
-      - name: Export IPA
+          fastlane sigh \
+            --app_identifier com.edosubeb.attendance \
+            --api_key_path /tmp/api_key.json \
+            --team_id $APPLE_TEAM_ID \
+            --output_path /tmp/profiles \
+            --force
+
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+
+          CERT_FILE=$(ls /tmp/certs/*.p12 2>/dev/null | head -1)
+          if [ -n "$CERT_FILE" ]; then
+            security import "$CERT_FILE" -k build.keychain -P "" -T /usr/bin/codesign -T /usr/bin/security
+            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+          fi
+
+          mkdir -p ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles
+          cp /tmp/profiles/*.mobileprovision ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/ 2>/dev/null || true
+
+      - name: Build & Archive
         script: |
           cd ios/App
-          cat > /tmp/exportOptions.plist << EOF
+          PROFILE_UUID=$(ls ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1 | xargs -I{} basename {} .mobileprovision)
+          cat > ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -61,6 +84,13 @@ workflows:
             <string>app-store</string>
             <key>teamID</key>
             <string>$APPLE_TEAM_ID</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.edosubeb.attendance</key>
+              <string>${PROFILE_UUID}</string>
+            </dict>
             <key>uploadBitcode</key>
             <false/>
             <key>uploadSymbols</key>
@@ -70,11 +100,24 @@ workflows:
           </dict>
           </plist>
           EOF
+
+          xcodebuild archive \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -archivePath $CM_BUILD_DIR/build/ios/xcarchive/App.xcarchive \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="${PROFILE_UUID}" \
+            DEVELOPMENT_TEAM=$APPLE_TEAM_ID
+
+      - name: Export IPA
+        script: |
+          cd ios/App
           xcodebuild -exportArchive \
             -archivePath $CM_BUILD_DIR/build/ios/xcarchive/App.xcarchive \
-            -exportOptionsPlist /tmp/exportOptions.plist \
-            -exportPath $CM_BUILD_DIR/build/ios/ipa \
-            -allowProvisioningUpdates
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath $CM_BUILD_DIR/build/ios/ipa
 
     artifacts:
       - $CM_BUILD_DIR/build/ios/ipa/*.ipa
