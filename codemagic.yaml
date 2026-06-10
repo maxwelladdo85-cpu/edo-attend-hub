@@ -70,8 +70,6 @@ workflows:
       - name: Build & Archive
         script: |
           cd ios/App
-          PROFILE_UUID=$(ls ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1 | xargs -I{} basename {} .mobileprovision)
-          echo "Using profile: $PROFILE_UUID"
           cat > /tmp/exportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -82,12 +80,7 @@ workflows:
             <key>teamID</key>
             <string>$APPLE_TEAM_ID</string>
             <key>signingStyle</key>
-            <string>manual</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.edosubeb.attendance</key>
-              <string>${PROFILE_UUID}</string>
-            </dict>
+            <string>automatic</string>
             <key>stripSwiftSymbols</key>
             <true/>
             <key>uploadSymbols</key>
@@ -101,10 +94,9 @@ workflows:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/App.xcarchive" \
-            CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_UUID"
+            CODE_SIGN_STYLE=Automatic
 
       - name: Export IPA
         script: |
