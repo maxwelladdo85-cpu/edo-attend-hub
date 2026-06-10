@@ -295,10 +295,15 @@ function TeacherView() {
               </div>
               {today?.arrival_status && <StatusBadge status={today.arrival_status} />}
               {today?.arrival_lat != null && today?.arrival_lng != null && (
-                <div className="mt-1.5 flex items-center gap-1 text-xs sm:text-[11px] text-muted-foreground font-mono">
+                <a
+                  href={`https://www.google.com/maps?q=${today.arrival_lat},${today.arrival_lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1.5 flex items-center gap-1 text-xs sm:text-[11px] text-primary font-mono hover:underline"
+                >
                   <MapPin className="h-3.5 w-3.5 sm:h-3 sm:w-3 flex-shrink-0" />
                   <span className="break-all">{today.arrival_lat.toFixed(4)}, {today.arrival_lng.toFixed(4)}</span>
-                </div>
+                </a>
               )}
               {today?.arrival_lat != null && today?.arrival_lng != null && school?.latitude != null && school?.longitude != null && (
                 <div className="mt-1 text-xs sm:text-[11px] text-muted-foreground">
@@ -324,10 +329,15 @@ function TeacherView() {
               </div>
               {today?.departure_status && <StatusBadge status={today.departure_status} />}
               {today?.departure_lat != null && today?.departure_lng != null && (
-                <div className="mt-1.5 flex items-center gap-1 text-xs sm:text-[11px] text-muted-foreground font-mono">
+                <a
+                  href={`https://www.google.com/maps?q=${today.departure_lat},${today.departure_lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1.5 flex items-center gap-1 text-xs sm:text-[11px] text-primary font-mono hover:underline"
+                >
                   <MapPin className="h-3.5 w-3.5 sm:h-3 sm:w-3 flex-shrink-0" />
                   <span className="break-all">{today.departure_lat.toFixed(4)}, {today.departure_lng.toFixed(4)}</span>
-                </div>
+                </a>
               )}
               {today?.departure_lat != null && today?.departure_lng != null && school?.latitude != null && school?.longitude != null && (
                 <div className="mt-1 text-xs sm:text-[11px] text-muted-foreground">
