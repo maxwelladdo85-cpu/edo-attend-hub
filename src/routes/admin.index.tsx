@@ -132,3 +132,127 @@ function OverviewPage() {
     </div>
   );
 }
+
+function StaffDirectory({
+  staff,
+  schools,
+}: {
+  staff: import("@/lib/admin-data").StaffProfile[];
+  schools: import("@/lib/admin-data").SchoolLite[];
+}) {
+  const schoolName = (id: string | null) =>
+    schools.find((s) => s.id === id)?.name ?? "—";
+
+  const headTeachers = staff
+    .filter((s) => s.role === "head_teacher")
+    .sort((a, b) => (a.full_name || "").localeCompare(b.full_name || ""));
+  const teachers = staff
+    .filter((s) => s.role === "teacher")
+    .sort((a, b) => (a.full_name || "").localeCompare(b.full_name || ""));
+
+  return (
+    <div className="mt-8 space-y-6">
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4" /> Head Teachers
+          <span className="ml-1 text-xs font-normal normal-case text-muted-foreground/80">
+            ({headTeachers.length})
+          </span>
+        </h2>
+        {headTeachers.length === 0 ? (
+          <PlaceholderCard label="No head teacher accounts yet" />
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {headTeachers.map((h) => (
+              <StaffCard key={h.user_id} person={h} schoolName={schoolName(h.school_id)} />
+            ))}
+            <PlaceholderCard label="Add another head teacher" dashed />
+          </div>
+        )}
+      </div>
+
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3 flex items-center gap-2">
+          <Users className="h-4 w-4" /> Teachers
+          <span className="ml-1 text-xs font-normal normal-case text-muted-foreground/80">
+            ({teachers.length})
+          </span>
+        </h2>
+        {teachers.length === 0 ? (
+          <PlaceholderCard label="No teacher accounts yet" />
+        ) : (
+          <div className="rounded-xl border border-border overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/60 text-muted-foreground">
+                <tr className="text-left">
+                  <th className="px-4 py-2 font-medium">Name</th>
+                  <th className="px-4 py-2 font-medium">Teacher ID</th>
+                  <th className="px-4 py-2 font-medium">Class</th>
+                  <th className="px-4 py-2 font-medium">School</th>
+                </tr>
+              </thead>
+              <tbody>
+                {teachers.map((t) => (
+                  <tr key={t.user_id} className="border-t border-border">
+                    <td className="px-4 py-2 font-medium text-foreground">{t.full_name}</td>
+                    <td className="px-4 py-2 text-muted-foreground">{t.teacher_id ?? "—"}</td>
+                    <td className="px-4 py-2 text-muted-foreground">{t.class_taught ?? "—"}</td>
+                    <td className="px-4 py-2 text-muted-foreground">{schoolName(t.school_id)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StaffCard({
+  person,
+  schoolName,
+}: {
+  person: import("@/lib/admin-data").StaffProfile;
+  schoolName: string;
+}) {
+  const initials = (person.full_name || "?")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase())
+    .join("");
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 flex items-start gap-3">
+      <div className="h-10 w-10 rounded-full bg-primary/10 text-primary grid place-items-center font-semibold">
+        {initials}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="font-medium text-foreground truncate">{person.full_name}</div>
+        <div className="text-xs text-muted-foreground truncate">{schoolName}</div>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {person.teacher_id && (
+            <Badge variant="secondary" className="font-mono text-[10px]">
+              {person.teacher_id}
+            </Badge>
+          )}
+          {person.class_taught && (
+            <Badge variant="outline" className="text-[10px]">
+              {person.class_taught}
+            </Badge>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlaceholderCard({ label, dashed = false }: { label: string; dashed?: boolean }) {
+  return (
+    <div
+      className={`rounded-xl ${dashed ? "border border-dashed" : "border"} border-border bg-muted/30 p-4 grid place-items-center text-sm text-muted-foreground min-h-[88px]`}
+    >
+      {label}
+    </div>
+  );
+}
