@@ -174,16 +174,16 @@ function TeacherView() {
       dist = distanceMeters(lat, lng, school.latitude, school.longitude);
       verified = dist <= (school.radius_meters ?? 1);
 
-      // Enforce strict 1-metre proximity rule.
+      // Out-of-range: still record the attendance as unverified, but show a
+      // clear message asking the head teacher to remove today's record and
+      // re-mark it from within the school radius.
       if (dist > MAX_DISTANCE_M) {
-        void haptic("warning");
         const teacherName = profile?.full_name ?? "Teacher";
-        const msg = `Dear teacher ${teacherName}, you marked your attendance out of range. You are ${Math.round(dist)} metres from your school location.`;
+        const msg = `Dear teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school). Please ask your head teacher to remove the data marked for today and allow them to mark the attendance again from within the school.`;
         setDistanceWarning(msg);
-        toast.error(msg);
-        return;
+      } else {
+        setDistanceWarning(null);
       }
-      setDistanceWarning(null);
 
       if (kind === "arrival") {
         const status = classifyArrival(now, school.resumption_time);
