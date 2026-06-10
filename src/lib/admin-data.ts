@@ -32,6 +32,16 @@ export type TeacherProfileLite = {
   school_id: string | null;
 };
 
+export type StaffProfile = {
+  user_id: string;
+  full_name: string;
+  teacher_id: string | null;
+  class_taught: string | null;
+  school_id: string | null;
+  role: "teacher" | "head_teacher";
+  created_at?: string | null;
+};
+
 export type StudentLite = {
   id: string;
   school_id: string;
