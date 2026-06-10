@@ -144,20 +144,31 @@ function TeacherView() {
       const now = new Date().toISOString();
       const dateStr = now.slice(0, 10);
 
-      // Best-effort location capture — does NOT block saving the time
-      let lat: number | null = null;
-      let lng: number | null = null;
+      // GPS capture is REQUIRED — abort if unavailable so we never store an
+      // attendance record without a verifiable location.
+      let lat: number;
+      let lng: number;
+      let dist: number;
       let verified = false;
-      let dist: number | null = null;
       try {
         const pos = await getCurrentPosition();
         lat = pos.coords.latitude;
         lng = pos.coords.longitude;
-        dist = distanceMeters(lat, lng, school.latitude, school.longitude);
-        verified = dist <= (school.radius_meters ?? 100);
-      } catch {
-        // Location unavailable — still record the time, just unverified
+      } catch (err: any) {
+        void haptic("error");
+        const msg =
+          err?.code === 1
+            ? "Location permission denied. Enable location access for this app and try again."
+            : err?.code === 2
+            ? "Could not determine your location. Move to an open area with GPS signal and try again."
+            : err?.code === 3
+            ? "Location request timed out. Please try again."
+            : err?.message ?? "Unable to capture your GPS location. Please try again.";
+        toast.error(msg);
+        return;
       }
+      dist = distanceMeters(lat, lng, school.latitude, school.longitude);
+      verified = dist <= (school.radius_meters ?? 100);
 
       if (kind === "arrival") {
         const status = classifyArrival(now, school.resumption_time);
@@ -180,12 +191,9 @@ function TeacherView() {
         if (verified) {
           void haptic("success");
           toast.success(`Arrival marked at ${timeLabel} — ${status.replace("_", " ")}`);
-        } else if (dist !== null) {
-          void haptic("warning");
-          toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)}m from ${school.name} (unverified).`);
         } else {
           void haptic("warning");
-          toast.warning(`Arrival recorded at ${timeLabel} without location (unverified).`);
+          toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)}m from ${school.name} (unverified).`);
         }
       } else {
         const status = classifyDeparture(now, school.closing_time);
