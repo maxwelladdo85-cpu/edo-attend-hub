@@ -298,6 +298,12 @@ function TeacherView() {
                 {today?.departure_time ? new Date(today.departure_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
               </div>
               {today?.departure_status && <StatusBadge status={today.departure_status} />}
+              {today?.departure_lat != null && today?.departure_lng != null && (
+                <div className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground font-mono">
+                  <MapPin className="h-3 w-3" />
+                  {today.departure_lat.toFixed(6)}, {today.departure_lng.toFixed(6)}
+                </div>
+              )}
             </div>
             <div className="h-12 w-12 rounded-xl bg-gold/15 grid place-items-center">
               <LogOut className="h-6 w-6 text-gold-foreground" />
