@@ -171,7 +171,7 @@ function TeacherView() {
         return;
       }
       dist = distanceMeters(lat, lng, school.latitude, school.longitude);
-      verified = dist <= (school.radius_meters ?? 100);
+      verified = dist <= (school.radius_meters ?? 1);
 
       // Enforce strict 1-metre proximity rule.
       if (dist > MAX_DISTANCE_M) {
