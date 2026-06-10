@@ -108,23 +108,26 @@ function StudentsPage() {
         subtitle={`All students admitted by teachers · ${data.length.toLocaleString()} total`}
         icon={GraduationCap}
         actions={
-          <ExportButton
-            filename="admitted-pupils"
-            title="Admitted Pupils"
-            rows={rows}
-            columns={[
-              { header: "Student", accessor: (s) => s.full_name },
-              { header: "Student ID", accessor: (s) => s.student_id },
-              { header: "Class", accessor: (s) => s.class },
-              { header: "Gender", accessor: (s) => s.gender ?? "" },
-              { header: "School", accessor: (s) => s.school?.name ?? "" },
-              { header: "LGA", accessor: (s) => s.school?.lga ?? "" },
-              { header: "School Type", accessor: (s) => prettyCategory(s.school?.category ?? null) },
-              { header: "Parent Contact", accessor: (s) => s.parent_contact ?? "" },
-              { header: "Parent NIN", accessor: (s) => s.parent_nin ?? "" },
-              { header: "Admitted", accessor: (s) => new Date(s.created_at).toLocaleDateString() },
-            ]}
-          />
+          <div className="flex flex-wrap items-end gap-3">
+            <DateRangeFilter />
+            <ExportButton
+              filename={`admitted-pupils-${from}_to_${to}`}
+              title={`Admitted Pupils · ${from} → ${to}`}
+              rows={rows}
+              columns={[
+                { header: "Student", accessor: (s) => s.full_name },
+                { header: "Student ID", accessor: (s) => s.student_id },
+                { header: "Class", accessor: (s) => s.class },
+                { header: "Gender", accessor: (s) => s.gender ?? "" },
+                { header: "School", accessor: (s) => s.school?.name ?? "" },
+                { header: "LGA", accessor: (s) => s.school?.lga ?? "" },
+                { header: "School Type", accessor: (s) => prettyCategory(s.school?.category ?? null) },
+                { header: "Parent Contact", accessor: (s) => s.parent_contact ?? "" },
+                { header: "Parent NIN", accessor: (s) => s.parent_nin ?? "" },
+                { header: "Admitted", accessor: (s) => new Date(s.created_at).toLocaleDateString() },
+              ]}
+            />
+          </div>
         }
       />
 
