@@ -36,36 +36,23 @@ workflows:
       - name: Install Fastlane & setup signing
         script: |
           gem install fastlane -q --no-document
-          printf '%s' "$APP_STORE_CONNECT_API_KEY" > /tmp/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
-          ruby -e '
-            require "json"
-            key = File.read("/tmp/AuthKey_'$APP_STORE_CONNECT_API_KEY_ID'.p8").strip
-            j = {"key_id" => "'$APP_STORE_CONNECT_API_KEY_ID'", "issuer_id" => "'$APP_STORE_CONNECT_ISSUER_ID'", "key" => key, "in_house" => false, "duration" => 1200}
-            File.write("/tmp/api_key.json", JSON.generate(j))
-          ' 2>&1 || {
-            echo "JSON generate failed, trying manual JSON construction..."
-            cat > /tmp/api_key.json << KEYEOF
-          {"key_id":"'$APP_STORE_CONNECT_API_KEY_ID'","issuer_id":"'$APP_STORE_CONNECT_ISSUER_ID'","key":"$(cat /tmp/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8 | tr -d '\n' | sed 's/"/\\"/g')","in_house":false,"duration":1200}
-          KEYEOF
-          }
-          cat /tmp/api_key.json | head -c 200
-          echo ""
-          echo "---"
-          echo "Key ID: $APP_STORE_CONNECT_API_KEY_ID"
-          echo "Issuer ID: $APPLE_TEAM_ID"
-
-          fastlane cert \
-            --api_key_path /tmp/api_key.json \
-            --team_id $APPLE_TEAM_ID \
-            --output_path /tmp/certs \
-            --force 2>&1 || echo "cert failed, continuing..."
-
-          fastlane sigh \
-            --app_identifier com.edosubeb.attendance \
-            --api_key_path /tmp/api_key.json \
-            --team_id $APPLE_TEAM_ID \
-            --output_path /tmp/profiles \
-            --force 2>&1 || echo "sigh failed, continuing..."
+          cat > /tmp/Fastfile << 'FASTFILE'
+          default_platform(:ios)
+          platform :ios do
+            lane :setup_signing do
+              api_key = app_store_connect_api_key(
+                key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+                key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+                duration: 1200,
+                in_house: false
+              )
+              cert(api_key: api_key, output_path: "/tmp/certs", force: true)
+              sigh(api_key: api_key, app_identifier: "com.edosubeb.attendance", output_path: "/tmp/profiles", force: true, development: false)
+            end
+          end
+          FASTFILE
+          cd /tmp && fastlane setup_signing
 
           ls -la /tmp/certs/ 2>/dev/null || echo "No certs dir"
           ls -la /tmp/profiles/ 2>/dev/null || echo "No profiles dir"
