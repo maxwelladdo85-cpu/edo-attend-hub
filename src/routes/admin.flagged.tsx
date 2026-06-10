@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { distanceMeters } from "@/lib/geo";
+import { ExportButton } from "@/components/ExportButton";
 
 export const Route = createFileRoute("/admin/flagged")({
   head: () => ({ meta: [{ title: "Flagged Teachers — EdoSUBEB" }] }),
@@ -181,6 +182,26 @@ function FlaggedPage() {
         title="Flagged Teachers"
         subtitle="Teachers who arrived late or marked attendance outside the approved school radius"
         icon={AlertTriangle}
+        actions={
+          <ExportButton
+            filename={`flagged-teachers-${date}`}
+            title={`Flagged Teachers · ${date}`}
+            rows={filtered}
+            columns={[
+              { header: "Teacher", accessor: (x) => x.profile?.full_name ?? "Unknown" },
+              { header: "Teacher ID", accessor: (x) => x.profile?.teacher_id ?? "" },
+              { header: "Phone", accessor: (x) => x.profile?.phone ?? "" },
+              { header: "School", accessor: (x) => x.school?.name ?? "" },
+              { header: "LGA", accessor: (x) => x.school?.lga ?? "" },
+              { header: "School Type", accessor: (x) => prettyCategory(x.school?.category ?? null) },
+              { header: "Arrival", accessor: (x) => x.row.arrival_time ? new Date(x.row.arrival_time).toLocaleString() : "" },
+              { header: "Distance (m)", accessor: (x) => x.distance != null ? Math.round(x.distance) : "" },
+              { header: "Radius (m)", accessor: (x) => x.radius },
+              { header: "Late", accessor: (x) => x.late ? "Yes" : "No" },
+              { header: "Out of range", accessor: (x) => x.outOfRange ? "Yes" : "No" },
+            ]}
+          />
+        }
       />
 
       <div className="flex flex-wrap items-end gap-3 mb-4">
