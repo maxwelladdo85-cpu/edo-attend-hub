@@ -187,8 +187,8 @@ function FlaggedPage() {
         icon={AlertTriangle}
         actions={
           <ExportButton
-            filename={`flagged-teachers-${date}`}
-            title={`Flagged Teachers · ${date}`}
+            filename={`flagged-teachers-${from}_to_${to}`}
+            title={`Flagged Teachers · ${from} → ${to}`}
             rows={filtered}
             columns={[
               { header: "Teacher", accessor: (x) => x.profile?.full_name ?? "Unknown" },
