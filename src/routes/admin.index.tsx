@@ -127,6 +127,8 @@ function OverviewPage() {
         <StatCard icon={UserCheck} label="Pupils present" value={studentsPresent} tone="success" hint={`${studentPct}%`} className="bg-head-teacher-card" />
         <StatCard icon={AlertCircle} label="Pupils not marked" value={Math.max(0, students.length - studentsPresent)} tone="destructive" className="bg-head-teacher-card" />
       </div>
+
+      <StaffDirectory staff={staff} schools={schools} />
     </div>
   );
 }
