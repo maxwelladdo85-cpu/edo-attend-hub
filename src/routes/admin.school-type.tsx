@@ -82,7 +82,28 @@ function BySchoolTypePage() {
 
   return (
     <div>
-      <AdminPageHeader title="Attendance by School Type" subtitle="Comparison of Primary vs Junior Secondary schools" icon={SchoolIcon} />
+      <AdminPageHeader
+        title="Attendance by School Type"
+        subtitle="Comparison of Primary vs Junior Secondary schools"
+        icon={SchoolIcon}
+        actions={
+          <ExportButton
+            filename="attendance-by-school-type"
+            title="Attendance by School Type"
+            rows={rows}
+            columns={[
+              { header: "School type", accessor: (r) => prettyCategory(r.category) },
+              { header: "Schools", accessor: (r) => r.schools },
+              { header: "Teachers", accessor: (r) => r.teachers },
+              { header: "Teachers present", accessor: (r) => r.teachersPresent },
+              { header: "Teachers present %", accessor: (r) => `${r.teacherPct}%` },
+              { header: "Pupils", accessor: (r) => r.students },
+              { header: "Pupils present", accessor: (r) => r.studentsPresent },
+              { header: "Pupils present %", accessor: (r) => `${r.studentPct}%` },
+            ]}
+          />
+        }
+      />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
         {rows.map((r) => (
