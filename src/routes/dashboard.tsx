@@ -304,13 +304,13 @@ function TeacherView() {
               </div>
               {today?.departure_status && <StatusBadge status={today.departure_status} />}
               {today?.departure_lat != null && today?.departure_lng != null && (
-                <div className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground font-mono">
-                  <MapPin className="h-3 w-3" />
-                  {today.departure_lat.toFixed(6)}, {today.departure_lng.toFixed(6)}
+                <div className="mt-1.5 flex items-center gap-1 text-xs sm:text-[11px] text-muted-foreground font-mono">
+                  <MapPin className="h-3.5 w-3.5 sm:h-3 sm:w-3 flex-shrink-0" />
+                  <span className="break-all">{today.departure_lat.toFixed(4)}, {today.departure_lng.toFixed(4)}</span>
                 </div>
               )}
               {today?.departure_lat != null && today?.departure_lng != null && school?.latitude != null && school?.longitude != null && (
-                <div className="mt-1 text-[11px] text-muted-foreground">
+                <div className="mt-1 text-xs sm:text-[11px] text-muted-foreground">
                   Distance: {Math.round(distanceMeters(today.departure_lat, today.departure_lng, school.latitude, school.longitude)).toLocaleString()} m from school
                 </div>
               )}
