@@ -104,7 +104,9 @@ function TeacherView() {
   const [busy, setBusy] = useState<"arrival" | "departure" | null>(null);
   const [distanceWarning, setDistanceWarning] = useState<string | null>(null);
 
-  const MAX_DISTANCE_M = 1;
+  // Default allowed radius (meters) when a school has not configured one.
+  // GPS accuracy on phones is typically 5-30m, so 100m is a sensible floor.
+  const DEFAULT_RADIUS_M = 100;
 
   const isHead = primaryRole(roles) === "head_teacher";
   const idLabel = isHead ? "Head Teacher ID" : "Teacher ID";
