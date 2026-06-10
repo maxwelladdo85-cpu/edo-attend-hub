@@ -64,27 +64,30 @@ function OverviewPage() {
         subtitle={`Live attendance across Edo State · ${new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}`}
         icon={Activity}
         actions={
-          <ExportButton
-            filename={`statewide-overview-${new Date().toISOString().slice(0, 10)}`}
-            title="State-wide Overview"
-            rows={[
-              { metric: "Schools", value: schools.length },
-              { metric: "Primary schools", value: schools.filter((s) => s.category === "primary").length },
-              { metric: "Junior Secondary schools", value: schools.filter((s) => s.category === "junior_secondary").length },
-              { metric: "Teachers (registered)", value: teachers.length },
-              { metric: "Pupils (registered)", value: students.length },
-              { metric: "Teachers present today", value: teachersPresent },
-              { metric: "Teachers present %", value: `${teacherPct}%` },
-              { metric: "Teachers late today", value: teachersLate },
-              { metric: "Pupils present today", value: studentsPresent },
-              { metric: "Pupils present %", value: `${studentPct}%` },
-              { metric: "Pupils not marked", value: Math.max(0, students.length - studentsPresent) },
-            ]}
-            columns={[
-              { header: "Metric", accessor: (r) => r.metric },
-              { header: "Value", accessor: (r) => r.value },
-            ]}
-          />
+          <div className="flex flex-wrap items-end gap-3">
+            <DateRangeFilter />
+            <ExportButton
+              filename={`statewide-overview-${from}_to_${to}`}
+              title={`State-wide Overview · ${from} → ${to}`}
+              rows={[
+                { metric: "Schools", value: schools.length },
+                { metric: "Primary schools", value: schools.filter((s) => s.category === "primary").length },
+                { metric: "Junior Secondary schools", value: schools.filter((s) => s.category === "junior_secondary").length },
+                { metric: "Teachers (registered)", value: teachers.length },
+                { metric: "Pupils (registered)", value: students.length },
+                { metric: "Teachers present (range)", value: teachersPresent },
+                { metric: "Teachers present %", value: `${teacherPct}%` },
+                { metric: "Teachers late (range)", value: teachersLate },
+                { metric: "Pupils present (range)", value: studentsPresent },
+                { metric: "Pupils present %", value: `${studentPct}%` },
+                { metric: "Pupils not marked", value: Math.max(0, students.length - studentsPresent) },
+              ]}
+              columns={[
+                { header: "Metric", accessor: (r) => r.metric },
+                { header: "Value", accessor: (r) => r.value },
+              ]}
+            />
+          </div>
         }
       />
 
