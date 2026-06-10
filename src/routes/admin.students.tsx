@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { ExportButton } from "@/components/ExportButton";
 
 export const Route = createFileRoute("/admin/students")({
   head: () => ({ meta: [{ title: "Admitted Pupils — EdoSUBEB" }] }),
