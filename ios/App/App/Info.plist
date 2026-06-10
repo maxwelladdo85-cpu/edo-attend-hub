@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>EdoSUBEB Attendance</string>
+        <string>EdoSAS</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -46,10 +46,10 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>EdoSUBEB Attendance needs your location to verify you are within your school premises when marking attendance.</string>
+	<string>EdoSAS needs your location to verify you are within your school premises when marking attendance.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>EdoSUBEB Attendance needs your location to verify you are within your school premises when marking attendance.</string>
+	<string>EdoSAS needs your location to verify you are within your school premises when marking attendance.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>EdoSUBEB Attendance needs your location to verify you are within your school premises when marking attendance.</string>
+	<string>EdoSAS needs your location to verify you are within your school premises when marking attendance.</string>
 </dict>
 </plist>

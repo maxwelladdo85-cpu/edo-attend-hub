@@ -7,9 +7,9 @@ import landingBg from "@/assets/landing-bg.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "EdoSUBEB Smart Attendance — Real-time school attendance for Edo State" },
+      { title: "EdoSAS — Real-time school attendance for Edo State" },
       { name: "description", content: "Digitally capture and monitor teacher and student attendance in real time across Edo State public primary schools, with GPS verification and instant analytics." },
-      { property: "og:title", content: "EdoSUBEB Smart Attendance" },
+      { property: "og:title", content: "EdoSAS" },
       { property: "og:description", content: "GPS-verified attendance for teachers and students across Edo State public primary schools." },
     ],
   }),
@@ -25,7 +25,7 @@ function Landing() {
           <Link to="/" className="flex items-center gap-2.5">
             <Logo className="h-10 w-10" />
             <div className="leading-tight">
-              <div className="font-display font-bold text-3xl text-foreground">EdoSUBEB</div>
+              <div className="font-display font-bold text-3xl text-foreground">EdoSAS</div>
               <div className="text-xl uppercase tracking-wider text-muted-foreground">Smart Attendance</div>
             </div>
           </Link>
@@ -48,7 +48,7 @@ function Landing() {
               Real-time attendance, <span className="bg-gradient-primary bg-clip-text text-transparent">verified by GPS.</span>
             </h1>
             <p className="mt-6 text-lg text-foreground/80 max-w-2xl">
-              EdoSUBEB Smart Attendance digitally captures teacher arrivals, departures, and student presence — with location verification, lateness flags, and statewide analytics.
+              EdoSAS digitally captures teacher arrivals, departures, and student presence — with location verification, lateness flags, and statewide analytics.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/signup">

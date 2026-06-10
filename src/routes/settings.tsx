@@ -22,7 +22,7 @@ import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { DashboardShell, roleLabelFor } from "@/components/DashboardShell";
 
 export const Route = createFileRoute("/settings")({
-  head: () => ({ meta: [{ title: "Settings — EdoSUBEB Smart Attendance" }] }),
+  head: () => ({ meta: [{ title: "Settings — EdoSAS" }] }),
   component: SettingsPage,
 });
 
@@ -228,7 +228,7 @@ function SettingsPage() {
                 <AlertDialogTitle>Delete your account?</AlertDialogTitle>
                 <AlertDialogDescription>
                   This will permanently remove your profile, role, and sign-in
-                  credentials from EdoSUBEB Smart Attendance. Attendance records
+                  credentials from EdoSAS. Attendance records
                   you submitted may be retained for school reporting. This action
                   cannot be undone.
                 </AlertDialogDescription>

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">EdoSUBEB Attendance</string>
-    <string name="title_activity_main">EdoSUBEB Attendance</string>
+    <string name="app_name">EdoSAS</string>
+    <string name="title_activity_main">EdoSAS</string>
     <string name="package_name">com.edosubeb.attendance</string>
     <string name="custom_url_scheme">com.edosubeb.attendance</string>
 </resources>

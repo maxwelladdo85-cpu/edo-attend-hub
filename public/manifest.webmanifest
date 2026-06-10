@@ -1,6 +1,6 @@
 {
-  "name": "EdoSUBEB Smart Attendance",
-  "short_name": "EdoSUBEB",
+  "name": "EdoSAS",
+  "short_name": "EdoSAS",
   "description": "Real-time GPS attendance tracking for teachers and students across Edo State public primary schools.",
   "id": "/",
   "start_url": "/",

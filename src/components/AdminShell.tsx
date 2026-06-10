@@ -90,7 +90,7 @@ export function AdminShell() {
       <div className="px-5 py-5 border-b border-sidebar-border flex items-center gap-2.5">
         <Logo className="h-9 w-9" />
         <div className="leading-tight">
-          <div className="font-display font-bold text-sm">EdoSUBEB</div>
+          <div className="font-display font-bold text-sm">EdoSAS</div>
           <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Administrator</div>
         </div>
       </div>
@@ -168,7 +168,7 @@ export function AdminShell() {
           </button>
           <div className="flex items-center gap-2">
             <Logo className="h-7 w-7" />
-            <span className="font-display font-bold text-sm">EdoSUBEB</span>
+            <span className="font-display font-bold text-sm">EdoSAS</span>
           </div>
           <div className="w-8" />
         </header>

@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { distanceMeters } from "@/lib/geo";
 
 export const Route = createFileRoute("/admin/flagged")({
-  head: () => ({ meta: [{ title: "Flagged Teachers — EdoSUBEB" }] }),
+  head: () => ({ meta: [{ title: "Flagged Teachers — EdoSAS" }] }),
   component: FlaggedPage,
 });
 

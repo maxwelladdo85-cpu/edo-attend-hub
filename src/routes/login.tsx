@@ -12,7 +12,7 @@ import authBg from "@/assets/auth-bg.png";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
-    meta: [{ title: "Sign in — EdoSUBEB Smart Attendance" }],
+    meta: [{ title: "Sign in — EdoSAS" }],
   }),
   component: LoginPage,
 });
@@ -87,7 +87,7 @@ function LoginPage() {
           <div className="h-11 w-11 rounded-lg bg-white p-1 grid place-items-center">
             <Logo className="h-9 w-9" />
           </div>
-          <div className="font-display font-semibold">EdoSUBEB</div>
+          <div className="font-display font-semibold">EdoSAS</div>
         </div>
         <div>
           <h2 className="text-4xl font-bold leading-tight">Punctuality. Presence. Performance.</h2>
@@ -102,7 +102,7 @@ function LoginPage() {
         <div className="w-full max-w-sm">
           <Link to="/" className="lg:hidden flex items-center gap-2 mb-8">
             <Logo className="h-9 w-9" />
-            <span className="font-display font-semibold">EdoSUBEB</span>
+            <span className="font-display font-semibold">EdoSAS</span>
           </Link>
           <div className="flex rounded-lg border border-border overflow-hidden mb-6">
             <Link

@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.edosubeb.attendance",
-  appName: "EdoSUBEB Attendance",
+  appName: "EdoSAS",
   webDir: "dist",
   server: {
     androidScheme: "https",

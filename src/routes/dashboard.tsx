@@ -14,7 +14,7 @@ import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
 import { AdmitStudentCard } from "@/components/AdmitStudentCard";
 
 export const Route = createFileRoute("/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — EdoSUBEB Smart Attendance" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — EdoSAS" }] }),
   component: DashboardPage,
 });
 
@@ -84,7 +84,7 @@ function DashboardPage() {
               <AlertCircle className="h-5 w-5 text-warning-foreground flex-shrink-0" />
               <div>
                 <div className="font-medium text-foreground">No school assigned yet</div>
-                <div className="text-muted-foreground mt-1">An EdoSUBEB administrator must assign you to a school before you can mark attendance.</div>
+                <div className="text-muted-foreground mt-1">An EdoSAS administrator must assign you to a school before you can mark attendance.</div>
               </div>
             </div>
           )}

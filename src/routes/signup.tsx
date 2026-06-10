@@ -14,7 +14,7 @@ import authBg from "@/assets/auth-bg.png";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
-    meta: [{ title: "Create account — EdoSUBEB Smart Attendance" }],
+    meta: [{ title: "Create account — EdoSAS" }],
   }),
   component: SignupPage,
 });
@@ -173,7 +173,7 @@ function SignupPage() {
             <Logo className="h-9 w-9" />
           </div>
           <div className="font-display font-semibold text-2xl leading-tight">
-            <div>EdoSUBEB</div>
+            <div>EdoSAS</div>
             <div className="text-sm tracking-widest font-medium text-primary-foreground/85">SMART ATTENDANCE</div>
           </div>
         </div>
@@ -190,7 +190,7 @@ function SignupPage() {
         <div className="w-full max-w-sm">
           <Link to="/" className="lg:hidden flex items-center gap-2 mb-8">
             <Logo className="h-9 w-9" />
-            <span className="font-display font-semibold">EdoSUBEB</span>
+            <span className="font-display font-semibold">EdoSAS</span>
           </Link>
           <div className="flex rounded-lg border border-border overflow-hidden mb-6">
             <div className="flex-1 py-2 text-center text-sm font-medium bg-primary text-primary-foreground">

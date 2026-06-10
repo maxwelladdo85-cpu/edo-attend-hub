@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/students")({
-  head: () => ({ meta: [{ title: "Admitted Pupils — EdoSUBEB" }] }),
+  head: () => ({ meta: [{ title: "Admitted Pupils — EdoSAS" }] }),
   component: StudentsPage,
 });
 
