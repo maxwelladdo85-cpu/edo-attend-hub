@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { distanceMeters } from "@/lib/geo";
+import { ExportButton } from "@/components/ExportButton";
 
 export const Route = createFileRoute("/admin/flagged")({
   head: () => ({ meta: [{ title: "Flagged Teachers — EdoSUBEB" }] }),
