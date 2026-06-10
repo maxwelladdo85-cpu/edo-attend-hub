@@ -78,6 +78,7 @@ function Landing() {
           <div className="flex flex-wrap items-center gap-4">
             <Link to="/privacy" className="hover:text-foreground">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-foreground">Terms & Conditions</Link>
+            <Link to="/cookies" className="hover:text-foreground">Cookies Policy</Link>
             <span>Strength · Achievement · Excellence</span>
           </div>
         </div>
