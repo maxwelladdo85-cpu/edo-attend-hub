@@ -37,14 +37,6 @@ const NAV = [
   { to: "/admin/assign", label: "Assign Teachers", icon: UserPlus, end: false },
 ];
 
-const NAV = [
-  { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
-  { to: "/admin/lga", label: "By LGA", icon: Building2, end: false },
-  { to: "/admin/school-type", label: "By School Type", icon: SchoolIcon, end: false },
-  { to: "/admin/analytics", label: "Analytics", icon: BarChart3, end: false },
-  { to: "/admin/map", label: "Map", icon: Map, end: false },
-  { to: "/admin/assign", label: "Assign Teachers", icon: UserPlus, end: false },
-];
 
 export function AdminShell() {
   const { session, loading, roles, profile, signOut } = useAuth();
