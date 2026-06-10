@@ -34,6 +34,7 @@ type School = {
   id: string;
   name: string;
   lga: string;
+  category: string | null;
   latitude: number;
   longitude: number;
   radius_meters: number | null;
@@ -68,7 +69,7 @@ function useFlagged(date: string) {
         schoolIds.length
           ? supabase
               .from("schools")
-              .select("id,name,lga,latitude,longitude,radius_meters")
+              .select("id,name,lga,category,latitude,longitude,radius_meters")
               .in("id", schoolIds)
           : Promise.resolve({ data: [], error: null } as any),
         teacherIds.length
@@ -124,12 +125,16 @@ function FlaggedPage() {
   const [date, setDate] = useState(todayStr());
   const [filter, setFilter] = useState<"all" | "late" | "range">("all");
   const [q, setQ] = useState("");
+  const [schoolType, setSchoolType] = useState<string>("all");
+  const [lga, setLga] = useState<string>("all");
   const { data = [], isLoading } = useFlagged(date);
 
   const filtered = useMemo(() => {
     return data.filter((x) => {
       if (filter === "late" && !x.late) return false;
       if (filter === "range" && !x.outOfRange) return false;
+      if (schoolType !== "all" && x.school?.category !== schoolType) return false;
+      if (lga !== "all" && x.school?.lga !== lga) return false;
       if (q) {
         const needle = q.toLowerCase();
         const hay = [
@@ -146,7 +151,7 @@ function FlaggedPage() {
       }
       return true;
     });
-  }, [data, filter, q]);
+  }, [data, filter, schoolType, lga, q]);
 
   const lateCount = data.filter((x) => x.late).length;
   const rangeCount = data.filter((x) => x.outOfRange).length;
