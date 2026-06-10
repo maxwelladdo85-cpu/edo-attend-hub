@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportButton } from "@/components/ExportButton";
+import { DateRangeFilter } from "@/components/DateRangeFilter";
+import { useAdminDateRange } from "@/contexts/AdminDateRangeContext";
 
 export const Route = createFileRoute("/admin/students")({
   head: () => ({ meta: [{ title: "Admitted Pupils — EdoSAS" }] }),
