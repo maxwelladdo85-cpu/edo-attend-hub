@@ -27,6 +27,7 @@ function OverviewPage() {
   const { data: schools = [] } = useSchools();
   const { data: teachers = [] } = useTeacherProfiles();
   const { data: students = [] } = useStudents();
+  const { data: staff = [] } = useStaffProfiles();
   const { data: tAtt = [] } = useTeacherAttendanceToday();
   const { data: sAtt = [] } = useStudentAttendanceToday();
 
