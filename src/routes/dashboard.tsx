@@ -101,6 +101,9 @@ function TeacherView() {
   const [today, setToday] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [busy, setBusy] = useState<"arrival" | "departure" | null>(null);
+  const [distanceWarning, setDistanceWarning] = useState<string | null>(null);
+
+  const MAX_DISTANCE_M = 1;
 
   const isHead = primaryRole(roles) === "head_teacher";
   const idLabel = isHead ? "Head Teacher ID" : "Teacher ID";
