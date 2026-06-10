@@ -1,1 +1,4 @@
 project_id = "joezvxvnersaposjfkyw"
+
+[functions.admin-bulk-create-users]
+verify_jwt = true
