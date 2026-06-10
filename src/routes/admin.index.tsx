@@ -24,11 +24,12 @@ function pct(n: number, d: number) {
 }
 
 function OverviewPage() {
+  const { from, to } = useAdminDateRange();
   const { data: schools = [] } = useSchools();
   const { data: teachers = [] } = useTeacherProfiles();
   const { data: students = [] } = useStudents();
-  const { data: tAtt = [] } = useTeacherAttendanceToday();
-  const { data: sAtt = [] } = useStudentAttendanceToday();
+  const { data: tAtt = [] } = useTeacherAttendanceRange(from, to);
+  const { data: sAtt = [] } = useStudentAttendanceRange(from, to);
 
   // De-duplicate by teacher to avoid multiple attendance rows inflating counts.
   const presentTeacherIds = new Set(
