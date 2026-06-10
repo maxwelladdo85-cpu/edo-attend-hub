@@ -208,7 +208,7 @@ function TeacherView() {
           toast.success(`Arrival marked at ${timeLabel} — ${status.replace("_", " ")}`);
         } else {
           void haptic("warning");
-          toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)}m from ${school.name} (unverified).`);
+          toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please ask your head teacher to remove today's record so it can be marked again from within the school.`);
         }
       } else {
         const status = classifyDeparture(now, school.closing_time);
