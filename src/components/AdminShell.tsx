@@ -27,6 +27,7 @@ import {
 } from "@/lib/admin-data";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
+import { AdminDateRangeProvider } from "@/contexts/AdminDateRangeContext";
 
 const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
