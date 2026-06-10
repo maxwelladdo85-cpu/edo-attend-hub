@@ -258,6 +258,7 @@ export type Database = {
           gender: string | null
           id: string
           parent_contact: string | null
+          parent_nin: string | null
           school_id: string
           student_id: string
           updated_at: string
@@ -269,6 +270,7 @@ export type Database = {
           gender?: string | null
           id?: string
           parent_contact?: string | null
+          parent_nin?: string | null
           school_id: string
           student_id: string
           updated_at?: string
@@ -280,6 +282,7 @@ export type Database = {
           gender?: string | null
           id?: string
           parent_contact?: string | null
+          parent_nin?: string | null
           school_id?: string
           student_id?: string
           updated_at?: string

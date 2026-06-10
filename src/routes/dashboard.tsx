@@ -11,6 +11,7 @@ import { StatCard } from "@/components/StatCard";
 import { distanceMeters, getCurrentPosition, classifyArrival, classifyDeparture } from "@/lib/geo";
 import { haptic } from "@/lib/haptics";
 import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
+import { AdmitStudentCard } from "@/components/AdmitStudentCard";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — EdoSUBEB Smart Attendance" }] }),
@@ -336,6 +337,8 @@ function TeacherView() {
           </div>
         </div>
       )}
+
+      <AdmitStudentCard schoolName={school?.name} onAdded={load} />
 
       <StudentAttendancePanel />
     </div>
