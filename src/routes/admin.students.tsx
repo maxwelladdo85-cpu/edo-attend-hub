@@ -41,7 +41,7 @@ function useAllStudents() {
         ? await supabase.from("schools").select("id,name,lga").in("id", ids)
         : { data: [] as School[] };
       const schoolMap = new Map<string, School>(
-        (schoolsData ?? []).map((s) => [s.id, s as School]),
+        ((schoolsData ?? []) as School[]).map((s: School) => [s.id, s]),
       );
       return students.map((s) => ({ ...s, school: schoolMap.get(s.school_id) }));
     },
