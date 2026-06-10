@@ -29,7 +29,7 @@ type Student = {
   parent_nin: string | null;
   created_at: string;
 };
-type School = { id: string; name: string; lga: string };
+type School = { id: string; name: string; lga: string; category: string | null };
 
 function useAllStudents() {
   return useQuery({
