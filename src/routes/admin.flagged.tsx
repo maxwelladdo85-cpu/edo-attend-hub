@@ -47,16 +47,17 @@ type Profile = {
   phone: string | null;
 };
 
-function useFlagged(date: string) {
+function useFlagged(from: string, to: string) {
   return useQuery({
-    queryKey: ["admin", "flagged", date],
+    queryKey: ["admin", "flagged", from, to],
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from("teacher_attendance")
         .select(
           "id,teacher_user_id,school_id,attendance_date,arrival_time,arrival_status,arrival_lat,arrival_lng",
         )
-        .eq("attendance_date", date)
+        .gte("attendance_date", from)
+        .lte("attendance_date", to)
         .not("arrival_time", "is", null);
       if (error) throw error;
       const attendance = (rows ?? []) as Row[];
