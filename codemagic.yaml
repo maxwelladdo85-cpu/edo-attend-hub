@@ -41,16 +41,18 @@ workflows:
         script: |
           gem install fastlane -q --no-document
           printf '-----BEGIN EC PRIVATE KEY-----\n%s\n-----END EC PRIVATE KEY-----\n' "$(echo "${APP_STORE_CONNECT_API_KEY}" | tr -d '\n')" > /tmp/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+          ruby -e '
+            require "json"
+            key = File.read("/tmp/AuthKey_'$APP_STORE_CONNECT_API_KEY_ID'.p8")
+            j = {key_id: "'$APP_STORE_CONNECT_API_KEY_ID'", issuer_id: "'$APP_STORE_CONNECT_ISSUER_ID'", key: key, in_house: false, duration: 1200}
+            File.write("/tmp/api_key.json", JSON.generate(j))
+          '
           mkdir -p fastlane
           cat > fastlane/Fastfile << 'FASTFILE'
           default_platform(:ios)
           platform :ios do
             lane :setup_signing do
-              api_key = app_store_connect_api_key(
-                key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
-                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
-                key_filepath: "/tmp/AuthKey_#{ENV['APP_STORE_CONNECT_API_KEY_ID']}.p8"
-              )
+              api_key = app_store_connect_api_key(key_filepath: "/tmp/api_key.json")
               match(
                 type: "appstore",
                 app_identifier: "com.edosubeb.attendance",
