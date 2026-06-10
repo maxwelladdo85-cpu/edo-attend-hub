@@ -1,7 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Building2 } from "lucide-react";
 import { AdminPageHeader } from "@/components/AdminShell";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   useSchools,
   useTeacherProfiles,
@@ -10,6 +17,7 @@ import {
   useStudentAttendanceToday,
   isStudentPresent,
   prettyLga,
+  prettyCategory,
   safePct,
 } from "@/lib/admin-data";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -27,8 +35,40 @@ function ByLgaPage() {
   const { data: tAtt = [] } = useTeacherAttendanceToday();
   const { data: sAtt = [] } = useStudentAttendanceToday();
 
+  const [selectedLga, setSelectedLga] = useState<string>("all");
+  const [selectedSchoolType, setSelectedSchoolType] = useState<string>("all");
+
+  const lgaOptions = useMemo(() => {
+    const list = Array.from(new Set(schools.map((s) => s.lga))).filter(Boolean);
+    list.sort();
+    return list;
+  }, [schools]);
+
+  const schoolTypeOptions = useMemo(() => {
+    const cats = Array.from(new Set(schools.map((s) => s.category))).filter(Boolean) as string[];
+    cats.sort();
+    return cats;
+  }, [schools]);
+
+  const filteredSchoolIds = useMemo(() => {
+    return new Set(
+      schools
+        .filter((s) => {
+          if (selectedLga !== "all" && s.lga !== selectedLga) return false;
+          if (selectedSchoolType !== "all" && s.category !== selectedSchoolType) return false;
+          return true;
+        })
+        .map((s) => s.id)
+    );
+  }, [schools, selectedLga, selectedSchoolType]);
+
   const rows = useMemo(() => {
-    const schoolToLga = new Map(schools.map((s) => [s.id, s.lga]));
+    const schoolToLga = new Map(
+      schools
+        .filter((s) => filteredSchoolIds.has(s.id))
+        .map((s) => [s.id, s.lga])
+    );
+
     const lgas = new Map<string, {
       lga: string;
       schools: number;
@@ -39,29 +79,34 @@ function ByLgaPage() {
     }>();
 
     for (const s of schools) {
+      if (!filteredSchoolIds.has(s.id)) continue;
       const cur = lgas.get(s.lga) ?? { lga: s.lga, schools: 0, teachers: 0, teachersPresent: 0, students: 0, studentsPresent: 0 };
       cur.schools += 1;
       lgas.set(s.lga, cur);
     }
     for (const t of teachers) {
-      const lga = t.school_id ? schoolToLga.get(t.school_id) : null;
+      if (!t.school_id || !filteredSchoolIds.has(t.school_id)) continue;
+      const lga = schoolToLga.get(t.school_id);
       if (!lga) continue;
       const cur = lgas.get(lga); if (!cur) continue;
       cur.teachers += 1;
     }
     for (const r of tAtt) {
-      const lga = r.school_id ? schoolToLga.get(r.school_id) : null;
+      if (!r.school_id || !filteredSchoolIds.has(r.school_id)) continue;
+      const lga = schoolToLga.get(r.school_id);
       if (!lga || !r.arrival_time) continue;
       const cur = lgas.get(lga); if (!cur) continue;
       cur.teachersPresent += 1;
     }
     for (const st of students) {
+      if (!filteredSchoolIds.has(st.school_id)) continue;
       const lga = schoolToLga.get(st.school_id);
       if (!lga) continue;
       const cur = lgas.get(lga); if (!cur) continue;
       cur.students += 1;
     }
     for (const r of sAtt) {
+      if (!filteredSchoolIds.has(r.school_id)) continue;
       const lga = schoolToLga.get(r.school_id);
       if (!lga || !isStudentPresent(r)) continue;
       const cur = lgas.get(lga); if (!cur) continue;
@@ -77,7 +122,7 @@ function ByLgaPage() {
         studentPct: safePct(r.studentsPresent, r.students),
       }))
       .sort((a, b) => a.lga.localeCompare(b.lga));
-  }, [schools, teachers, students, tAtt, sAtt]);
+  }, [schools, teachers, students, tAtt, sAtt, filteredSchoolIds]);
 
   const chartData = rows.map((r) => ({ lga: prettyLga(r.lga), Teachers: r.teacherPct, Pupils: r.studentPct }));
 
@@ -105,6 +150,45 @@ function ByLgaPage() {
           />
         }
       />
+
+      <div className="flex flex-wrap items-end gap-3 mb-4">
+        <div>
+          <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-1">
+            LGA
+          </label>
+          <Select value={selectedLga} onValueChange={setSelectedLga}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="All LGAs" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All LGAs</SelectItem>
+              {lgaOptions.map((l) => (
+                <SelectItem key={l} value={l}>
+                  {prettyLga(l)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-1">
+            School type
+          </label>
+          <Select value={selectedSchoolType} onValueChange={setSelectedSchoolType}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              {schoolTypeOptions.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {prettyCategory(c)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card p-4 sm:p-5 mb-6">
         <h3 className="font-display font-semibold mb-4">Present today (%)</h3>
