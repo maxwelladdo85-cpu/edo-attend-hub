@@ -4,6 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { GraduationCap, Search } from "lucide-react";
 import { AdminPageHeader } from "@/components/AdminShell";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/students")({
