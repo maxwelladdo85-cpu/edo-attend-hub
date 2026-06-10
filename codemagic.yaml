@@ -8,7 +8,7 @@ workflows:
         - supabase_env
         - ios_signing
       node: 22
-      xcode: 16.2
+      xcode: latest
       cocoapods: default
 
     triggering:
