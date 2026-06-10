@@ -101,6 +101,9 @@ function TeacherView() {
   const [today, setToday] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [busy, setBusy] = useState<"arrival" | "departure" | null>(null);
+  const [distanceWarning, setDistanceWarning] = useState<string | null>(null);
+
+  const MAX_DISTANCE_M = 1;
 
   const isHead = primaryRole(roles) === "head_teacher";
   const idLabel = isHead ? "Head Teacher ID" : "Teacher ID";
@@ -144,20 +147,42 @@ function TeacherView() {
       const now = new Date().toISOString();
       const dateStr = now.slice(0, 10);
 
-      // Best-effort location capture — does NOT block saving the time
-      let lat: number | null = null;
-      let lng: number | null = null;
+      // GPS capture is REQUIRED — abort if unavailable so we never store an
+      // attendance record without a verifiable location.
+      let lat: number;
+      let lng: number;
+      let dist: number;
       let verified = false;
-      let dist: number | null = null;
       try {
         const pos = await getCurrentPosition();
         lat = pos.coords.latitude;
         lng = pos.coords.longitude;
-        dist = distanceMeters(lat, lng, school.latitude, school.longitude);
-        verified = dist <= (school.radius_meters ?? 100);
-      } catch {
-        // Location unavailable — still record the time, just unverified
+      } catch (err: any) {
+        void haptic("error");
+        const msg =
+          err?.code === 1
+            ? "Location permission denied. Enable location access for this app and try again."
+            : err?.code === 2
+            ? "Could not determine your location. Move to an open area with GPS signal and try again."
+            : err?.code === 3
+            ? "Location request timed out. Please try again."
+            : err?.message ?? "Unable to capture your GPS location. Please try again.";
+        toast.error(msg);
+        return;
       }
+      dist = distanceMeters(lat, lng, school.latitude, school.longitude);
+      verified = dist <= (school.radius_meters ?? 100);
+
+      // Enforce strict 1-metre proximity rule.
+      if (dist > MAX_DISTANCE_M) {
+        void haptic("warning");
+        const teacherName = profile?.full_name ?? "Teacher";
+        const msg = `Dear teacher ${teacherName}, you marked your attendance ${Math.round(dist)} metres from your school location.`;
+        setDistanceWarning(msg);
+        toast.warning(msg);
+        return;
+      }
+      setDistanceWarning(null);
 
       if (kind === "arrival") {
         const status = classifyArrival(now, school.resumption_time);
@@ -180,12 +205,9 @@ function TeacherView() {
         if (verified) {
           void haptic("success");
           toast.success(`Arrival marked at ${timeLabel} — ${status.replace("_", " ")}`);
-        } else if (dist !== null) {
-          void haptic("warning");
-          toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)}m from ${school.name} (unverified).`);
         } else {
           void haptic("warning");
-          toast.warning(`Arrival recorded at ${timeLabel} without location (unverified).`);
+          toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)}m from ${school.name} (unverified).`);
         }
       } else {
         const status = classifyDeparture(now, school.closing_time);
@@ -233,6 +255,16 @@ function TeacherView() {
         </div>
       </div>
 
+      {distanceWarning && (
+        <div className="rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm flex gap-3">
+          <AlertCircle className="h-5 w-5 text-warning-foreground flex-shrink-0 mt-0.5" />
+          <div>
+            <div className="font-medium text-foreground">Attendance not recorded</div>
+            <div className="text-muted-foreground mt-1">{distanceWarning}</div>
+          </div>
+        </div>
+      )}
+
       <div className="grid md:grid-cols-2 gap-4">
         <div className={`rounded-2xl border border-border ${cardBg} p-6 shadow-card`}>
           <div className="flex items-center justify-between">
@@ -242,6 +274,17 @@ function TeacherView() {
                 {today?.arrival_time ? new Date(today.arrival_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
               </div>
               {today?.arrival_status && <StatusBadge status={today.arrival_status} />}
+              {today?.arrival_lat != null && today?.arrival_lng != null && (
+                <div className="mt-1.5 flex items-center gap-1 text-xs sm:text-[11px] text-muted-foreground font-mono">
+                  <MapPin className="h-3.5 w-3.5 sm:h-3 sm:w-3 flex-shrink-0" />
+                  <span className="break-all">{today.arrival_lat.toFixed(4)}, {today.arrival_lng.toFixed(4)}</span>
+                </div>
+              )}
+              {today?.arrival_lat != null && today?.arrival_lng != null && school?.latitude != null && school?.longitude != null && (
+                <div className="mt-1 text-xs sm:text-[11px] text-muted-foreground">
+                  Distance: {Math.round(distanceMeters(today.arrival_lat, today.arrival_lng, school.latitude, school.longitude)).toLocaleString()} m from school
+                </div>
+              )}
             </div>
             <div className="h-12 w-12 rounded-xl bg-primary/10 grid place-items-center">
               <LogIn className="h-6 w-6 text-primary" />
@@ -260,6 +303,17 @@ function TeacherView() {
                 {today?.departure_time ? new Date(today.departure_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
               </div>
               {today?.departure_status && <StatusBadge status={today.departure_status} />}
+              {today?.departure_lat != null && today?.departure_lng != null && (
+                <div className="mt-1.5 flex items-center gap-1 text-xs sm:text-[11px] text-muted-foreground font-mono">
+                  <MapPin className="h-3.5 w-3.5 sm:h-3 sm:w-3 flex-shrink-0" />
+                  <span className="break-all">{today.departure_lat.toFixed(4)}, {today.departure_lng.toFixed(4)}</span>
+                </div>
+              )}
+              {today?.departure_lat != null && today?.departure_lng != null && school?.latitude != null && school?.longitude != null && (
+                <div className="mt-1 text-xs sm:text-[11px] text-muted-foreground">
+                  Distance: {Math.round(distanceMeters(today.departure_lat, today.departure_lng, school.latitude, school.longitude)).toLocaleString()} m from school
+                </div>
+              )}
             </div>
             <div className="h-12 w-12 rounded-xl bg-gold/15 grid place-items-center">
               <LogOut className="h-6 w-6 text-gold-foreground" />
