@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Users, GraduationCap, School as SchoolIcon, UserCheck, AlertCircle, Activity } from "lucide-react";
+import { Users, GraduationCap, School as SchoolIcon, UserCheck, AlertCircle, Activity, ShieldCheck } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { AdminPageHeader } from "@/components/AdminShell";
 import {
@@ -8,9 +8,11 @@ import {
   useStudents,
   useTeacherAttendanceToday,
   useStudentAttendanceToday,
+  useStaffProfiles,
   isStudentPresent,
 } from "@/lib/admin-data";
 import { ExportButton } from "@/components/ExportButton";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/admin/")({
   component: OverviewPage,
