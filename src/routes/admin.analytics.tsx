@@ -15,6 +15,7 @@ import {
 } from "@/lib/admin-data";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+import { ExportButton } from "@/components/ExportButton";
 
 export const Route = createFileRoute("/admin/analytics")({
   component: AnalyticsPage,
