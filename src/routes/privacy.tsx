@@ -30,6 +30,7 @@ function PrivacyPage() {
           </Link>
           <nav className="text-sm flex gap-4">
             <Link to="/terms" className="text-muted-foreground hover:text-foreground">Terms</Link>
+            <Link to="/cookies" className="text-muted-foreground hover:text-foreground">Cookies</Link>
             <Link to="/" className="text-muted-foreground hover:text-foreground">Home</Link>
           </nav>
         </div>
