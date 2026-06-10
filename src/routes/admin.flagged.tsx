@@ -5,6 +5,13 @@ import { AlertTriangle, Clock, MapPin, Search } from "lucide-react";
 import { AdminPageHeader } from "@/components/AdminShell";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { distanceMeters } from "@/lib/geo";
 
