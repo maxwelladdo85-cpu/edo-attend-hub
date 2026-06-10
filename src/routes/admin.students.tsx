@@ -58,16 +58,39 @@ function useAllStudents() {
 function StudentsPage() {
   const { data = [], isLoading } = useAllStudents();
   const [q, setQ] = useState("");
+  const [schoolType, setSchoolType] = useState<string>("all");
+  const [lga, setLga] = useState<string>("all");
+
+  const schoolTypes = useMemo(() => {
+    const cats = Array.from(new Set(data.map((s) => s.school?.category).filter(Boolean) as string[]));
+    cats.sort();
+    return cats;
+  }, [data]);
+
+  const lgas = useMemo(() => {
+    const list = Array.from(new Set(data.map((s) => s.school?.lga).filter(Boolean) as string[]));
+    list.sort();
+    return list;
+  }, [data]);
+
+  const prettyCategory = (c: string | null) => {
+    if (!c) return "Other";
+    if (c === "primary") return "Primary";
+    if (c === "junior_secondary") return "Junior Secondary";
+    return c;
+  };
 
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase();
-    if (!term) return data;
-    return data.filter((s) =>
-      [s.full_name, s.student_id, s.class, s.school?.name, s.school?.lga, s.parent_contact, s.parent_nin]
+    return data.filter((s) => {
+      if (schoolType !== "all" && s.school?.category !== schoolType) return false;
+      if (lga !== "all" && s.school?.lga !== lga) return false;
+      if (!term) return true;
+      return [s.full_name, s.student_id, s.class, s.school?.name, s.school?.lga, s.parent_contact, s.parent_nin]
         .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(term)),
-    );
-  }, [data, q]);
+        .some((v) => String(v).toLowerCase().includes(term));
+    });
+  }, [data, q, schoolType, lga]);
 
   return (
     <div>
@@ -77,14 +100,55 @@ function StudentsPage() {
         icon={GraduationCap}
       />
 
-      <div className="relative mb-4 max-w-md">
-        <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search name, student ID, class, school, NIN…"
-          className="pl-9"
-        />
+      <div className="flex flex-wrap items-end gap-3 mb-4">
+        <div className="relative flex-1 min-w-[200px] max-w-md">
+          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search name, student ID, class, school, NIN…"
+            className="pl-9"
+          />
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-1">
+            School type
+          </label>
+          <Select value={schoolType} onValueChange={setSchoolType}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              {schoolTypes.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {prettyCategory(c)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-1">
+            LGA
+          </label>
+          <Select value={lga} onValueChange={setLga}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="All LGAs" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All LGAs</SelectItem>
+              {lgas.map((l) => (
+                <SelectItem key={l} value={l}>
+                  {l
+                    .split("-")
+                    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+                    .join(" ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="rounded-xl border border-border bg-card overflow-hidden">
