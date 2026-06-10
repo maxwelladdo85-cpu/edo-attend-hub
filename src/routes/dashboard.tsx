@@ -174,16 +174,16 @@ function TeacherView() {
       dist = distanceMeters(lat, lng, school.latitude, school.longitude);
       verified = dist <= (school.radius_meters ?? 1);
 
-      // Enforce strict 1-metre proximity rule.
+      // Out-of-range: still record the attendance as unverified, but show a
+      // clear message asking the head teacher to remove today's record and
+      // re-mark it from within the school radius.
       if (dist > MAX_DISTANCE_M) {
-        void haptic("warning");
         const teacherName = profile?.full_name ?? "Teacher";
-        const msg = `Dear teacher ${teacherName}, you marked your attendance out of range. You are ${Math.round(dist)} metres from your school location.`;
+        const msg = `Dear teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school). Please ask your head teacher to remove the data marked for today and allow them to mark the attendance again from within the school.`;
         setDistanceWarning(msg);
-        toast.error(msg);
-        return;
+      } else {
+        setDistanceWarning(null);
       }
-      setDistanceWarning(null);
 
       if (kind === "arrival") {
         const status = classifyArrival(now, school.resumption_time);
@@ -208,7 +208,7 @@ function TeacherView() {
           toast.success(`Arrival marked at ${timeLabel} — ${status.replace("_", " ")}`);
         } else {
           void haptic("warning");
-          toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)}m from ${school.name} (unverified).`);
+          toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please ask your head teacher to remove today's record so it can be marked again from within the school.`);
         }
       } else {
         const status = classifyDeparture(now, school.closing_time);
@@ -225,8 +225,13 @@ function TeacherView() {
           .eq("attendance_date", dateStr);
         if (error) throw error;
         const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-        void haptic("success");
-        toast.success(`Departure marked at ${timeLabel} — ${status.replace("_", " ")}`);
+        if (verified) {
+          void haptic("success");
+          toast.success(`Departure marked at ${timeLabel} — ${status.replace("_", " ")}`);
+        } else {
+          void haptic("warning");
+          toast.warning(`Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please ask your head teacher to remove today's record so it can be marked again from within the school.`);
+        }
       }
       await load();
     } catch (e: any) {
