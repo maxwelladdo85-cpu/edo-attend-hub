@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from "./routes/__root"
+import { Route as TermsRouteImport } from "./routes/terms"
 import { Route as SignupRouteImport } from "./routes/signup"
 import { Route as SettingsRouteImport } from "./routes/settings"
+import { Route as PrivacyRouteImport } from "./routes/privacy"
 import { Route as LoginRouteImport } from "./routes/login"
 import { Route as DashboardRouteImport } from "./routes/dashboard"
 import { Route as AdminRouteImport } from "./routes/admin"
@@ -22,6 +24,11 @@ import { Route as AdminLgaRouteImport } from "./routes/admin.lga"
 import { Route as AdminAssignRouteImport } from "./routes/admin.assign"
 import { Route as AdminAnalyticsRouteImport } from "./routes/admin.analytics"
 
+const TermsRoute = TermsRouteImport.update({
+  id: "/terms",
+  path: "/terms",
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: "/signup",
   path: "/signup",
@@ -30,6 +37,11 @@ const SignupRoute = SignupRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: "/settings",
   path: "/settings",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: "/privacy",
+  path: "/privacy",
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -88,8 +100,10 @@ export interface FileRoutesByFullPath {
   "/admin": typeof AdminRouteWithChildren
   "/dashboard": typeof DashboardRoute
   "/login": typeof LoginRoute
+  "/privacy": typeof PrivacyRoute
   "/settings": typeof SettingsRoute
   "/signup": typeof SignupRoute
+  "/terms": typeof TermsRoute
   "/admin/analytics": typeof AdminAnalyticsRoute
   "/admin/assign": typeof AdminAssignRoute
   "/admin/lga": typeof AdminLgaRoute
@@ -101,8 +115,10 @@ export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/dashboard": typeof DashboardRoute
   "/login": typeof LoginRoute
+  "/privacy": typeof PrivacyRoute
   "/settings": typeof SettingsRoute
   "/signup": typeof SignupRoute
+  "/terms": typeof TermsRoute
   "/admin/analytics": typeof AdminAnalyticsRoute
   "/admin/assign": typeof AdminAssignRoute
   "/admin/lga": typeof AdminLgaRoute
@@ -116,8 +132,10 @@ export interface FileRoutesById {
   "/admin": typeof AdminRouteWithChildren
   "/dashboard": typeof DashboardRoute
   "/login": typeof LoginRoute
+  "/privacy": typeof PrivacyRoute
   "/settings": typeof SettingsRoute
   "/signup": typeof SignupRoute
+  "/terms": typeof TermsRoute
   "/admin/analytics": typeof AdminAnalyticsRoute
   "/admin/assign": typeof AdminAssignRoute
   "/admin/lga": typeof AdminLgaRoute
@@ -132,8 +150,10 @@ export interface FileRouteTypes {
     | "/admin"
     | "/dashboard"
     | "/login"
+    | "/privacy"
     | "/settings"
     | "/signup"
+    | "/terms"
     | "/admin/analytics"
     | "/admin/assign"
     | "/admin/lga"
@@ -145,8 +165,10 @@ export interface FileRouteTypes {
     | "/"
     | "/dashboard"
     | "/login"
+    | "/privacy"
     | "/settings"
     | "/signup"
+    | "/terms"
     | "/admin/analytics"
     | "/admin/assign"
     | "/admin/lga"
@@ -159,8 +181,10 @@ export interface FileRouteTypes {
     | "/admin"
     | "/dashboard"
     | "/login"
+    | "/privacy"
     | "/settings"
     | "/signup"
+    | "/terms"
     | "/admin/analytics"
     | "/admin/assign"
     | "/admin/lga"
@@ -174,12 +198,21 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
+  PrivacyRoute: typeof PrivacyRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
+  TermsRoute: typeof TermsRoute
 }
 
 declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
+    "/terms": {
+      id: "/terms"
+      path: "/terms"
+      fullPath: "/terms"
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     "/signup": {
       id: "/signup"
       path: "/signup"
@@ -192,6 +225,13 @@ declare module "@tanstack/react-router" {
       path: "/settings"
       fullPath: "/settings"
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/privacy": {
+      id: "/privacy"
+      path: "/privacy"
+      fullPath: "/privacy"
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/login": {
@@ -292,8 +332,10 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
+  PrivacyRoute: PrivacyRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
+  TermsRoute: TermsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
