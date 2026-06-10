@@ -70,6 +70,10 @@ workflows:
       - name: Build & Archive
         script: |
           cd ios/App
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" <(security cms -D -i ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1) 2>/dev/null || ls ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1 | xargs -I{} basename {} .mobileprovision)
+          echo "Profile UUID: $PROFILE_UUID"
+          sed -i '' 's/ProvisioningStyle = Manual/ProvisioningStyle = Automatic/g' App.xcodeproj/project.pbxproj
+          sed -i '' 's/ProvisioningStyle = Manual/ProvisioningStyle = Automatic/g' Pods/Pods.xcodeproj/project.pbxproj
           cat > /tmp/exportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -79,8 +83,6 @@ workflows:
             <string>app-store-connect</string>
             <key>teamID</key>
             <string>$APPLE_TEAM_ID</string>
-            <key>signingStyle</key>
-            <string>automatic</string>
             <key>stripSwiftSymbols</key>
             <true/>
             <key>uploadSymbols</key>
@@ -94,8 +96,8 @@ workflows:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/App.xcarchive" \
-            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
-            CODE_SIGN_STYLE=Automatic
+            -allowProvisioningUpdates \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
 
       - name: Export IPA
         script: |
