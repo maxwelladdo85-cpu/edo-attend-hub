@@ -338,6 +338,8 @@ function TeacherView() {
         </div>
       )}
 
+      <AdmitStudentCard schoolName={school?.name} onAdded={load} />
+
       <StudentAttendancePanel />
     </div>
   );
