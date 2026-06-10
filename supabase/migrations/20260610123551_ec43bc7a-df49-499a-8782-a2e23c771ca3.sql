@@ -1,0 +1,1 @@
+ALTER TABLE public.students ADD COLUMN parent_nin TEXT NULL;
