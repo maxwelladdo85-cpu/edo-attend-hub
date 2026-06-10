@@ -156,6 +156,25 @@ function FlaggedPage() {
   const lateCount = data.filter((x) => x.late).length;
   const rangeCount = data.filter((x) => x.outOfRange).length;
 
+  const schoolTypes = useMemo(() => {
+    const cats = Array.from(new Set(data.map((x) => x.school?.category).filter(Boolean) as string[]));
+    cats.sort();
+    return cats;
+  }, [data]);
+
+  const lgas = useMemo(() => {
+    const list = Array.from(new Set(data.map((x) => x.school?.lga).filter(Boolean) as string[]));
+    list.sort();
+    return list;
+  }, [data]);
+
+  const prettyCategory = (c: string | null) => {
+    if (!c) return "Other";
+    if (c === "primary") return "Primary";
+    if (c === "junior_secondary") return "Junior Secondary";
+    return c;
+  };
+
   return (
     <div>
       <AdminPageHeader
@@ -198,6 +217,45 @@ function FlaggedPage() {
           >
             <MapPin className="h-3.5 w-3.5 mr-1" /> Out of range ({rangeCount})
           </Button>
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-1">
+            School type
+          </label>
+          <Select value={schoolType} onValueChange={setSchoolType}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              {schoolTypes.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {prettyCategory(c)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="block text-xs uppercase tracking-wide text-muted-foreground mb-1">
+            LGA
+          </label>
+          <Select value={lga} onValueChange={setLga}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="All LGAs" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All LGAs</SelectItem>
+              {lgas.map((l) => (
+                <SelectItem key={l} value={l}>
+                  {l
+                    .split("-")
+                    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+                    .join(" ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="relative flex-1 min-w-[200px]">
           <Search className="h-4 w-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
