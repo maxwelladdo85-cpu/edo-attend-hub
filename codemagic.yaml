@@ -37,6 +37,10 @@ workflows:
         script: |
           cd ios/App
           xcode-project use-profiles
+          sed -i '' "s/DEVELOPMENT_TEAM = \"\"/DEVELOPMENT_TEAM = \"$APPLE_TEAM_ID\"/g" App.xcodeproj/project.pbxproj
+          if ! grep -q "DEVELOPMENT_TEAM" App.xcodeproj/project.pbxproj; then
+            sed -i '' "s/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Automatic;\n\t\t\t\tDEVELOPMENT_TEAM = \"$APPLE_TEAM_ID\";/g" App.xcodeproj/project.pbxproj
+          fi
 
       - name: Build iOS project
         script: |
