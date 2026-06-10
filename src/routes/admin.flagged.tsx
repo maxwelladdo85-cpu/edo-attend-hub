@@ -15,6 +15,8 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { distanceMeters } from "@/lib/geo";
 import { ExportButton } from "@/components/ExportButton";
+import { DateRangeFilter } from "@/components/DateRangeFilter";
+import { useAdminDateRange } from "@/contexts/AdminDateRangeContext";
 
 export const Route = createFileRoute("/admin/flagged")({
   head: () => ({ meta: [{ title: "Flagged Teachers — EdoSAS" }] }),
