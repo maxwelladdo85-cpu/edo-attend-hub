@@ -90,21 +90,24 @@ function BySchoolTypePage() {
         subtitle="Comparison of Primary vs Junior Secondary schools"
         icon={SchoolIcon}
         actions={
-          <ExportButton
-            filename="attendance-by-school-type"
-            title="Attendance by School Type"
-            rows={rows}
-            columns={[
-              { header: "School type", accessor: (r) => prettyCategory(r.category) },
-              { header: "Schools", accessor: (r) => r.schools },
-              { header: "Teachers", accessor: (r) => r.teachers },
-              { header: "Teachers present", accessor: (r) => r.teachersPresent },
-              { header: "Teachers present %", accessor: (r) => `${r.teacherPct}%` },
-              { header: "Pupils", accessor: (r) => r.students },
-              { header: "Pupils present", accessor: (r) => r.studentsPresent },
-              { header: "Pupils present %", accessor: (r) => `${r.studentPct}%` },
-            ]}
-          />
+          <div className="flex flex-wrap items-end gap-3">
+            <DateRangeFilter />
+            <ExportButton
+              filename={`attendance-by-school-type-${from}_to_${to}`}
+              title={`Attendance by School Type · ${from} → ${to}`}
+              rows={rows}
+              columns={[
+                { header: "School type", accessor: (r) => prettyCategory(r.category) },
+                { header: "Schools", accessor: (r) => r.schools },
+                { header: "Teachers", accessor: (r) => r.teachers },
+                { header: "Teachers present", accessor: (r) => r.teachersPresent },
+                { header: "Teachers present %", accessor: (r) => `${r.teacherPct}%` },
+                { header: "Pupils", accessor: (r) => r.students },
+                { header: "Pupils present", accessor: (r) => r.studentsPresent },
+                { header: "Pupils present %", accessor: (r) => `${r.studentPct}%` },
+              ]}
+            />
+          </div>
         }
       />
 
