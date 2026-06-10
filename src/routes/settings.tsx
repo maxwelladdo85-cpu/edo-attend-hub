@@ -36,7 +36,6 @@ function SettingsPage() {
   const [form, setForm] = useState({
     full_name: "",
     phone: "",
-    designation: "",
     class_taught: "",
   });
 
@@ -49,7 +48,6 @@ function SettingsPage() {
       setForm({
         full_name: profile.full_name || "",
         phone: profile.phone || "",
-        designation: profile.designation || "",
         class_taught: profile.class_taught || "",
       });
     }
@@ -75,7 +73,6 @@ function SettingsPage() {
         .update({
           full_name: form.full_name.trim(),
           phone: form.phone.trim() || null,
-          designation: form.designation.trim() || null,
           class_taught: form.class_taught.trim() || null,
         })
         .eq("user_id", session.user.id);
@@ -174,15 +171,6 @@ function SettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="designation">Designation</Label>
-                <Input
-                  id="designation"
-                  value={form.designation}
-                  onChange={(e) => setForm((f) => ({ ...f, designation: e.target.value }))}
-                  placeholder="e.g. Classroom Teacher"
-                />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="class_taught">Class taught</Label>
                 <Input
                   id="class_taught"
@@ -209,10 +197,6 @@ function SettingsPage() {
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">Phone</span>
                 <span className="font-medium text-right">{profile.phone ?? "—"}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">Designation</span>
-                <span className="font-medium text-right">{profile.designation ?? "—"}</span>
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">Class taught</span>
