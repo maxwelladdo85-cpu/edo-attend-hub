@@ -10,6 +10,7 @@ import {
   useStudentAttendanceToday,
   isStudentPresent,
 } from "@/lib/admin-data";
+import { ExportButton } from "@/components/ExportButton";
 
 export const Route = createFileRoute("/admin/")({
   component: OverviewPage,
