@@ -36,7 +36,8 @@ workflows:
       - name: Install Fastlane & setup signing
         script: |
           gem install fastlane -q --no-document
-          cat > /tmp/Fastfile << 'FASTFILE'
+          mkdir -p /tmp/fastlane
+          cat > /tmp/fastlane/Fastfile << 'FASTFILE'
           default_platform(:ios)
           platform :ios do
             lane :setup_signing do
