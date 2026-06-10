@@ -101,6 +101,9 @@ function TeacherView() {
   const [today, setToday] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [busy, setBusy] = useState<"arrival" | "departure" | null>(null);
+  const [distanceWarning, setDistanceWarning] = useState<string | null>(null);
+
+  const MAX_DISTANCE_M = 1;
 
   const isHead = primaryRole(roles) === "head_teacher";
   const idLabel = isHead ? "Head Teacher ID" : "Teacher ID";
@@ -169,6 +172,17 @@ function TeacherView() {
       }
       dist = distanceMeters(lat, lng, school.latitude, school.longitude);
       verified = dist <= (school.radius_meters ?? 100);
+
+      // Enforce strict 1-metre proximity rule.
+      if (dist > MAX_DISTANCE_M) {
+        void haptic("warning");
+        const teacherName = profile?.full_name ?? "Teacher";
+        const msg = `Dear teacher ${teacherName}, you marked your attendance ${Math.round(dist)} metres from your school location.`;
+        setDistanceWarning(msg);
+        toast.warning(msg);
+        return;
+      }
+      setDistanceWarning(null);
 
       if (kind === "arrival") {
         const status = classifyArrival(now, school.resumption_time);
@@ -240,6 +254,16 @@ function TeacherView() {
           )}
         </div>
       </div>
+
+      {distanceWarning && (
+        <div className="rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm flex gap-3">
+          <AlertCircle className="h-5 w-5 text-warning-foreground flex-shrink-0 mt-0.5" />
+          <div>
+            <div className="font-medium text-foreground">Attendance not recorded</div>
+            <div className="text-muted-foreground mt-1">{distanceWarning}</div>
+          </div>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className={`rounded-2xl border border-border ${cardBg} p-6 shadow-card`}>
