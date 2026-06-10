@@ -177,9 +177,9 @@ function TeacherView() {
       if (dist > MAX_DISTANCE_M) {
         void haptic("warning");
         const teacherName = profile?.full_name ?? "Teacher";
-        const msg = `Dear teacher ${teacherName}, you marked your attendance ${Math.round(dist)} metres from your school location.`;
+        const msg = `Dear teacher ${teacherName}, you marked your attendance out of range. You are ${Math.round(dist)} metres from your school location.`;
         setDistanceWarning(msg);
-        toast.warning(msg);
+        toast.error(msg);
         return;
       }
       setDistanceWarning(null);
@@ -256,11 +256,11 @@ function TeacherView() {
       </div>
 
       {distanceWarning && (
-        <div className="rounded-xl border border-warning/40 bg-warning/10 p-4 text-sm flex gap-3">
-          <AlertCircle className="h-5 w-5 text-warning-foreground flex-shrink-0 mt-0.5" />
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm flex gap-3">
+          <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
           <div>
-            <div className="font-medium text-foreground">Attendance not recorded</div>
-            <div className="text-muted-foreground mt-1">{distanceWarning}</div>
+            <div className="font-medium text-destructive">Attendance not recorded</div>
+            <div className="text-destructive/80 mt-1">{distanceWarning}</div>
           </div>
         </div>
       )}
