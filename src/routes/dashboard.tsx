@@ -210,9 +210,10 @@ function TeacherView() {
         );
         if (error) throw error;
         const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        const arrivalLabel = status === "early" ? "Well done, you arrived early" : status === "late" ? "You arrived late" : `Arrival marked at ${timeLabel} — on time`;
         if (verified) {
           void haptic("success");
-          toast.success(`Arrival marked at ${timeLabel} — ${status.replace("_", " ")}`);
+          toast.success(arrivalLabel);
         } else {
           void haptic("warning");
           if (isHead) {
