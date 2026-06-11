@@ -45,9 +45,11 @@ type StudentRow = {
 };
 
 export function SchoolAttendanceOverview() {
-  const { profile } = useAuth();
+  const { profile, roles } = useAuth();
   const schoolId = profile?.school_id;
-  const [mode, setMode] = useState<Mode>("teachers");
+  const isHead = roles.includes("head_teacher") || roles.includes("admin");
+  const teacherClass = profile?.class_taught ?? null;
+  const [mode, setMode] = useState<Mode>(isHead ? "teachers" : "students");
   const [loading, setLoading] = useState(false);
   const [teacherRows, setTeacherRows] = useState<TeacherRow[]>([]);
   const [studentRows, setStudentRows] = useState<StudentRow[]>([]);
