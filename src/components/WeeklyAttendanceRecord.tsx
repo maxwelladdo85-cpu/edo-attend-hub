@@ -21,8 +21,9 @@ function toDateStr(d: Date) {
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
-export function WeeklyAttendanceRecord() {
+export function WeeklyAttendanceRecord({ teacherUserId }: { teacherUserId?: string } = {}) {
   const { user } = useAuth();
+  const targetId = teacherUserId ?? user?.id;
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<Record<string, any>>({});
 
