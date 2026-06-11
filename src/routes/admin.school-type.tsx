@@ -79,7 +79,7 @@ function BySchoolTypePage() {
       teacherPct: safePct(r.teachersPresent, r.teachers),
       studentPct: safePct(r.studentsPresent, r.students),
     }));
-  }, [schools, teachers, students, tAtt, sAtt]);
+  }, [schools, teachers, teacherUserIds, students, tAtt, sAtt]);
 
   const chartData = rows.map((r) => ({ type: prettyCategory(r.category), Teachers: r.teacherPct, Pupils: r.studentPct }));
 
