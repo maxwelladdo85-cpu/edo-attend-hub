@@ -45,7 +45,7 @@ workflows:
       - name: Install Fastlane & setup signing
         script: |
           gem install fastlane -q --no-document
-          echo "${APP_STORE_CONNECT_API_KEY}" | tr -d '\n' | base64 -d > /tmp/AuthKey_${APPLE_KEY_ID}.p8
+          echo "${APP_STORE_CONNECT_API_KEY}" | tr -d '\n' | base64 --decode | openssl pkey -inform DER -outform PEM > /tmp/AuthKey_${APPLE_KEY_ID}.p8
           ruby -e '
             require "json"
             key = File.read("/tmp/AuthKey_'"$APPLE_KEY_ID"'.p8")
