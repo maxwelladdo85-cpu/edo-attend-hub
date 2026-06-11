@@ -42,24 +42,35 @@ workflows:
           cd ios/App
           pod install --repo-update
 
-      - name: Install Fastlane & setup signing
+      - name: Setup iOS signing
         script: |
           gem install fastlane -q --no-document
-          echo "${APP_STORE_CONNECT_API_KEY}" | tr -d '\n' | base64 --decode | openssl pkey -inform DER -outform PEM > /tmp/AuthKey_${APPLE_KEY_ID}.p8
-          ruby -e '
-            require "json"
-            key = File.read("/tmp/AuthKey_'"$APPLE_KEY_ID"'.p8")
-            j = {key_id: "'"$APPLE_KEY_ID"'", issuer_id: "'"$APPLE_ISSUER_ID"'", key: key, in_house: false, duration: 1200}
-            File.write("/tmp/api_key.json", JSON.generate(j))
-          '
+          mkdir -p fastlane
+          cat > fastlane/Fastfile << 'FASTFILE'
+          default_platform(:ios)
+          platform :ios do
+            lane :setup_signing do
+              api_key = app_store_connect_api_key(
+                key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+                key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+                is_key_content_base64: true
+              )
+              match(
+                type: "appstore",
+                app_identifier: ENV["BUNDLE_ID"],
+                git_url: "https://github.com/maxwelladdo85-cpu/edo-attend-hub.git",
+                git_branch: "match-certs",
+                api_key: api_key,
+                force_for_new_devices: true,
+                force: true,
+                generate_apple_certs: false
+              )
+            end
+          end
+          FASTFILE
           git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-          fastlane match appstore \
-            --app_identifier "$BUNDLE_ID" \
-            --git_url "https://github.com/maxwelladdo85-cpu/edo-attend-hub.git" \
-            --git_branch "match-certs" \
-            --api_key_path /tmp/api_key.json \
-            --force_for_new_devices true \
-            --skip_docs true
+          fastlane setup_signing
 
       - name: Build & Archive
         script: |
@@ -98,10 +109,26 @@ workflows:
       - name: Upload to App Store Connect
         script: |
           cd ios/App
-          fastlane pilot upload \
-            --ipa "$CM_BUILD_DIR/build/ios/ipa/App.ipa" \
-            --api_key_path /tmp/api_key.json \
-            --skip_waiting_for_build_processing true
+          mkdir -p fastlane
+          cat > fastlane/Fastfile << 'FASTFILE'
+          default_platform(:ios)
+          platform :ios do
+            lane :upload_to_store do
+              api_key = app_store_connect_api_key(
+                key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+                key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+                is_key_content_base64: true
+              )
+              pilot(
+                ipa: ENV["CM_BUILD_DIR"] + "/build/ios/ipa/App.ipa",
+                api_key: api_key,
+                skip_waiting_for_build_processing: true
+              )
+            end
+          end
+          FASTFILE
+          fastlane upload_to_store
 
     artifacts:
       - build/ios/ipa/*.ipa
