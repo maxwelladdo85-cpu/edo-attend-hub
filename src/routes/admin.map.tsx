@@ -93,7 +93,7 @@ function MapPage() {
           status,
         };
       });
-  }, [schools, teachers, students, tAtt, sAtt]);
+  }, [schools, teachers, teacherUserIds, students, tAtt, sAtt]);
 
   const colorFor = (status: "late" | "on_time" | "none") => {
     if (status === "on_time") return "oklch(0.55 0.18 148)"; // green
