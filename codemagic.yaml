@@ -1,12 +1,20 @@
 workflows:
   edosubeb-ios:
-    name: EdoSUBEB Attendance iOS
+    name: EdoSAS iOS Build
     max_build_duration: 60
+    instance_type: mac_mini_m2
 
     environment:
       groups:
         - supabase_env
         - ios_signing
+      vars:
+        XCODE_WORKSPACE: ios/App/App.xcworkspace
+        XCODE_SCHEME: App
+        APPLE_KEY_ID: YW29AY9768
+        APPLE_ISSUER_ID: 81b05e99-eb94-4256-b404-186053348cba
+        TEAM_ID: UPH4MRP52S
+        BUNDLE_ID: com.edosubeb.attendance
       node: 22
       xcode: latest
       cocoapods: default
@@ -15,126 +23,85 @@ workflows:
       events:
         - push
       branch_patterns:
-        - pattern: "main"
+        - pattern: main
           include: true
           source: true
 
     scripts:
       - name: Install dependencies
-        script: |
-          npm install
+        script: npm install
 
       - name: Build web assets
-        script: |
-          npx vite build
+        script: npm run build
 
       - name: Sync Capacitor
-        script: |
-          npx cap sync ios
+        script: npx cap sync ios
 
       - name: Install CocoaPods
         script: |
           cd ios/App
           pod install --repo-update
 
-      - name: Setup iOS signing
+      - name: Install Fastlane & setup signing
         script: |
           gem install fastlane -q --no-document
-          mkdir -p fastlane
-          cat > fastlane/Fastfile << 'FASTFILE'
-          default_platform(:ios)
-          platform :ios do
-            lane :setup_signing do
-              api_key = app_store_connect_api_key(
-                key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
-                issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
-                key_content: ENV["APP_STORE_CONNECT_API_KEY"],
-                is_key_content_base64: true
-              )
-              match(
-                type: "appstore",
-                app_identifier: "com.edosubeb.attendance",
-                git_url: "https://github.com/maxwelladdo85-cpu/edo-attend-hub.git",
-                git_branch: "match-certs",
-                api_key: api_key,
-                force_for_new_devices: true,
-                force: true,
-                generate_apple_certs: false
-              )
-            end
-          end
-          FASTFILE
+          echo "${APP_STORE_CONNECT_API_KEY}" | tr -d '\n' | base64 -d > /tmp/AuthKey_${APPLE_KEY_ID}.p8
+          ruby -e '
+            require "json"
+            key = File.read("/tmp/AuthKey_'"$APPLE_KEY_ID"'.p8")
+            j = {key_id: "'"$APPLE_KEY_ID"'", issuer_id: "'"$APPLE_ISSUER_ID"'", key: key, in_house: false, duration: 1200}
+            File.write("/tmp/api_key.json", JSON.generate(j))
+          '
           git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-          fastlane setup_signing
+          fastlane match appstore \
+            --app_identifier "$BUNDLE_ID" \
+            --git_url "https://github.com/maxwelladdo85-cpu/edo-attend-hub.git" \
+            --git_branch "match-certs" \
+            --api_key_path /tmp/api_key.json \
+            --force_for_new_devices true \
+            --skip_docs true
 
       - name: Build & Archive
         script: |
           cd ios/App
-          PROFILE_UUID=$(ls ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1 | xargs -I{} basename {} .mobileprovision)
-          echo "Using profile: $PROFILE_UUID"
-          cat > /tmp/exportOptions.plist << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store-connect</string>
-            <key>teamID</key>
-            <string>$APPLE_TEAM_ID</string>
-            <key>signingStyle</key>
-            <string>manual</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.edosubeb.attendance</key>
-              <string>$PROFILE_UUID</string>
-            </dict>
-            <key>stripSwiftSymbols</key>
-            <true/>
-            <key>uploadSymbols</key>
-            <true/>
-          </dict>
-          </plist>
-          EOF
-          ruby -e '
-            proj = File.read("App.xcodeproj/project.pbxproj")
-            proj.gsub!(/CODE_SIGN_STYLE = Automatic;/, "CODE_SIGN_STYLE = Manual;\n\t\t\t\tDEVELOPMENT_TEAM = \"'"$APPLE_TEAM_ID"'\";\n\t\t\t\tCODE_SIGN_IDENTITY = \"Apple Distribution\";\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = \"'"$PROFILE_UUID"'\";")
-            File.write("App.xcodeproj/project.pbxproj", proj)
-            pods = File.read("Pods/Pods.xcodeproj/project.pbxproj")
-            pods.gsub!(/CODE_SIGN_IDENTITY = "Apple Development";/, "CODE_SIGN_IDENTITY = \"-\";")
-            pods.gsub!(/CODE_SIGN_IDENTITY = "iPhone Developer";/, "CODE_SIGN_IDENTITY = \"-\";")
-            pods.gsub!(/CODE_SIGN_IDENTITY = "iPhone Distribution";/, "CODE_SIGN_IDENTITY = \"-\";")
-            pods.gsub!(/CODE_SIGNING_REQUIRED = YES;/, "CODE_SIGNING_REQUIRED = NO;")
-            pods.gsub!(/CODE_SIGNING_ALLOWED = YES;/, "CODE_SIGNING_ALLOWED = NO;")
-            File.write("Pods/Pods.xcodeproj/project.pbxproj", pods)
-          '
           xcodebuild archive \
-            -workspace App.xcworkspace \
-            -scheme App \
+            -workspace "$XCODE_WORKSPACE" \
+            -scheme "$XCODE_SCHEME" \
             -configuration Release \
             -destination 'generic/platform=iOS' \
-            -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/App.xcarchive"
+            -archivePath "$CM_BUILD_DIR/build/ios/App.xcarchive"
 
       - name: Export IPA
         script: |
           cd ios/App
+          PROFILE_UUID=$(ls ~/Library/Developer/Xcode/UserData/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1 | xargs -I{} basename {} .mobileprovision)
+          echo "Using profile: $PROFILE_UUID"
+          cat > /tmp/exportOptions.plist << PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>teamID</key><string>$TEAM_ID</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>provisioningProfiles</key><dict>
+              <key>$BUNDLE_ID</key><string>${PROFILE_UUID}</string>
+            </dict>
+            <key>stripSwiftSymbols</key><true/>
+            <key>uploadSymbols</key><true/>
+          </dict></plist>
+          PLIST
           xcodebuild -exportArchive \
-            -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/App.xcarchive" \
-            -exportOptionsPlist /tmp/exportOptions.plist \
-            -exportPath "$CM_BUILD_DIR/build/ios/ipa"
+            -archivePath "$CM_BUILD_DIR/build/ios/App.xcarchive" \
+            -exportPath "$CM_BUILD_DIR/build/ios/ipa" \
+            -exportOptionsPlist /tmp/exportOptions.plist
 
       - name: Upload to App Store Connect
         script: |
-          pip3 install --upgrade codemagic-cli-tools
-          echo "${APP_STORE_CONNECT_API_KEY}" | tr -d '\n' | base64 --decode | openssl pkey -inform DER -outform PEM > /tmp/AuthKey.pem
-          echo "Key header: $(head -1 /tmp/AuthKey.pem)"
-          app-store-connect publish \
-            --path "$CM_BUILD_DIR/build/ios/ipa/App.ipa" \
-            --key-id "$APP_STORE_CONNECT_API_KEY_ID" \
-            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --private-key @file:/tmp/AuthKey.pem \
-            --testflight
+          cd ios/App
+          fastlane pilot upload \
+            --ipa "$CM_BUILD_DIR/build/ios/ipa/App.ipa" \
+            --api_key_path /tmp/api_key.json \
+            --skip_waiting_for_build_processing true
 
     artifacts:
-      - $CM_BUILD_DIR/build/ios/ipa/*.ipa
-
-    publishing: {}
+      - build/ios/ipa/*.ipa

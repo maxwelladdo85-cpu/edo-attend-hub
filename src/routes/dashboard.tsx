@@ -129,14 +129,6 @@ function TeacherView() {
     setStudents(st ?? []);
   };
 
-  useEffect(() => {
-    // Only auto-refresh when the school is missing. class_taught is intentionally
-    // null for Head Teachers — refreshing on it caused an infinite loader loop.
-    if (user && !profile?.school_id) {
-      void refresh();
-    }
-  }, [user, profile?.school_id, refresh]);
-
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id, profile?.school_id, profile?.class_taught]);
 
   const mark = async (kind: "arrival" | "departure") => {

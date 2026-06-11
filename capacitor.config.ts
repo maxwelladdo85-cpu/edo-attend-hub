@@ -6,8 +6,6 @@ const config: CapacitorConfig = {
   webDir: "dist",
   server: {
     androidScheme: "https",
-    url: "http://10.0.2.2:5173",
-    cleartext: true,
   },
   plugins: {
     Geolocation: {
