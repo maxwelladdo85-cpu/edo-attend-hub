@@ -113,7 +113,7 @@ export function DashboardShell({
         </div>
       )}
 
-      <div className="flex-1 min-w-0 flex flex-col md:ml-2">
+      <div className="flex-1 min-w-0 flex flex-col md:ml-4">
         {/* Mobile header */}
         <header className="md:hidden sticky top-0 z-30 bg-card border-b border-border h-14 px-4 pr-safe pl-safe pt-safe flex items-center justify-between">
           <button
