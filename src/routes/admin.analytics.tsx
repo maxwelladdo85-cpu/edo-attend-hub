@@ -4,7 +4,7 @@ import { BarChart3 } from "lucide-react";
 import { AdminPageHeader } from "@/components/AdminShell";
 import {
   useSchools,
-  useTeacherProfiles,
+  useStaffProfiles,
   useStudents,
   useTeacherAttendanceToday,
   useStudentAttendanceToday,
@@ -31,24 +31,33 @@ const COLORS = {
 
 function AnalyticsPage() {
   const { data: schools = [] } = useSchools();
-  const { data: teachers = [] } = useTeacherProfiles();
+  const { data: staff = [] } = useStaffProfiles();
+  const teachers = useMemo(() => staff.filter((s) => s.role === "teacher"), [staff]);
+  const teacherUserIds = useMemo(() => new Set(teachers.map((t) => t.user_id)), [teachers]);
   const { data: students = [] } = useStudents();
   const { data: tAtt = [] } = useTeacherAttendanceToday();
   const { data: sAtt = [] } = useStudentAttendanceToday();
 
-  // Denominator includes any teacher who appears in attendance but isn't in
-  // the teacher profile list, so percentages never exceed 100%.
+  // Teacher-only attendance (exclude head teachers — they have their own role).
+  const teacherOnlyAtt = useMemo(
+    () => tAtt.filter((r) => teacherUserIds.has(r.teacher_user_id)),
+    [tAtt, teacherUserIds],
+  );
+
+  // Denominator: registered teachers ∪ any teacher with an attendance row today.
   const teacherDenom = new Set<string>([
     ...teachers.map((t) => t.user_id),
-    ...tAtt.map((r) => r.teacher_user_id),
+    ...teacherOnlyAtt.map((r) => r.teacher_user_id),
   ]).size;
-  const teachersPresent = Math.min(tAtt.filter((r) => r.arrival_time).length, teacherDenom);
-  const teachersLate = tAtt.filter((r) => r.arrival_status === "late").length;
-  const teachersOnTime = tAtt.filter((r) => r.arrival_status === "on_time" || r.arrival_status === "early").length;
+  const teachersPresent = Math.min(teacherOnlyAtt.filter((r) => r.arrival_time).length, teacherDenom);
+  const teachersLate = teacherOnlyAtt.filter((r) => r.arrival_status === "late").length;
+  const teachersOnTime = teacherOnlyAtt.filter((r) => r.arrival_status === "on_time" || r.arrival_status === "early").length;
   const teachersAbsent = Math.max(0, teacherDenom - teachersPresent);
 
-  const studentDenom = Math.max(students.length, sAtt.length);
-  const studentsPresent = Math.min(sAtt.filter(isStudentPresent).length, studentDenom);
+  // Match Overview's pupil denominator (presentStudentIds count, not raw rows).
+  const presentStudentIds = new Set(sAtt.filter(isStudentPresent).map((r) => r.student_id));
+  const studentDenom = Math.max(students.length, presentStudentIds.size);
+  const studentsPresent = Math.min(presentStudentIds.size, studentDenom);
   const studentsAbsent = Math.max(0, studentDenom - studentsPresent);
 
   const teacherPie = [
@@ -72,7 +81,7 @@ function AnalyticsPage() {
       const lga = t.school_id ? schoolToLga.get(t.school_id) : null;
       if (!lga) continue; lgas.get(lga)!.teachers += 1;
     }
-    for (const r of tAtt) {
+    for (const r of teacherOnlyAtt) {
       const lga = r.school_id ? schoolToLga.get(r.school_id) : null;
       if (!lga || !r.arrival_time) continue; lgas.get(lga)!.tPresent += 1;
     }
@@ -86,7 +95,7 @@ function AnalyticsPage() {
       .map((r) => ({ name: prettyLga(r.lga), Pupils: safePct(r.sPresent, r.students), Teachers: safePct(r.tPresent, r.teachers) }))
       .sort((a, b) => b.Pupils - a.Pupils)
       .slice(0, 10);
-  }, [schools, teachers, students, tAtt, sAtt]);
+  }, [schools, teachers, students, teacherOnlyAtt, sAtt]);
 
   const typeBar = useMemo(() => {
     const schoolToCat = new Map(schools.map((s) => [s.id, s.category ?? "other"]));
@@ -99,7 +108,7 @@ function AnalyticsPage() {
       const c = t.school_id ? schoolToCat.get(t.school_id) : null;
       if (!c) continue; buckets.get(c)!.teachers += 1;
     }
-    for (const r of tAtt) {
+    for (const r of teacherOnlyAtt) {
       const c = r.school_id ? schoolToCat.get(r.school_id) : null;
       if (!c || !r.arrival_time) continue; buckets.get(c)!.tPresent += 1;
     }
@@ -110,7 +119,7 @@ function AnalyticsPage() {
       const c = schoolToCat.get(r.school_id); if (!c || !isStudentPresent(r)) continue; buckets.get(c)!.sPresent += 1;
     }
     return Array.from(buckets.values()).map((r) => ({ name: r.name, Pupils: safePct(r.sPresent, r.students), Teachers: safePct(r.tPresent, r.teachers) }));
-  }, [schools, teachers, students, tAtt, sAtt]);
+  }, [schools, teachers, students, teacherOnlyAtt, sAtt]);
 
   return (
     <div>
