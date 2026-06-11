@@ -290,6 +290,59 @@ function OverviewPage() {
         <StatCard icon={AlertCircle} label="Teachers late" value={teachersLate} tone="warning" className="bg-head-teacher-card" />
         <StatCard icon={AlertCircle} label="Pupils not marked" value={Math.max(0, filteredStudents.length - studentsPresent)} tone="destructive" className="bg-head-teacher-card" />
       </div>
+
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mt-8 mb-3">
+        Schools {activeFilters.length ? `(${filteredSchools.length})` : "in Edo State"}
+      </h2>
+      <div className="grid gap-3 md:grid-cols-2">
+        {filteredSchools.length === 0 && (
+          <div className="text-sm text-muted-foreground italic">No schools match the current filters.</div>
+        )}
+        {filteredSchools.map((school) => {
+          const schoolStaff = filteredStaff.filter((s) => s.school_id === school.id);
+          const heads = schoolStaff.filter((s) => s.role === "head_teacher");
+          const tchrs = schoolStaff.filter((s) => s.role === "teacher");
+          return (
+            <div key={school.id} className="rounded-xl border bg-card p-4 shadow-sm">
+              <div className="font-semibold text-foreground">{school.name}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">
+                {prettyLga(school.lga)}{school.category ? ` · ${prettyCategory(school.category)}` : ""}
+              </div>
+              <div className="mt-3 space-y-2 text-sm">
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Head Teacher</div>
+                  {heads.length === 0 ? (
+                    <div className="text-muted-foreground italic">Not assigned</div>
+                  ) : (
+                    <ul className="mt-0.5">
+                      {heads.map((h) => (
+                        <li key={h.user_id} className="text-foreground">{h.full_name || "—"}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Teachers ({tchrs.length})
+                  </div>
+                  {tchrs.length === 0 ? (
+                    <div className="text-muted-foreground italic">No teachers registered</div>
+                  ) : (
+                    <ul className="mt-0.5 grid gap-0.5">
+                      {tchrs.map((t) => (
+                        <li key={t.user_id} className="text-foreground">
+                          {t.full_name || "—"}
+                          {t.class_taught ? <span className="text-muted-foreground"> · {t.class_taught}</span> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
