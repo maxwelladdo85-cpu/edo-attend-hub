@@ -150,6 +150,8 @@ function AttendanceRecordPage() {
           </div>
         )}
 
+        {isHead && <SchoolAttendanceOverview />}
+
         {viewingId ? (
           <WeeklyAttendanceRecord key={viewingId} teacherUserId={viewingId} />
         ) : isHead ? (
