@@ -81,7 +81,7 @@ function AnalyticsPage() {
       const lga = t.school_id ? schoolToLga.get(t.school_id) : null;
       if (!lga) continue; lgas.get(lga)!.teachers += 1;
     }
-    for (const r of tAtt) {
+    for (const r of teacherOnlyAtt) {
       const lga = r.school_id ? schoolToLga.get(r.school_id) : null;
       if (!lga || !r.arrival_time) continue; lgas.get(lga)!.tPresent += 1;
     }
