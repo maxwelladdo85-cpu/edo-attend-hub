@@ -78,7 +78,7 @@ const ATT_GC = 10 * 60_000;
 const ATT_REFETCH = 90_000;
 
 // PostgREST caps responses at 1000 rows by default, so fetch in pages.
-async function fetchAllPaged<T>(
+export async function fetchAllPaged<T>(
   query: (from: number, to: number) => Promise<{ data: T[] | null; error: unknown }>,
   pageSize = 1000,
 ): Promise<T[]> {
