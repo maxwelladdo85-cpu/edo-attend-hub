@@ -45,9 +45,11 @@ type StudentRow = {
 };
 
 export function SchoolAttendanceOverview() {
-  const { profile } = useAuth();
+  const { profile, roles } = useAuth();
   const schoolId = profile?.school_id;
-  const [mode, setMode] = useState<Mode>("teachers");
+  const isHead = roles.includes("head_teacher") || roles.includes("admin");
+  const teacherClass = profile?.class_taught ?? null;
+  const [mode, setMode] = useState<Mode>(isHead ? "teachers" : "students");
   const [loading, setLoading] = useState(false);
   const [teacherRows, setTeacherRows] = useState<TeacherRow[]>([]);
   const [studentRows, setStudentRows] = useState<StudentRow[]>([]);
@@ -118,10 +120,14 @@ export function SchoolAttendanceOverview() {
         }).sort((a: TeacherRow, b: TeacherRow) => (a.full_name ?? "").localeCompare(b.full_name ?? ""));
         if (!cancelled) setTeacherRows(rows);
       } else {
-        const { data: studs } = await supabase
+        let studQuery = supabase
           .from("students")
           .select("id, full_name, class")
           .eq("school_id", schoolId);
+        if (!isHead && teacherClass) {
+          studQuery = studQuery.eq("class", teacherClass);
+        }
+        const { data: studs } = await studQuery;
         const ids = (studs ?? []).map((s: any) => s.id);
         const { data: att } = await supabase
           .from("student_attendance")
@@ -150,7 +156,7 @@ export function SchoolAttendanceOverview() {
       if (!cancelled) setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [mode, schoolId, start, end]);
+  }, [mode, schoolId, start, end, isHead, teacherClass]);
 
   const statusLabel = (s: TeacherRow["status"]) => {
     if (s === "early") return <Badge className="bg-success/15 text-success hover:bg-success/15 border-success/30">Early</Badge>;
@@ -167,14 +173,16 @@ export function SchoolAttendanceOverview() {
           <p className="text-xs text-muted-foreground">This week ({start} – {end})</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant={mode === "teachers" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setMode("teachers")}
-            className="gap-2"
-          >
-            <Users className="h-4 w-4" /> Teachers
-          </Button>
+          {isHead && (
+            <Button
+              variant={mode === "teachers" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setMode("teachers")}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" /> Teachers
+            </Button>
+          )}
           <Button
             variant={mode === "students" ? "default" : "outline"}
             size="sm"
@@ -182,6 +190,7 @@ export function SchoolAttendanceOverview() {
             className="gap-2"
           >
             <GraduationCap className="h-4 w-4" /> Students
+            {!isHead && teacherClass ? ` · ${teacherClass}` : ""}
           </Button>
         </div>
       </div>
