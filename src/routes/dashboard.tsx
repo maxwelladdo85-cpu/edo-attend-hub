@@ -282,7 +282,7 @@ function TeacherView() {
         <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm flex gap-3">
           <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
           <div>
-            <div className="font-medium text-destructive">Attendance not recorded</div>
+            <div className="font-medium text-destructive">Attendance Marked</div>
             <div className="text-destructive/80 mt-1">{distanceWarning}</div>
           </div>
         </div>
