@@ -56,14 +56,26 @@ function OverviewPage() {
     return Array.from(set).sort();
   }, [schools]);
 
-  // Filter schools
-  const filteredSchools = useMemo(() => {
+  // Schools matching LGA + category (used to populate the school-name filter).
+  const schoolsInScope = useMemo(() => {
     return schools.filter((s) => {
       if (selectedLga !== "all" && s.lga !== selectedLga) return false;
       if (selectedCategory !== "all" && s.category !== selectedCategory) return false;
       return true;
     });
   }, [schools, selectedLga, selectedCategory]);
+
+  // If the selected school no longer matches the LGA/category filters, drop it.
+  const effectiveSchoolId = useMemo(() => {
+    if (selectedSchoolId === "all") return "all";
+    return schoolsInScope.some((s) => s.id === selectedSchoolId) ? selectedSchoolId : "all";
+  }, [selectedSchoolId, schoolsInScope]);
+
+  // Filter schools (LGA + category + specific school)
+  const filteredSchools = useMemo(() => {
+    if (effectiveSchoolId === "all") return schoolsInScope;
+    return schoolsInScope.filter((s) => s.id === effectiveSchoolId);
+  }, [schoolsInScope, effectiveSchoolId]);
 
   const filteredSchoolIds = useMemo(
     () => new Set(filteredSchools.map((s) => s.id)),
