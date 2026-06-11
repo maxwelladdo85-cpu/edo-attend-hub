@@ -120,10 +120,14 @@ export function SchoolAttendanceOverview() {
         }).sort((a: TeacherRow, b: TeacherRow) => (a.full_name ?? "").localeCompare(b.full_name ?? ""));
         if (!cancelled) setTeacherRows(rows);
       } else {
-        const { data: studs } = await supabase
+        let studQuery = supabase
           .from("students")
           .select("id, full_name, class")
           .eq("school_id", schoolId);
+        if (!isHead && teacherClass) {
+          studQuery = studQuery.eq("class", teacherClass);
+        }
+        const { data: studs } = await studQuery;
         const ids = (studs ?? []).map((s: any) => s.id);
         const { data: att } = await supabase
           .from("student_attendance")
