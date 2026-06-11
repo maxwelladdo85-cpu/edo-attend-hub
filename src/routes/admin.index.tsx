@@ -243,9 +243,29 @@ function OverviewPage() {
             ))}
           </SelectContent>
         </Select>
-        {(selectedLga !== "all" || selectedCategory !== "all") && (
+        <Select
+          value={effectiveSchoolId}
+          onValueChange={setSelectedSchoolId}
+          disabled={schoolsInScope.length === 0}
+        >
+          <SelectTrigger className="w-[260px] bg-background">
+            <SelectValue placeholder="All Schools" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[320px]">
+            <SelectItem value="all">All Schools ({schoolsInScope.length})</SelectItem>
+            {schoolsInScope
+              .slice()
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+        {(selectedLga !== "all" || selectedCategory !== "all" || effectiveSchoolId !== "all") && (
           <button
-            onClick={() => { setSelectedLga("all"); setSelectedCategory("all"); }}
+            onClick={() => { setSelectedLga("all"); setSelectedCategory("all"); setSelectedSchoolId("all"); }}
             className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="h-3.5 w-3.5" />
