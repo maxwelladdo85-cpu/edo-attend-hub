@@ -121,16 +121,26 @@ workflows:
             -archivePath "$CM_BUILD_DIR/build/ios/xcarchive/App.xcarchive" \
             -exportOptionsPlist /tmp/exportOptions.plist \
             -exportPath "$CM_BUILD_DIR/build/ios/ipa"
-          echo "=== Exported IPA files ==="
-          ls -la "$CM_BUILD_DIR/build/ios/ipa/" || true
-          find "$CM_BUILD_DIR/build/ios/ipa" -name "*.ipa" -exec ls -la {} \;
+
+      - name: Upload to App Store Connect
+        script: |
+          echo "$APP_STORE_CONNECT_API_KEY" | base64 --decode | openssl pkey -inform DER -outform PEM > /tmp/AuthKey.pem
+          if [ ! -s /tmp/AuthKey.pem ]; then
+            echo "PEM conversion failed, trying direct base64 decode..."
+            echo "$APP_STORE_CONNECT_API_KEY" | base64 --decode > /tmp/AuthKey.pem
+          fi
+          echo "Key file size: $(wc -c < /tmp/AuthKey.pem) bytes"
+          echo "Key preview: $(head -c 30 /tmp/AuthKey.pem)..."
+          ls -la "$CM_BUILD_DIR/build/ios/ipa/"*.ipa
+          app-store-connect publish \
+            --path "$CM_BUILD_DIR/build/ios/ipa/App.ipa" \
+            --key-id "$APP_STORE_CONNECT_API_KEY_ID" \
+            --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
+            --private-key "$(cat /tmp/AuthKey.pem)" \
+            --testflight \
+            --skip-package-validation
 
     artifacts:
       - $CM_BUILD_DIR/build/ios/ipa/*.ipa
 
-    publishing:
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_API_KEY
-        key_id: $APP_STORE_CONNECT_API_KEY_ID
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_app_store: false
+    publishing: {}
