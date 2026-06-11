@@ -106,7 +106,7 @@ function TeacherView() {
 
   // Default allowed radius (meters) when a school has not configured one.
   // GPS accuracy on phones is typically 5-30m, so 100m is a sensible floor.
-  const DEFAULT_RADIUS_M = 100;
+  const DEFAULT_RADIUS_M = 20;
 
   const isHead = primaryRole(roles) === "head_teacher";
   const idLabel = isHead ? "Head Teacher ID" : "Teacher ID";
