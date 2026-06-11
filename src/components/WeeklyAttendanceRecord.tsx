@@ -21,8 +21,9 @@ function toDateStr(d: Date) {
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
-export function WeeklyAttendanceRecord() {
+export function WeeklyAttendanceRecord({ teacherUserId }: { teacherUserId?: string } = {}) {
   const { user } = useAuth();
+  const targetId = teacherUserId ?? user?.id;
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<Record<string, any>>({});
 
@@ -33,7 +34,7 @@ export function WeeklyAttendanceRecord() {
   });
 
   useEffect(() => {
-    if (!user) return;
+    if (!targetId) return;
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -42,7 +43,7 @@ export function WeeklyAttendanceRecord() {
       const { data } = await supabase
         .from("teacher_attendance")
         .select("attendance_date, arrival_time, departure_time, arrival_status")
-        .eq("teacher_user_id", user.id)
+        .eq("teacher_user_id", targetId)
         .gte("attendance_date", start)
         .lte("attendance_date", end);
       if (cancelled) return;
@@ -53,7 +54,7 @@ export function WeeklyAttendanceRecord() {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [targetId]);
 
   const today = toDateStr(new Date());
   const presentDays = week.filter(d => records[d.dateStr]?.arrival_time).length;
