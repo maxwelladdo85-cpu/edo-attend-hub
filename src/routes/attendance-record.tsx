@@ -150,8 +150,6 @@ function AttendanceRecordPage() {
           </div>
         )}
 
-        {isHead && <SchoolAttendanceOverview />}
-
         {viewingId ? (
           <WeeklyAttendanceRecord key={viewingId} teacherUserId={viewingId} />
         ) : isHead ? (
@@ -159,6 +157,8 @@ function AttendanceRecordPage() {
             Select a teacher above to view their attendance record, or view your own record.
           </div>
         ) : null}
+
+        {isHead && <SchoolAttendanceOverview />}
       </div>
     </DashboardShell>
   );
