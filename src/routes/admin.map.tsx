@@ -4,7 +4,7 @@ import { Map as MapIcon } from "lucide-react";
 import { AdminPageHeader } from "@/components/AdminShell";
 import {
   useSchools,
-  useTeacherProfiles,
+  useStaffProfiles,
   useStudents,
   useTeacherAttendanceToday,
   useStudentAttendanceToday,
@@ -26,7 +26,9 @@ const EDO_CENTER: [number, number] = [6.5, 6.0];
 
 function MapPage() {
   const { data: schools = [] } = useSchools();
-  const { data: teachers = [] } = useTeacherProfiles();
+  const { data: staff = [] } = useStaffProfiles();
+  const teachers = useMemo(() => staff.filter((s) => s.role === "teacher"), [staff]);
+  const teacherUserIds = useMemo(() => new Set(teachers.map((t) => t.user_id)), [teachers]);
   const { data: students = [] } = useStudents();
   const { data: tAtt = [] } = useTeacherAttendanceToday();
   const { data: sAtt = [] } = useStudentAttendanceToday();
@@ -46,6 +48,7 @@ function MapPage() {
     }
     for (const r of tAtt) {
       if (!r.school_id || !r.arrival_time) continue;
+      if (!teacherUserIds.has(r.teacher_user_id)) continue; // exclude head teachers
       const cur = teacherBySchool.get(r.school_id);
       if (!cur) continue;
       cur.present += 1;
@@ -90,7 +93,7 @@ function MapPage() {
           status,
         };
       });
-  }, [schools, teachers, students, tAtt, sAtt]);
+  }, [schools, teachers, teacherUserIds, students, tAtt, sAtt]);
 
   const colorFor = (status: "late" | "on_time" | "none") => {
     if (status === "on_time") return "oklch(0.55 0.18 148)"; // green

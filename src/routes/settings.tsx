@@ -20,6 +20,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { DashboardShell, roleLabelFor } from "@/components/DashboardShell";
+import { AcademicPeriodsCard } from "@/components/AcademicPeriodsCard";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — EdoSAS" }] }),
@@ -206,6 +207,8 @@ function SettingsPage() {
           )}
         </CardContent>
       </Card>
+
+      {role === "admin" && <AcademicPeriodsCard />}
 
       <Card className="border-destructive/40">
         <CardHeader>

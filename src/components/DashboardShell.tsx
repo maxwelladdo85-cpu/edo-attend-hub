@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   Loader2,
+  ClipboardList,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ export function DashboardShell({
 
   const sidebarNav: NavItem[] = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/attendance-record", label: "Attendance record", icon: ClipboardList },
     { to: "/settings", label: "My Profile", icon: UserCircle },
     ...nav,
   ];
@@ -113,7 +115,7 @@ export function DashboardShell({
         </div>
       )}
 
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col md:ml-4">
         {/* Mobile header */}
         <header className="md:hidden sticky top-0 z-30 bg-card border-b border-border h-14 px-4 pr-safe pl-safe pt-safe flex items-center justify-between">
           <button

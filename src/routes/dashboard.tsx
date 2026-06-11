@@ -13,6 +13,7 @@ import { haptic } from "@/lib/haptics";
 import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
 import { AdmitStudentCard } from "@/components/AdmitStudentCard";
 
+
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — EdoSAS" }] }),
   component: DashboardPage,
@@ -106,7 +107,7 @@ function TeacherView() {
 
   // Default allowed radius (meters) when a school has not configured one.
   // GPS accuracy on phones is typically 5-30m, so 100m is a sensible floor.
-  const DEFAULT_RADIUS_M = 100;
+  const DEFAULT_RADIUS_M = 20;
 
   const isHead = primaryRole(roles) === "head_teacher";
   const idLabel = isHead ? "Head Teacher ID" : "Teacher ID";
@@ -170,16 +171,14 @@ function TeacherView() {
       verified = dist <= allowedRadius;
 
       // Out-of-range: still record the attendance as unverified, but show a
-      // clear message. For head teachers, address them directly without asking
-      // to remove the record. For regular teachers, ask them to contact the
-      // head teacher to remove today's record and re-mark it from within range.
+      // clear message. For head teachers, address them directly.
       if (!verified) {
         const teacherName = profile?.full_name ?? "Teacher";
         if (isHead) {
           const msg = `Dear Head Teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m). Please ensure you are within the school premises when marking attendance.`;
           setDistanceWarning(msg);
         } else {
-          const msg = `Dear teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m). Please ask your head teacher to remove the data marked for today and allow them to mark the attendance again from within the school.`;
+          const msg = `Dear teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m).`;
           setDistanceWarning(msg);
         }
       } else {
@@ -204,15 +203,16 @@ function TeacherView() {
         );
         if (error) throw error;
         const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        const arrivalLabel = status === "early" ? "Well done, you arrived early" : status === "late" ? "You arrived late" : `Arrival marked at ${timeLabel} — on time`;
         if (verified) {
           void haptic("success");
-          toast.success(`Arrival marked at ${timeLabel} — ${status.replace("_", " ")}`);
+          toast.success(arrivalLabel);
         } else {
           void haptic("warning");
           if (isHead) {
             toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please mark attendance from within the school premises.`);
           } else {
-            toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please ask your head teacher to remove today's record so it can be marked again from within the school.`);
+            toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.`);
           }
         }
       } else {
@@ -230,15 +230,16 @@ function TeacherView() {
           .eq("attendance_date", dateStr);
         if (error) throw error;
         const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        const departureLabel = status === "left_early" ? "Early" : status === "overtime" ? "Departed after closing time" : status.replace("_", " ");
         if (verified) {
           void haptic("success");
-          toast.success(`Departure marked at ${timeLabel} — ${status.replace("_", " ")}`);
+          toast.success(`Departure marked at ${timeLabel} — ${departureLabel}`);
         } else {
           void haptic("warning");
           if (isHead) {
             toast.warning(`Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please mark attendance from within the school premises.`);
           } else {
-            toast.warning(`Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please ask your head teacher to remove today's record so it can be marked again from within the school.`);
+            toast.warning(`Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.`);
           }
         }
       }
@@ -274,7 +275,7 @@ function TeacherView() {
         <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm flex gap-3">
           <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
           <div>
-            <div className="font-medium text-destructive">Attendance not recorded</div>
+            <div className="font-medium text-destructive">Attendance Marked</div>
             <div className="text-destructive/80 mt-1">{distanceWarning}</div>
           </div>
         </div>
@@ -362,6 +363,8 @@ function TeacherView() {
         </div>
       )}
 
+      
+
       <AdmitStudentCard schoolName={school?.name} onAdded={load} />
 
       <StudentAttendancePanel />
@@ -386,8 +389,8 @@ function StatusBadge({ status }: { status: string }) {
     early: { label: "Early", cls: "bg-success/15 text-success" },
     on_time: { label: "On time", cls: "bg-success/15 text-success" },
     late: { label: "Late", cls: "bg-destructive/15 text-destructive" },
-    left_early: { label: "Left early", cls: "bg-destructive/15 text-destructive" },
-    overtime: { label: "Overtime", cls: "bg-gold/20 text-gold-foreground" },
+    left_early: { label: "Early", cls: "bg-destructive/15 text-destructive" },
+    overtime: { label: "Departed after closing time", cls: "bg-gold/20 text-gold-foreground" },
   };
   const s = map[status] ?? { label: status, cls: "bg-muted text-muted-foreground" };
   return <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full mt-2 ${s.cls}`}>{s.label}</span>;

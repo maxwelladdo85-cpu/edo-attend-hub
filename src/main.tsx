@@ -6,6 +6,12 @@ import { routeTree } from "./routeTree.gen";
 import { Toaster } from "./components/ui/sonner";
 import "./styles.css";
 
+// On hard reload, always return to the sign-in page
+const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+if (navEntry?.type === "reload" && window.location.pathname !== "/login") {
+  window.location.href = "/login";
+}
+
 const queryClient = new QueryClient();
 
 const router = createRouter({
@@ -34,5 +40,5 @@ if (!rootElement.innerHTML) {
   );
 }
 
-// Initialize native shell after render
+// Initialize native shell after render (non-blocking)
 import("./lib/native-init").then(({ initNativeShell }) => initNativeShell());
