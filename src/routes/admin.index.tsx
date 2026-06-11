@@ -169,6 +169,8 @@ function OverviewPage() {
   const activeFilters: string[] = [];
   if (selectedLga !== "all") activeFilters.push(prettyLga(selectedLga));
   if (selectedCategory !== "all") activeFilters.push(prettyCategory(selectedCategory));
+  const selectedSchool = effectiveSchoolId !== "all" ? schoolsInScope.find((s) => s.id === effectiveSchoolId) : undefined;
+  if (selectedSchool) activeFilters.push(selectedSchool.name);
 
   const subtitleText = activeFilters.length
     ? `Filtered: ${activeFilters.join(" · ")} · ${new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}`
