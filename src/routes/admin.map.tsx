@@ -48,6 +48,7 @@ function MapPage() {
     }
     for (const r of tAtt) {
       if (!r.school_id || !r.arrival_time) continue;
+      if (!teacherUserIds.has(r.teacher_user_id)) continue; // exclude head teachers
       const cur = teacherBySchool.get(r.school_id);
       if (!cur) continue;
       cur.present += 1;
