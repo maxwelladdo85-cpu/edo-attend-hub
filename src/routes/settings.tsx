@@ -208,6 +208,8 @@ function SettingsPage() {
         </CardContent>
       </Card>
 
+      {role === "admin" && <AcademicPeriodsCard />}
+
       <Card className="border-destructive/40">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base text-destructive">
