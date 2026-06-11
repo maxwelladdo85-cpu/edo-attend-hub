@@ -43,6 +43,7 @@ function OverviewPage() {
 
   const [selectedLga, setSelectedLga] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string>("all");
 
   // Unique filter options
   const lgaOptions = useMemo(() => {
@@ -55,14 +56,26 @@ function OverviewPage() {
     return Array.from(set).sort();
   }, [schools]);
 
-  // Filter schools
-  const filteredSchools = useMemo(() => {
+  // Schools matching LGA + category (used to populate the school-name filter).
+  const schoolsInScope = useMemo(() => {
     return schools.filter((s) => {
       if (selectedLga !== "all" && s.lga !== selectedLga) return false;
       if (selectedCategory !== "all" && s.category !== selectedCategory) return false;
       return true;
     });
   }, [schools, selectedLga, selectedCategory]);
+
+  // If the selected school no longer matches the LGA/category filters, drop it.
+  const effectiveSchoolId = useMemo(() => {
+    if (selectedSchoolId === "all") return "all";
+    return schoolsInScope.some((s) => s.id === selectedSchoolId) ? selectedSchoolId : "all";
+  }, [selectedSchoolId, schoolsInScope]);
+
+  // Filter schools (LGA + category + specific school)
+  const filteredSchools = useMemo(() => {
+    if (effectiveSchoolId === "all") return schoolsInScope;
+    return schoolsInScope.filter((s) => s.id === effectiveSchoolId);
+  }, [schoolsInScope, effectiveSchoolId]);
 
   const filteredSchoolIds = useMemo(
     () => new Set(filteredSchools.map((s) => s.id)),
@@ -156,6 +169,8 @@ function OverviewPage() {
   const activeFilters: string[] = [];
   if (selectedLga !== "all") activeFilters.push(prettyLga(selectedLga));
   if (selectedCategory !== "all") activeFilters.push(prettyCategory(selectedCategory));
+  const selectedSchool = effectiveSchoolId !== "all" ? schoolsInScope.find((s) => s.id === effectiveSchoolId) : undefined;
+  if (selectedSchool) activeFilters.push(selectedSchool.name);
 
   const subtitleText = activeFilters.length
     ? `Filtered: ${activeFilters.join(" · ")} · ${new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}`
@@ -228,9 +243,29 @@ function OverviewPage() {
             ))}
           </SelectContent>
         </Select>
-        {(selectedLga !== "all" || selectedCategory !== "all") && (
+        <Select
+          value={effectiveSchoolId}
+          onValueChange={setSelectedSchoolId}
+          disabled={schoolsInScope.length === 0}
+        >
+          <SelectTrigger className="w-[260px] bg-background">
+            <SelectValue placeholder="All Schools" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[320px]">
+            <SelectItem value="all">All Schools ({schoolsInScope.length})</SelectItem>
+            {schoolsInScope
+              .slice()
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.name}
+                </SelectItem>
+              ))}
+          </SelectContent>
+        </Select>
+        {(selectedLga !== "all" || selectedCategory !== "all" || effectiveSchoolId !== "all") && (
           <button
-            onClick={() => { setSelectedLga("all"); setSelectedCategory("all"); }}
+            onClick={() => { setSelectedLga("all"); setSelectedCategory("all"); setSelectedSchoolId("all"); }}
             className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="h-3.5 w-3.5" />
@@ -290,6 +325,108 @@ function OverviewPage() {
         <StatCard icon={AlertCircle} label="Teachers late" value={teachersLate} tone="warning" className="bg-head-teacher-card" />
         <StatCard icon={AlertCircle} label="Pupils not marked" value={Math.max(0, filteredStudents.length - studentsPresent)} tone="destructive" className="bg-head-teacher-card" />
       </div>
+
+      {selectedSchool && (() => {
+        const schoolStaff = filteredStaff.filter((s) => s.school_id === selectedSchool.id);
+        const heads = schoolStaff.filter((s) => s.role === "head_teacher");
+        const tchrs = schoolStaff.filter((s) => s.role === "teacher");
+        const attByTeacher = new Map(filteredTAtt.map((r) => [r.teacher_user_id, r]));
+        const studentsHere = filteredStudents.filter((s) => s.school_id === selectedSchool.id);
+        const presentStudentsHere = filteredSAtt.filter(
+          (r) => r.school_id === selectedSchool.id && isStudentPresent(r),
+        ).length;
+
+        const fmtTime = (t: string | null) => {
+          if (!t) return "—";
+          const d = new Date(t);
+          return isNaN(d.getTime())
+            ? t
+            : d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+        };
+
+        const StaffRow = ({ p }: { p: typeof schoolStaff[number] }) => {
+          const att = attByTeacher.get(p.user_id);
+          const status = att?.arrival_status ?? (att?.arrival_time ? "present" : "absent");
+          const tone =
+            status === "present"
+              ? "bg-success/10 text-success border-success/20"
+              : status === "late"
+              ? "bg-warning/10 text-warning border-warning/20"
+              : "bg-destructive/10 text-destructive border-destructive/20";
+          return (
+            <div className="rounded-lg border bg-background/60 p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="font-medium text-foreground truncate">{p.full_name || "—"}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5 space-x-2">
+                    {p.teacher_id && <span>ID: {p.teacher_id}</span>}
+                    {p.class_taught && <span>· Class: {p.class_taught}</span>}
+                  </div>
+                </div>
+                <span className={`shrink-0 inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium capitalize ${tone}`}>
+                  {status}
+                </span>
+              </div>
+              <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                <div>
+                  <div className="text-muted-foreground">Arrival</div>
+                  <div className="text-foreground">{fmtTime(att?.arrival_time ?? null)}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Departure</div>
+                  <div className="text-foreground">{fmtTime(att?.departure_time ?? null)}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Head verified</div>
+                  <div className="text-foreground">{att?.head_verified ? "Yes" : "No"}</div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        return (
+          <section className="mt-8 rounded-2xl border bg-card p-5 shadow-sm">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
+              <h2 className="text-base font-semibold text-foreground">
+                Review · {selectedSchool.name}
+              </h2>
+              <div className="text-xs text-muted-foreground">
+                {prettyLga(selectedSchool.lga)}
+                {selectedSchool.category ? ` · ${prettyCategory(selectedSchool.category)}` : ""}
+                {" · "}
+                {studentsHere.length} pupils ({presentStudentsHere} present today)
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                Head Teacher{heads.length > 1 ? "s" : ""} ({heads.length})
+              </div>
+              {heads.length === 0 ? (
+                <div className="text-sm text-muted-foreground italic">Not assigned</div>
+              ) : (
+                <div className="grid gap-2 md:grid-cols-2">
+                  {heads.map((h) => <StaffRow key={h.user_id} p={h} />)}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+                Teachers ({tchrs.length})
+              </div>
+              {tchrs.length === 0 ? (
+                <div className="text-sm text-muted-foreground italic">No teachers registered at this school.</div>
+              ) : (
+                <div className="grid gap-2 md:grid-cols-2">
+                  {tchrs.map((t) => <StaffRow key={t.user_id} p={t} />)}
+                </div>
+              )}
+            </div>
+          </section>
+        );
+      })()}
 
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mt-8 mb-3">
         Schools {activeFilters.length ? `(${filteredSchools.length})` : "in Edo State"}
