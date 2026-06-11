@@ -61,7 +61,7 @@ function AttendanceRecordPage() {
       if (cancelled) return;
       const list = (profs ?? [])
         .map((p: any) => ({ user_id: p.user_id, full_name: p.full_name, teacher_id: p.teacher_id }))
-        .sort((a, b) => (a.teacher_id ?? "").localeCompare(b.teacher_id ?? ""));
+        .sort((a: TeacherOption, b: TeacherOption) => (a.teacher_id ?? "").localeCompare(b.teacher_id ?? ""));
       setTeachers(list);
       setTeachersLoading(false);
     })();
