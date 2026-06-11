@@ -147,7 +147,7 @@ function todayStr() {
 
 function FlaggedPage() {
   const { data: earliestDate } = useEarliestAttendanceDate();
-  const [fromDate, setFromDate] = useState("2020-01-01");
+  const [fromDate, setFromDate] = useState(todayStr());
   const [toDate, setToDate] = useState(todayStr());
   const [filter, setFilter] = useState<"all" | "late" | "range">("all");
   const [q, setQ] = useState("");
