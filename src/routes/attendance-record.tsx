@@ -41,6 +41,8 @@ function AttendanceRecordPage() {
 
   const role = primaryRole(roles);
   const isHead = role === "head_teacher";
+  const isTeacher = role === "teacher";
+  const canViewOverview = isHead || isTeacher;
 
   useEffect(() => {
     if (!isHead || !profile?.school_id) return;
@@ -158,7 +160,7 @@ function AttendanceRecordPage() {
           </div>
         ) : null}
 
-        {isHead && <SchoolAttendanceOverview />}
+        {canViewOverview && <SchoolAttendanceOverview />}
       </div>
     </DashboardShell>
   );
