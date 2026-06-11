@@ -95,6 +95,7 @@ function ByLgaPage() {
     }
     for (const r of tAtt) {
       if (!r.school_id || !filteredSchoolIds.has(r.school_id)) continue;
+      if (!teacherUserIds.has(r.teacher_user_id)) continue; // exclude head teachers
       const lga = schoolToLga.get(r.school_id);
       if (!lga || !r.arrival_time) continue;
       const cur = lgas.get(lga); if (!cur) continue;
