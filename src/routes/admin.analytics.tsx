@@ -108,7 +108,7 @@ function AnalyticsPage() {
       const c = t.school_id ? schoolToCat.get(t.school_id) : null;
       if (!c) continue; buckets.get(c)!.teachers += 1;
     }
-    for (const r of tAtt) {
+    for (const r of teacherOnlyAtt) {
       const c = r.school_id ? schoolToCat.get(r.school_id) : null;
       if (!c || !r.arrival_time) continue; buckets.get(c)!.tPresent += 1;
     }
