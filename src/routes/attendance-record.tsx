@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, User } from "lucide-react";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { DashboardShell, roleLabelFor } from "@/components/DashboardShell";
 import { WeeklyAttendanceRecord } from "@/components/WeeklyAttendanceRecord";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -12,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 
 export const Route = createFileRoute("/attendance-record")({
   head: () => ({ meta: [{ title: "Attendance Record — EdoSAS" }] }),
@@ -30,6 +32,7 @@ function AttendanceRecordPage() {
   const [teachers, setTeachers] = useState<TeacherOption[]>([]);
   const [selectedTeacherId, setSelectedTeacherId] = useState<string | undefined>();
   const [teachersLoading, setTeachersLoading] = useState(false);
+  const [viewingOwn, setViewingOwn] = useState(false);
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/login", replace: true });
@@ -77,7 +80,7 @@ function AttendanceRecordPage() {
   }
 
   const label = roleLabelFor(role);
-  const viewingId = isHead ? selectedTeacherId : user?.id;
+  const viewingId = isHead && !viewingOwn ? selectedTeacherId : user?.id;
   const selectedTeacher = teachers.find((t) => t.user_id === selectedTeacherId);
 
   return (
@@ -87,43 +90,62 @@ function AttendanceRecordPage() {
           <h1 className="text-2xl md:text-3xl font-bold">Attendance Record</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {isHead
-              ? "Select a teacher to view their weekly attendance record."
+              ? "View your own record or select a teacher to view theirs."
               : "Your weekly attendance summary."}
           </p>
         </div>
 
         {isHead && (
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
-            <label className="text-sm font-medium mb-2 block">Select teacher</label>
-            <Select
-              value={selectedTeacherId}
-              onValueChange={(v) => setSelectedTeacherId(v)}
-              disabled={teachersLoading || teachers.length === 0}
-            >
-              <SelectTrigger className="w-full md:w-[420px]">
-                <SelectValue
-                  placeholder={
-                    teachersLoading
-                      ? "Loading teachers..."
-                      : teachers.length === 0
-                      ? "No teachers found"
-                      : "Choose a teacher ID"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {teachers.map((t) => (
-                  <SelectItem key={t.user_id} value={t.user_id}>
-                    {(t.teacher_id ?? "—") + (t.full_name ? ` · ${t.full_name}` : "")}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedTeacher && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Viewing record for <span className="font-medium text-foreground">{selectedTeacher.full_name ?? selectedTeacher.teacher_id}</span>
-              </p>
-            )}
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-card space-y-4">
+            <div className="flex items-center gap-3">
+              <Button
+                variant={viewingOwn ? "default" : "outline"}
+                onClick={() => {
+                  setViewingOwn(true);
+                  setSelectedTeacherId(undefined);
+                }}
+                className="gap-2"
+              >
+                <User className="h-4 w-4" />
+                Head teacher's attendance record
+              </Button>
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <label className="text-sm font-medium mb-2 block">Select teacher</label>
+              <Select
+                value={selectedTeacherId}
+                onValueChange={(v) => {
+                  setSelectedTeacherId(v);
+                  setViewingOwn(false);
+                }}
+                disabled={teachersLoading || teachers.length === 0}
+              >
+                <SelectTrigger className="w-full md:w-[420px]">
+                  <SelectValue
+                    placeholder={
+                      teachersLoading
+                        ? "Loading teachers..."
+                        : teachers.length === 0
+                        ? "No teachers found"
+                        : "Choose a teacher ID"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {teachers.map((t) => (
+                    <SelectItem key={t.user_id} value={t.user_id}>
+                      {(t.teacher_id ?? "—") + (t.full_name ? ` · ${t.full_name}` : "")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedTeacher && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Viewing record for <span className="font-medium text-foreground">{selectedTeacher.full_name ?? selectedTeacher.teacher_id}</span>
+                </p>
+              )}
+            </div>
           </div>
         )}
 
@@ -131,7 +153,7 @@ function AttendanceRecordPage() {
           <WeeklyAttendanceRecord key={viewingId} teacherUserId={viewingId} />
         ) : isHead ? (
           <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
-            Select a teacher above to view their attendance record.
+            Select a teacher above to view their attendance record, or view your own record.
           </div>
         ) : null}
       </div>
