@@ -16,6 +16,7 @@ import { Route as PrivacyRouteImport } from "./routes/privacy"
 import { Route as LoginRouteImport } from "./routes/login"
 import { Route as DashboardRouteImport } from "./routes/dashboard"
 import { Route as CookiesRouteImport } from "./routes/cookies"
+import { Route as AttendanceRecordRouteImport } from "./routes/attendance-record"
 import { Route as AdminRouteImport } from "./routes/admin"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as AdminIndexRouteImport } from "./routes/admin.index"
@@ -62,6 +63,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const CookiesRoute = CookiesRouteImport.update({
   id: "/cookies",
   path: "/cookies",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AttendanceRecordRoute = AttendanceRecordRouteImport.update({
+  id: "/attendance-record",
+  path: "/attendance-record",
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -128,6 +134,7 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/admin": typeof AdminRouteWithChildren
+  "/attendance-record": typeof AttendanceRecordRoute
   "/cookies": typeof CookiesRoute
   "/dashboard": typeof DashboardRoute
   "/login": typeof LoginRoute
@@ -148,6 +155,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
+  "/attendance-record": typeof AttendanceRecordRoute
   "/cookies": typeof CookiesRoute
   "/dashboard": typeof DashboardRoute
   "/login": typeof LoginRoute
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   "/": typeof IndexRoute
   "/admin": typeof AdminRouteWithChildren
+  "/attendance-record": typeof AttendanceRecordRoute
   "/cookies": typeof CookiesRoute
   "/dashboard": typeof DashboardRoute
   "/login": typeof LoginRoute
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
   fullPaths:
     | "/"
     | "/admin"
+    | "/attendance-record"
     | "/cookies"
     | "/dashboard"
     | "/login"
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
+    | "/attendance-record"
     | "/cookies"
     | "/dashboard"
     | "/login"
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | "__root__"
     | "/"
     | "/admin"
+    | "/attendance-record"
     | "/cookies"
     | "/dashboard"
     | "/login"
@@ -256,6 +268,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
+  AttendanceRecordRoute: typeof AttendanceRecordRoute
   CookiesRoute: typeof CookiesRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
@@ -314,6 +327,13 @@ declare module "@tanstack/react-router" {
       path: "/cookies"
       fullPath: "/cookies"
       preLoaderRoute: typeof CookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/attendance-record": {
+      id: "/attendance-record"
+      path: "/attendance-record"
+      fullPath: "/attendance-record"
+      preLoaderRoute: typeof AttendanceRecordRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/admin": {
@@ -434,6 +454,7 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
+  AttendanceRecordRoute: AttendanceRecordRoute,
   CookiesRoute: CookiesRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
