@@ -178,9 +178,7 @@ function TeacherView() {
       verified = dist <= allowedRadius;
 
       // Out-of-range: still record the attendance as unverified, but show a
-      // clear message. For head teachers, address them directly without asking
-      // to remove the record. For regular teachers, ask them to contact the
-      // head teacher to remove today's record and re-mark it from within range.
+      // clear message. For head teachers, address them directly.
       if (!verified) {
         const teacherName = profile?.full_name ?? "Teacher";
         if (isHead) {
