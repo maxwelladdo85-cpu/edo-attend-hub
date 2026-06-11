@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import {
   useSchools,
-  useTeacherProfiles,
+  useStaffProfiles,
   useStudents,
   useTeacherAttendanceToday,
   useStudentAttendanceToday,
@@ -30,7 +30,9 @@ export const Route = createFileRoute("/admin/lga")({
 
 function ByLgaPage() {
   const { data: schools = [] } = useSchools();
-  const { data: teachers = [] } = useTeacherProfiles();
+  const { data: staff = [] } = useStaffProfiles();
+  const teachers = useMemo(() => staff.filter((s) => s.role === "teacher"), [staff]);
+  const teacherUserIds = useMemo(() => new Set(teachers.map((t) => t.user_id)), [teachers]);
   const { data: students = [] } = useStudents();
   const { data: tAtt = [] } = useTeacherAttendanceToday();
   const { data: sAtt = [] } = useStudentAttendanceToday();
