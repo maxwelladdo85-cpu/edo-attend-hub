@@ -4,6 +4,7 @@ import { Loader2, User } from "lucide-react";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { DashboardShell, roleLabelFor } from "@/components/DashboardShell";
 import { WeeklyAttendanceRecord } from "@/components/WeeklyAttendanceRecord";
+import { SchoolAttendanceOverview } from "@/components/SchoolAttendanceOverview";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -148,6 +149,8 @@ function AttendanceRecordPage() {
             </div>
           </div>
         )}
+
+        {isHead && <SchoolAttendanceOverview />}
 
         {viewingId ? (
           <WeeklyAttendanceRecord key={viewingId} teacherUserId={viewingId} />
