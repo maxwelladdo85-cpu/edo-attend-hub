@@ -156,7 +156,7 @@ export function SchoolAttendanceOverview() {
       if (!cancelled) setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [mode, schoolId, start, end]);
+  }, [mode, schoolId, start, end, isHead, teacherClass]);
 
   const statusLabel = (s: TeacherRow["status"]) => {
     if (s === "early") return <Badge className="bg-success/15 text-success hover:bg-success/15 border-success/30">Early</Badge>;
