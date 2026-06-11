@@ -5,14 +5,9 @@ import { Button } from "@/components/ui/button";
 import landingBg from "@/assets/landing-bg.png";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "EdoSAS — Real-time school attendance for Edo State" },
-      { name: "description", content: "Digitally capture and monitor teacher and student attendance in real time across Edo State public primary schools, with GPS verification and instant analytics." },
-      { property: "og:title", content: "EdoSAS" },
-      { property: "og:description", content: "GPS-verified attendance for teachers and students across Edo State public primary schools." },
-    ],
-  }),
+  beforeLoad: () => {
+    throw redirect({ to: "/login", replace: true });
+  },
   component: Landing,
 });
 
