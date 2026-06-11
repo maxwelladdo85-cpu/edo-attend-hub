@@ -160,7 +160,7 @@ function AttendanceRecordPage() {
           </div>
         ) : null}
 
-        {isHead && <SchoolAttendanceOverview />}
+        {canViewOverview && <SchoolAttendanceOverview />}
       </div>
     </DashboardShell>
   );
