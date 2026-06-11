@@ -36,14 +36,22 @@ function useAllStudents() {
   return useQuery({
     queryKey: ["admin", "students-full"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("students")
-        .select(
-          "id,student_id,full_name,class,gender,school_id,parent_contact,parent_nin,created_at",
-        )
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      const students = (data ?? []) as Student[];
+      const pageSize = 1000;
+      const students: Student[] = [];
+      for (let from = 0; ; from += pageSize) {
+        const to = from + pageSize - 1;
+        const { data, error } = await supabase
+          .from("students")
+          .select(
+            "id,student_id,full_name,class,gender,school_id,parent_contact,parent_nin,created_at",
+          )
+          .order("created_at", { ascending: false })
+          .range(from, to);
+        if (error) throw error;
+        const rows = (data ?? []) as Student[];
+        students.push(...rows);
+        if (rows.length < pageSize) break;
+      }
       const ids = Array.from(new Set(students.map((s) => s.school_id)));
       const { data: schoolsData } = ids.length
         ? await supabase.from("schools").select("id,name,lga,category").in("id", ids)
@@ -53,6 +61,8 @@ function useAllStudents() {
       );
       return students.map((s) => ({ ...s, school: schoolMap.get(s.school_id) }));
     },
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 }
 
