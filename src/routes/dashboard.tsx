@@ -236,9 +236,10 @@ function TeacherView() {
           .eq("attendance_date", dateStr);
         if (error) throw error;
         const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        const departureLabel = status === "left_early" ? "Early" : status === "overtime" ? "Departed after closing time" : status.replace("_", " ");
         if (verified) {
           void haptic("success");
-          toast.success(`Departure marked at ${timeLabel} — ${status.replace("_", " ")}`);
+          toast.success(`Departure marked at ${timeLabel} — ${departureLabel}`);
         } else {
           void haptic("warning");
           if (isHead) {
