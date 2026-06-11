@@ -144,7 +144,7 @@ export function SchoolAttendanceOverview() {
             presentDays: present,
             rate: Math.round((present / 5) * 100),
           };
-        }).sort((a, b) => a.full_name.localeCompare(b.full_name));
+        }).sort((a: StudentRow, b: StudentRow) => a.full_name.localeCompare(b.full_name));
         if (!cancelled) setStudentRows(rows);
       }
       if (!cancelled) setLoading(false);
