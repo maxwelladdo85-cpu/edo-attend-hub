@@ -173,14 +173,16 @@ export function SchoolAttendanceOverview() {
           <p className="text-xs text-muted-foreground">This week ({start} – {end})</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant={mode === "teachers" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setMode("teachers")}
-            className="gap-2"
-          >
-            <Users className="h-4 w-4" /> Teachers
-          </Button>
+          {isHead && (
+            <Button
+              variant={mode === "teachers" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setMode("teachers")}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" /> Teachers
+            </Button>
+          )}
           <Button
             variant={mode === "students" ? "default" : "outline"}
             size="sm"
@@ -188,6 +190,7 @@ export function SchoolAttendanceOverview() {
             className="gap-2"
           >
             <GraduationCap className="h-4 w-4" /> Students
+            {!isHead && teacherClass ? ` · ${teacherClass}` : ""}
           </Button>
         </div>
       </div>
