@@ -8,6 +8,12 @@ import { Toaster } from "./components/ui/sonner";
 import { initNativeShell } from "./lib/native-init";
 import "./styles.css";
 
+// On hard reload, always return to the landing page
+const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+if (navEntry?.type === "reload" && window.location.pathname !== "/") {
+  window.location.href = "/";
+}
+
 // Configure native status bar / keyboard if running inside Capacitor.
 void initNativeShell();
 
