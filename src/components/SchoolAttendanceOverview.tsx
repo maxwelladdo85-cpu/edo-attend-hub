@@ -115,7 +115,7 @@ export function SchoolAttendanceOverview() {
             presentDays: present,
             status,
           };
-        }).sort((a, b) => (a.full_name ?? "").localeCompare(b.full_name ?? ""));
+        }).sort((a: TeacherRow, b: TeacherRow) => (a.full_name ?? "").localeCompare(b.full_name ?? ""));
         if (!cancelled) setTeacherRows(rows);
       } else {
         const { data: studs } = await supabase
