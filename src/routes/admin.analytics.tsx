@@ -95,7 +95,7 @@ function AnalyticsPage() {
       .map((r) => ({ name: prettyLga(r.lga), Pupils: safePct(r.sPresent, r.students), Teachers: safePct(r.tPresent, r.teachers) }))
       .sort((a, b) => b.Pupils - a.Pupils)
       .slice(0, 10);
-  }, [schools, teachers, students, tAtt, sAtt]);
+  }, [schools, teachers, students, teacherOnlyAtt, sAtt]);
 
   const typeBar = useMemo(() => {
     const schoolToCat = new Map(schools.map((s) => [s.id, s.category ?? "other"]));
