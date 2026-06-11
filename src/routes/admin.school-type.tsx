@@ -56,6 +56,7 @@ function BySchoolTypePage() {
     for (const r of tAtt) {
       const c = r.school_id ? schoolToCat.get(r.school_id) : null;
       if (!c || !r.arrival_time) continue;
+      if (!teacherUserIds.has(r.teacher_user_id)) continue; // exclude head teachers
       const cur = buckets.get(c); if (!cur) continue;
       cur.teachersPresent += 1;
     }
