@@ -225,8 +225,8 @@ export function StudentAttendancePanel() {
             return (
               <div key={s.id} className="p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-9 w-9 rounded-lg bg-primary/10 grid place-items-center font-mono text-xs font-semibold text-primary flex-shrink-0">
-                    {s.student_id}
+                  <div className="h-9 min-w-[3.5rem] max-w-[5rem] rounded-lg bg-primary/10 flex items-center justify-center font-mono text-[10px] font-semibold text-primary flex-shrink-0 overflow-hidden px-1.5">
+                    <span className="truncate">{s.student_id}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{s.full_name}</div>
