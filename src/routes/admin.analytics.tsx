@@ -119,7 +119,7 @@ function AnalyticsPage() {
       const c = schoolToCat.get(r.school_id); if (!c || !isStudentPresent(r)) continue; buckets.get(c)!.sPresent += 1;
     }
     return Array.from(buckets.values()).map((r) => ({ name: r.name, Pupils: safePct(r.sPresent, r.students), Teachers: safePct(r.tPresent, r.teachers) }));
-  }, [schools, teachers, students, tAtt, sAtt]);
+  }, [schools, teachers, students, teacherOnlyAtt, sAtt]);
 
   return (
     <div>
