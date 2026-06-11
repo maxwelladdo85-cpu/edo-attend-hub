@@ -8,6 +8,7 @@ import {
   Menu,
   X,
   Loader2,
+  ClipboardList,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ export function DashboardShell({
 
   const sidebarNav: NavItem[] = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/attendance-record", label: "Attendance record", icon: ClipboardList },
     { to: "/settings", label: "My Profile", icon: UserCircle },
     ...nav,
   ];

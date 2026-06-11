@@ -12,7 +12,7 @@ import { distanceMeters, getCurrentPosition, classifyArrival, classifyDeparture 
 import { haptic } from "@/lib/haptics";
 import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
 import { AdmitStudentCard } from "@/components/AdmitStudentCard";
-import { WeeklyAttendanceRecord } from "@/components/WeeklyAttendanceRecord";
+
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — EdoSAS" }] }),
@@ -371,7 +371,7 @@ function TeacherView() {
         </div>
       )}
 
-      <WeeklyAttendanceRecord />
+      
 
       <AdmitStudentCard schoolName={school?.name} onAdded={load} />
 
