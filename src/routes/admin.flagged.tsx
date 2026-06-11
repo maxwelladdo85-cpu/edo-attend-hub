@@ -129,7 +129,7 @@ function useFlagged({ fromDate, toDate }: { fromDate: string; toDate: string }) 
               school.longitude,
             );
           }
-          const radius = school?.radius_meters ?? 1;
+          const radius = school?.radius_meters ?? 20;
           const outOfRange = distance != null && distance > radius;
           const late = r.arrival_status === "late";
           return { row: r, school, profile, distance, radius, outOfRange, late };
