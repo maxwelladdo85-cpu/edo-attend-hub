@@ -236,9 +236,10 @@ function TeacherView() {
           .eq("attendance_date", dateStr);
         if (error) throw error;
         const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        const departureLabel = status === "left_early" ? "Early" : status === "overtime" ? "Departed after closing time" : status.replace("_", " ");
         if (verified) {
           void haptic("success");
-          toast.success(`Departure marked at ${timeLabel} — ${status.replace("_", " ")}`);
+          toast.success(`Departure marked at ${timeLabel} — ${departureLabel}`);
         } else {
           void haptic("warning");
           if (isHead) {
@@ -392,8 +393,8 @@ function StatusBadge({ status }: { status: string }) {
     early: { label: "Early", cls: "bg-success/15 text-success" },
     on_time: { label: "On time", cls: "bg-success/15 text-success" },
     late: { label: "Late", cls: "bg-destructive/15 text-destructive" },
-    left_early: { label: "Left early", cls: "bg-destructive/15 text-destructive" },
-    overtime: { label: "Overtime", cls: "bg-gold/20 text-gold-foreground" },
+    left_early: { label: "Early", cls: "bg-destructive/15 text-destructive" },
+    overtime: { label: "Departed after closing time", cls: "bg-gold/20 text-gold-foreground" },
   };
   const s = map[status] ?? { label: status, cls: "bg-muted text-muted-foreground" };
   return <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full mt-2 ${s.cls}`}>{s.label}</span>;
