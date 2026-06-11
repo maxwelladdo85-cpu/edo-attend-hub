@@ -43,6 +43,7 @@ function OverviewPage() {
 
   const [selectedLga, setSelectedLga] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string>("all");
 
   // Unique filter options
   const lgaOptions = useMemo(() => {
