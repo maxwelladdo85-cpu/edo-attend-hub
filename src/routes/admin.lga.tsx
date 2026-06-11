@@ -125,7 +125,7 @@ function ByLgaPage() {
         studentPct: safePct(r.studentsPresent, r.students),
       }))
       .sort((a, b) => a.lga.localeCompare(b.lga));
-  }, [schools, teachers, students, tAtt, sAtt, filteredSchoolIds]);
+  }, [schools, teachers, teacherUserIds, students, tAtt, sAtt, filteredSchoolIds]);
 
   const chartData = rows.map((r) => ({ lga: prettyLga(r.lga), Teachers: r.teacherPct, Pupils: r.studentPct }));
 
