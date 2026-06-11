@@ -178,16 +178,14 @@ function TeacherView() {
       verified = dist <= allowedRadius;
 
       // Out-of-range: still record the attendance as unverified, but show a
-      // clear message. For head teachers, address them directly without asking
-      // to remove the record. For regular teachers, ask them to contact the
-      // head teacher to remove today's record and re-mark it from within range.
+      // clear message. For head teachers, address them directly.
       if (!verified) {
         const teacherName = profile?.full_name ?? "Teacher";
         if (isHead) {
           const msg = `Dear Head Teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m). Please ensure you are within the school premises when marking attendance.`;
           setDistanceWarning(msg);
         } else {
-          const msg = `Dear teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m). Please ask your head teacher to remove the data marked for today and allow them to mark the attendance again from within the school.`;
+          const msg = `Dear teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m).`;
           setDistanceWarning(msg);
         }
       } else {
@@ -220,7 +218,7 @@ function TeacherView() {
           if (isHead) {
             toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please mark attendance from within the school premises.`);
           } else {
-            toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please ask your head teacher to remove today's record so it can be marked again from within the school.`);
+            toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.`);
           }
         }
       } else {
@@ -246,7 +244,7 @@ function TeacherView() {
           if (isHead) {
             toast.warning(`Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please mark attendance from within the school premises.`);
           } else {
-            toast.warning(`Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please ask your head teacher to remove today's record so it can be marked again from within the school.`);
+            toast.warning(`Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.`);
           }
         }
       }
