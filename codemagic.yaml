@@ -138,9 +138,7 @@ workflows:
             --path "$CM_BUILD_DIR/build/ios/ipa/App.ipa" \
             --key-id "$APP_STORE_CONNECT_API_KEY_ID" \
             --issuer-id "$APP_STORE_CONNECT_ISSUER_ID" \
-            --private-key "$(cat /tmp/AuthKey.pem)" \
-            --testflight \
-            --skip-package-validation
+            --private-key "$(cat /tmp/AuthKey.pem)"
 
     artifacts:
       - $CM_BUILD_DIR/build/ios/ipa/*.ipa
