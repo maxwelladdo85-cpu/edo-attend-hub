@@ -37,7 +37,7 @@ const NAV = [
   { to: "/admin/school-type", label: "By School Type", icon: SchoolIcon, end: false },
   { to: "/admin/flagged", label: "Late & Out of Range", icon: AlertTriangle, end: false },
   { to: "/admin/students", label: "Admitted Pupils", icon: GraduationCap, end: false },
-  { to: "/admin/pupil-attendance", label: "Pupil Attendance", icon: Clock, end: false },
+  { to: "/admin/pupil-attendance", label: "Attendance (Deep Dive)", icon: Clock, end: false },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3, end: false },
   { to: "/admin/reports", label: "Reports", icon: FileDown, end: false },
   { to: "/admin/map", label: "Map", icon: Map, end: false },
