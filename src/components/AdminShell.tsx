@@ -15,6 +15,7 @@ import {
   GraduationCap,
   Clock,
   FileDown,
+  CalendarDays,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -40,8 +41,10 @@ const NAV = [
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3, end: false },
   { to: "/admin/reports", label: "Reports", icon: FileDown, end: false },
   { to: "/admin/map", label: "Map", icon: Map, end: false },
+  { to: "/admin/calendar", label: "Academic Calendar", icon: CalendarDays, end: false },
   { to: "/admin/assign", label: "Assign Teachers", icon: UserPlus, end: false },
 ];
+
 
 
 export function AdminShell() {
