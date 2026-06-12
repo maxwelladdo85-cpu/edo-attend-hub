@@ -92,6 +92,8 @@ workflows:
             <true/>
             <key>uploadSymbols</key>
             <true/>
+            <key>ITSAppUsesNonExemptEncryption</key>
+            <false/>
           </dict>
           </plist>
           EOF
