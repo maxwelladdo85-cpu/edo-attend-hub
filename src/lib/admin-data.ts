@@ -112,23 +112,38 @@ export function useSchools() {
   });
 }
 
+// PostgREST caps each response at 1000 rows, so we have to chunk
+// .in("user_id", [...]) lookups when there are many users.
+async function fetchProfilesByUserIds<T>(ids: string[], columns: string): Promise<T[]> {
+  const out: T[] = [];
+  const CHUNK = 500;
+  for (let i = 0; i < ids.length; i += CHUNK) {
+    const slice = ids.slice(i, i + CHUNK);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(columns)
+      .in("user_id", slice);
+    if (error) throw error;
+    out.push(...((data ?? []) as T[]));
+  }
+  return out;
+}
+
 export function useTeacherProfiles() {
   return useQuery({
     queryKey: ["admin", "teacher-profiles"],
     queryFn: async () => {
-      const { data: roleRows, error: rerr } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "teacher");
-      if (rerr) throw rerr;
-      const ids = (roleRows ?? []).map((r: any) => r.user_id);
+      const roleRows = await fetchAllPaged<{ user_id: string }>(async (from, to) => {
+        const { data, error } = await supabase
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "teacher")
+          .range(from, to);
+        return { data: data as { user_id: string }[] | null, error };
+      });
+      const ids = roleRows.map((r) => r.user_id);
       if (ids.length === 0) return [] as TeacherProfileLite[];
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("user_id,school_id")
-        .in("user_id", ids);
-      if (error) throw error;
-      return (data ?? []) as TeacherProfileLite[];
+      return await fetchProfilesByUserIds<TeacherProfileLite>(ids, "user_id,school_id");
     },
     staleTime: REF_STALE,
     gcTime: REF_GC,
@@ -140,24 +155,28 @@ export function useStaffProfiles() {
   return useQuery({
     queryKey: ["admin", "staff-profiles"],
     queryFn: async () => {
-      const { data: roleRows, error: rerr } = await supabase
-        .from("user_roles")
-        .select("user_id,role")
-        .in("role", ["teacher", "head_teacher"]);
-      if (rerr) throw rerr;
+      const roleRows = await fetchAllPaged<{ user_id: string; role: "teacher" | "head_teacher" }>(
+        async (from, to) => {
+          const { data, error } = await supabase
+            .from("user_roles")
+            .select("user_id,role")
+            .in("role", ["teacher", "head_teacher"])
+            .range(from, to);
+          return { data: data as { user_id: string; role: "teacher" | "head_teacher" }[] | null, error };
+        },
+      );
       const roleMap = new Map<string, "teacher" | "head_teacher">();
-      for (const r of (roleRows ?? []) as { user_id: string; role: "teacher" | "head_teacher" }[]) {
+      for (const r of roleRows) {
         // head_teacher wins if a user somehow has both
         if (r.role === "head_teacher" || !roleMap.has(r.user_id)) roleMap.set(r.user_id, r.role);
       }
       const ids = Array.from(roleMap.keys());
       if (ids.length === 0) return [] as StaffProfile[];
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("user_id,full_name,teacher_id,class_taught,school_id,created_at")
-        .in("user_id", ids);
-      if (error) throw error;
-      return (data ?? []).map((p: any) => ({
+      const rows = await fetchProfilesByUserIds<any>(
+        ids,
+        "user_id,full_name,teacher_id,class_taught,school_id,created_at",
+      );
+      return rows.map((p) => ({
         user_id: p.user_id,
         full_name: p.full_name,
         teacher_id: p.teacher_id,
