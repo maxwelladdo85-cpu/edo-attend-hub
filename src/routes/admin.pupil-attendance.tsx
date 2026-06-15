@@ -64,6 +64,9 @@ type StaffAttRow = {
 };
 
 const ALL = "__all__";
+const EMPTY_STUDENTS: Student[] = [];
+const EMPTY_STUDENT_ATT: StudentAttRow[] = [];
+const EMPTY_STAFF_ATT: StaffAttRow[] = [];
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -192,13 +195,15 @@ function AttendanceDeepDivePage() {
   }, [schoolId, filteredSchools]);
 
   // --------- Student path ---------
-  const { data: students = [], isLoading: loadingStudents } = useStudentsForSchools(
+  const { data: studentsData, isLoading: loadingStudents } = useStudentsForSchools(
     role === "student" ? targetSchoolIds : [],
   );
-  const { data: studentAtt = [], isLoading: loadingStudentAtt } = useStudentAttendanceForSchools(
+  const { data: studentAttData, isLoading: loadingStudentAtt } = useStudentAttendanceForSchools(
     role === "student" ? targetSchoolIds : [],
     date,
   );
+  const students = studentsData ?? EMPTY_STUDENTS;
+  const studentAtt = studentAttData ?? EMPTY_STUDENT_ATT;
 
   const studentAttByPupil = useMemo(() => {
     const m = new Map<string, StudentAttRow>();
@@ -232,10 +237,11 @@ function AttendanceDeepDivePage() {
   }, [staff, role, targetSchoolIds]);
 
   const staffUserIds = useMemo(() => staffFiltered.map((s) => s.user_id), [staffFiltered]);
-  const { data: staffAtt = [], isLoading: loadingStaffAtt } = useStaffAttendanceForDate(
+  const { data: staffAttData, isLoading: loadingStaffAtt } = useStaffAttendanceForDate(
     role === "student" ? [] : staffUserIds,
     date,
   );
+  const staffAtt = staffAttData ?? EMPTY_STAFF_ATT;
 
   const staffAttByUser = useMemo(() => {
     const m = new Map<string, StaffAttRow>();
