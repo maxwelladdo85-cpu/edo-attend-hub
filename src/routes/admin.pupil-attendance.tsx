@@ -389,9 +389,14 @@ function AttendanceDeepDivePage() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent className="max-h-[320px]">
                 <SelectItem value={ALL}>All Schools ({filteredSchools.length})</SelectItem>
-                {filteredSchools.map((s) => (
+                {filteredSchools.slice(0, 300).map((s) => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                 ))}
+                {filteredSchools.length > 300 && (
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    Showing first 300. Narrow by LGA or School Type to see more.
+                  </div>
+                )}
               </SelectContent>
             </Select>
           </div>
