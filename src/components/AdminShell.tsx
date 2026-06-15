@@ -44,6 +44,7 @@ const NAV = [
   { to: "/admin/map", label: "Map", icon: Map, end: false },
   { to: "/admin/calendar", label: "Academic Calendar", icon: CalendarDays, end: false },
   { to: "/admin/assign", label: "Assign Teachers", icon: UserPlus, end: false },
+  { to: "/admin/assistant", label: "AI Assistant", icon: Bot, end: false },
 ];
 
 
