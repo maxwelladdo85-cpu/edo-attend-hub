@@ -192,13 +192,15 @@ function AttendanceDeepDivePage() {
   }, [schoolId, filteredSchools]);
 
   // --------- Student path ---------
-  const { data: students = [], isLoading: loadingStudents } = useStudentsForSchools(
+  const { data: studentsData, isLoading: loadingStudents } = useStudentsForSchools(
     role === "student" ? targetSchoolIds : [],
   );
-  const { data: studentAtt = [], isLoading: loadingStudentAtt } = useStudentAttendanceForSchools(
+  const { data: studentAttData, isLoading: loadingStudentAtt } = useStudentAttendanceForSchools(
     role === "student" ? targetSchoolIds : [],
     date,
   );
+  const students = studentsData ?? EMPTY_STUDENTS;
+  const studentAtt = studentAttData ?? EMPTY_STUDENT_ATT;
 
   const studentAttByPupil = useMemo(() => {
     const m = new Map<string, StudentAttRow>();
