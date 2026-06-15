@@ -29,6 +29,7 @@ import {
   useTeacherAttendanceToday,
   useStudentAttendanceToday,
 } from "@/lib/admin-data";
+import { useAttendanceRealtime } from "@/lib/use-attendance-realtime";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 
@@ -62,6 +63,9 @@ export function AdminShell() {
   useStudents();
   useTeacherAttendanceToday();
   useStudentAttendanceToday();
+
+  // Live-refresh today's attendance the moment new rows are inserted/updated.
+  useAttendanceRealtime();
 
   useEffect(() => {
     if (loading) return;
