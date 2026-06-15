@@ -268,9 +268,7 @@ function AttendanceDeepDivePage() {
     setDrafts((prev) => ({ ...prev, [studentRowId]: { ...prev[studentRowId], [field]: val } }));
   };
 
-  const saveStudent = async (s: Student) => {
-    const draft = drafts[s.id];
-    if (!draft) return;
+  const saveStudent = async (s: Student, draft: Draft) => {
     setSavingId(s.id);
     try {
       const morningIso = timeToIso(date, draft.arrival);
@@ -289,17 +287,50 @@ function AttendanceDeepDivePage() {
         .from("student_attendance")
         .upsert(payload, { onConflict: "student_id,attendance_date" });
       if (error) throw error;
-      toast.success(`Saved ${s.full_name}`);
+      setSavedId(s.id);
+      if (savedClearTimer.current) clearTimeout(savedClearTimer.current);
+      savedClearTimer.current = setTimeout(() => setSavedId(null), 1500);
       qc.invalidateQueries({ queryKey: ["admin", "deep-dive", "student-att"] });
       qc.invalidateQueries({ queryKey: ["admin", "student-attendance"] });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save");
     } finally {
-      setSavingId(null);
+      setSavingId((cur) => (cur === s.id ? null : cur));
     }
   };
 
-  // --------- Filtered display ---------
+  const studentById = useMemo(() => {
+    const m = new Map<string, Student>();
+    for (const s of students) m.set(s.id, s);
+    return m;
+  }, [students]);
+
+  const setField = (studentRowId: string, field: keyof Draft, val: string) => {
+    setDrafts((prev) => {
+      const nextDraft = { ...(prev[studentRowId] ?? { arrival: "", departure: "" }), [field]: val };
+      const next = { ...prev, [studentRowId]: nextDraft };
+      // debounce auto-save
+      const existing = saveTimers.current[studentRowId];
+      if (existing) clearTimeout(existing);
+      saveTimers.current[studentRowId] = setTimeout(() => {
+        const s = studentById.get(studentRowId);
+        if (s) saveStudent(s, nextDraft);
+        delete saveTimers.current[studentRowId];
+      }, 600);
+      return next;
+    });
+  };
+
+  // clear timers on unmount
+  useEffect(() => {
+    const timers = saveTimers.current;
+    return () => {
+      Object.values(timers).forEach((t) => clearTimeout(t));
+      if (savedClearTimer.current) clearTimeout(savedClearTimer.current);
+    };
+  }, []);
+
+
   const filteredStudents = useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!term) return students;
