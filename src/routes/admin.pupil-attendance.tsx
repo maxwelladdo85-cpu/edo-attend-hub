@@ -490,10 +490,13 @@ function AttendanceDeepDivePage() {
                 </tr>
               </thead>
               <tbody>
-                {loading && (
+                {!scopeReady && (
+                  <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Select an LGA, School Type, or School to load staff.</td></tr>
+                )}
+                {scopeReady && loading && (
                   <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
                 )}
-                {!loading && filteredStaff.length === 0 && (
+                {scopeReady && !loading && filteredStaff.length === 0 && (
                   <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No {role === "teacher" ? "teachers" : "head teachers"} found.</td></tr>
                 )}
                 {filteredStaff.map((p) => {
