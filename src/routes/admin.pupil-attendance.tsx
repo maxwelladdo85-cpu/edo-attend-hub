@@ -497,9 +497,13 @@ function AttendanceDeepDivePage() {
                         <Input type="time" value={d.departure} onChange={(e) => setField(s.id, "departure", e.target.value)} className="h-9 w-28" />
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Button size="sm" onClick={() => saveStudent(s)} disabled={savingId === s.id}>
-                          {savingId === s.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><Save className="h-3.5 w-3.5 mr-1" /> Save</>}
-                        </Button>
+                        {savingId === s.id ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…</span>
+                        ) : savedId === s.id ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-emerald-600"><Check className="h-3.5 w-3.5" /> Saved</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Auto-saves</span>
+                        )}
                       </td>
                     </tr>
                   );
