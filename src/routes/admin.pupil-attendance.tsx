@@ -189,10 +189,13 @@ function AttendanceDeepDivePage() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [schools, lga, category]);
 
+  // Require a narrower scope before querying (avoid loading all pupils across 1998 schools).
+  const scopeReady = schoolId !== ALL || lga !== ALL || category !== ALL;
   const targetSchoolIds = useMemo(() => {
+    if (!scopeReady) return [];
     if (schoolId !== ALL) return [schoolId];
     return filteredSchools.map((s) => s.id);
-  }, [schoolId, filteredSchools]);
+  }, [scopeReady, schoolId, filteredSchools]);
 
   // --------- Student path ---------
   const { data: studentsData, isLoading: loadingStudents } = useStudentsForSchools(
@@ -386,9 +389,14 @@ function AttendanceDeepDivePage() {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent className="max-h-[320px]">
                 <SelectItem value={ALL}>All Schools ({filteredSchools.length})</SelectItem>
-                {filteredSchools.map((s) => (
+                {filteredSchools.slice(0, 300).map((s) => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                 ))}
+                {filteredSchools.length > 300 && (
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                    Showing first 300. Narrow by LGA or School Type to see more.
+                  </div>
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -435,10 +443,13 @@ function AttendanceDeepDivePage() {
                 </tr>
               </thead>
               <tbody>
-                {loading && (
+                {!scopeReady && (
+                  <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Select an LGA, School Type, or School to load pupils.</td></tr>
+                )}
+                {scopeReady && loading && (
                   <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
                 )}
-                {!loading && filteredStudents.length === 0 && (
+                {scopeReady && !loading && filteredStudents.length === 0 && (
                   <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No pupils found.</td></tr>
                 )}
                 {filteredStudents.map((s) => {
@@ -479,10 +490,13 @@ function AttendanceDeepDivePage() {
                 </tr>
               </thead>
               <tbody>
-                {loading && (
+                {!scopeReady && (
+                  <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Select an LGA, School Type, or School to load staff.</td></tr>
+                )}
+                {scopeReady && loading && (
                   <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
                 )}
-                {!loading && filteredStaff.length === 0 && (
+                {scopeReady && !loading && filteredStaff.length === 0 && (
                   <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No {role === "teacher" ? "teachers" : "head teachers"} found.</td></tr>
                 )}
                 {filteredStaff.map((p) => {
