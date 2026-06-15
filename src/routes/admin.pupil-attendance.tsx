@@ -64,6 +64,9 @@ type StaffAttRow = {
 };
 
 const ALL = "__all__";
+const EMPTY_STUDENTS: Student[] = [];
+const EMPTY_STUDENT_ATT: StudentAttRow[] = [];
+const EMPTY_STAFF_ATT: StaffAttRow[] = [];
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
