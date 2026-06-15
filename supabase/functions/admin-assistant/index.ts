@@ -284,7 +284,7 @@ async function runTool(name: string, args: Record<string, unknown>): Promise<unk
         const limit = clampLimit(args.limit, 20, 100);
         const { data, error } = await admin
           .from("teacher_attendance")
-          .select("id,school_id,teacher_id,attendance_date,arrival_time,departure_time,arrival_lat,arrival_lng,head_verified")
+          .select("id,school_id,teacher_user_id,attendance_date,arrival_time,departure_time,arrival_lat,arrival_lng,head_verified,arrival_status,departure_status")
           .eq("attendance_date", date)
           .order("arrival_time", { ascending: false })
           .limit(limit);
