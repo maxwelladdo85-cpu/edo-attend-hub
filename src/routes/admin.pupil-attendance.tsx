@@ -443,10 +443,13 @@ function AttendanceDeepDivePage() {
                 </tr>
               </thead>
               <tbody>
-                {loading && (
+                {!scopeReady && (
+                  <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Select an LGA, School Type, or School to load pupils.</td></tr>
+                )}
+                {scopeReady && loading && (
                   <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
                 )}
-                {!loading && filteredStudents.length === 0 && (
+                {scopeReady && !loading && filteredStudents.length === 0 && (
                   <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No pupils found.</td></tr>
                 )}
                 {filteredStudents.map((s) => {
