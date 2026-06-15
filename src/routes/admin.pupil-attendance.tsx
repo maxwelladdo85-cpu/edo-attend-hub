@@ -264,9 +264,6 @@ function AttendanceDeepDivePage() {
     return m;
   }, [schools]);
 
-  const setField = (studentRowId: string, field: keyof Draft, val: string) => {
-    setDrafts((prev) => ({ ...prev, [studentRowId]: { ...prev[studentRowId], [field]: val } }));
-  };
 
   const saveStudent = async (s: Student, draft: Draft) => {
     setSavingId(s.id);
