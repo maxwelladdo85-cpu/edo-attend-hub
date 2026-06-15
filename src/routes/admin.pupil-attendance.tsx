@@ -469,7 +469,7 @@ function AttendanceDeepDivePage() {
                   <th className="text-left px-4 py-3">School</th>
                   <th className="text-left px-4 py-3">Arrival</th>
                   <th className="text-left px-4 py-3">Departure</th>
-                  <th className="text-right px-4 py-3">Action</th>
+                  <th className="text-right px-4 py-3">Status</th>
                 </tr>
               </thead>
               <tbody>
