@@ -237,10 +237,11 @@ function AttendanceDeepDivePage() {
   }, [staff, role, targetSchoolIds]);
 
   const staffUserIds = useMemo(() => staffFiltered.map((s) => s.user_id), [staffFiltered]);
-  const { data: staffAtt = [], isLoading: loadingStaffAtt } = useStaffAttendanceForDate(
+  const { data: staffAttData, isLoading: loadingStaffAtt } = useStaffAttendanceForDate(
     role === "student" ? [] : staffUserIds,
     date,
   );
+  const staffAtt = staffAttData ?? EMPTY_STAFF_ATT;
 
   const staffAttByUser = useMemo(() => {
     const m = new Map<string, StaffAttRow>();
