@@ -215,6 +215,9 @@ function AttendanceDeepDivePage() {
 
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const savedClearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (role !== "student") return;
