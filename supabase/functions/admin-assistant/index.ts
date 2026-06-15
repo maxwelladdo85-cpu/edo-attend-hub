@@ -264,7 +264,7 @@ async function runTool(name: string, args: Record<string, unknown>): Promise<unk
         return { date, scope: args.school_id ?? args.lga ?? "all", records: data?.length ?? 0, arrived, departed, verified };
       }
       case "search_students": {
-        let q = admin.from("students").select("id,full_name,school_id,class_name").limit(clampLimit(args.limit, 25, 50));
+        let q = admin.from("students").select("id,student_id,full_name,school_id,class,gender").limit(clampLimit(args.limit, 25, 50));
         if (args.name_contains) q = q.ilike("full_name", `%${String(args.name_contains)}%`);
         if (args.school_id) q = q.eq("school_id", String(args.school_id));
         const { data, error } = await q;
