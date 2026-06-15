@@ -189,10 +189,13 @@ function AttendanceDeepDivePage() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [schools, lga, category]);
 
+  // Require a narrower scope before querying (avoid loading all pupils across 1998 schools).
+  const scopeReady = schoolId !== ALL || lga !== ALL || category !== ALL;
   const targetSchoolIds = useMemo(() => {
+    if (!scopeReady) return [];
     if (schoolId !== ALL) return [schoolId];
     return filteredSchools.map((s) => s.id);
-  }, [schoolId, filteredSchools]);
+  }, [scopeReady, schoolId, filteredSchools]);
 
   // --------- Student path ---------
   const { data: studentsData, isLoading: loadingStudents } = useStudentsForSchools(
