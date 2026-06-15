@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
-import authBg from "@/assets/auth-bg.png";
+import authBg from "@/assets/auth-bg.webp";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
