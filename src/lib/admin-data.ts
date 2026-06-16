@@ -77,19 +77,60 @@ const ATT_STALE = 60_000;
 const ATT_GC = 10 * 60_000;
 const ATT_REFETCH = 90_000;
 
-// PostgREST caps responses at 1000 rows by default, so fetch in pages.
+// PostgREST caps responses at 1000 rows by default. We fetch the first page
+// to learn the total row count, then fan out the remaining pages in parallel
+// so very large datasets (students, attendance) load in roughly one round-trip
+// of latency instead of N sequential trips.
 export async function fetchAllPaged<T>(
-  query: (from: number, to: number) => Promise<{ data: T[] | null; error: unknown }>,
+  query: (
+    from: number,
+    to: number,
+  ) => Promise<{ data: T[] | null; error: unknown; count?: number | null }>,
   pageSize = 1000,
 ): Promise<T[]> {
-  const out: T[] = [];
-  for (let from = 0; ; from += pageSize) {
-    const to = from + pageSize - 1;
-    const { data, error } = await query(from, to);
-    if (error) throw error;
-    const rows = data ?? [];
-    out.push(...rows);
-    if (rows.length < pageSize) break;
+  const first = await query(0, pageSize - 1);
+  if (first.error) throw first.error;
+  const firstRows = (first.data ?? []) as T[];
+  if (firstRows.length < pageSize) return firstRows;
+
+  // If the caller surfaced a total count, use it to fan out; otherwise keep
+  // probing in parallel batches until we hit a short page.
+  const total = typeof first.count === "number" ? first.count : null;
+  if (total != null) {
+    const pages = Math.ceil(total / pageSize);
+    const tasks = [] as Promise<{ data: T[] | null; error: unknown }>[];
+    for (let p = 1; p < pages; p++) {
+      tasks.push(query(p * pageSize, (p + 1) * pageSize - 1));
+    }
+    const results = await Promise.all(tasks);
+    const out: T[] = [...firstRows];
+    for (const r of results) {
+      if (r.error) throw r.error;
+      out.push(...((r.data ?? []) as T[]));
+    }
+    return out;
+  }
+
+  // Fallback: fetch next 4 pages in parallel, repeat until a short page.
+  const out: T[] = [...firstRows];
+  const PARALLEL = 4;
+  let nextStart = pageSize;
+  while (true) {
+    const tasks = [] as Promise<{ data: T[] | null; error: unknown }>[];
+    for (let i = 0; i < PARALLEL; i++) {
+      const from = nextStart + i * pageSize;
+      tasks.push(query(from, from + pageSize - 1));
+    }
+    const results = await Promise.all(tasks);
+    let done = false;
+    for (const r of results) {
+      if (r.error) throw r.error;
+      const rows = (r.data ?? []) as T[];
+      out.push(...rows);
+      if (rows.length < pageSize) done = true;
+    }
+    if (done) break;
+    nextStart += PARALLEL * pageSize;
   }
   return out;
 }
