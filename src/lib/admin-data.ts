@@ -256,12 +256,15 @@ export function useTeacherAttendanceToday() {
     queryKey: ["admin", "teacher-attendance", todayStr()],
     queryFn: async () => {
       const rows = await fetchAllPaged<TeacherAttendanceLite>(async (from, to) => {
-        const { data, error } = await supabase
+        const { data, error, count } = await supabase
           .from("teacher_attendance")
-          .select("id,school_id,teacher_user_id,arrival_time,arrival_status,departure_time,head_verified")
+          .select(
+            "id,school_id,teacher_user_id,arrival_time,arrival_status,departure_time,head_verified",
+            { count: "exact" },
+          )
           .eq("attendance_date", todayStr())
           .range(from, to);
-        return { data: data as TeacherAttendanceLite[] | null, error };
+        return { data: data as TeacherAttendanceLite[] | null, error, count };
       });
       // De-duplicate by teacher_user_id so a teacher with multiple rows in a
       // single day cannot be counted more than once.
