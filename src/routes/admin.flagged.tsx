@@ -48,22 +48,10 @@ type Profile = {
   phone: string | null;
 };
 
-function useEarliestAttendanceDate() {
-  return useQuery({
-    queryKey: ["admin", "earliest-attendance-date"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("teacher_attendance")
-        .select("attendance_date")
-        .order("attendance_date", { ascending: true })
-        .limit(1)
-        .single();
-      if (error) throw error;
-      return (data?.attendance_date as string) ?? "2020-01-01";
-    },
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-  });
+function daysAgoStr(days: number) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 10);
 }
 
 function useFlagged({ fromDate, toDate }: { fromDate: string; toDate: string }) {
