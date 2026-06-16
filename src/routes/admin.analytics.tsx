@@ -33,7 +33,9 @@ function AnalyticsPage() {
   const { data: schools = [] } = useSchools();
   const { data: staff = [] } = useStaffProfiles();
   const teachers = useMemo(() => staff.filter((s) => s.role === "teacher"), [staff]);
+  const headTeachers = useMemo(() => staff.filter((s) => s.role === "head_teacher"), [staff]);
   const teacherUserIds = useMemo(() => new Set(teachers.map((t) => t.user_id)), [teachers]);
+  const headUserIds = useMemo(() => new Set(headTeachers.map((t) => t.user_id)), [headTeachers]);
   const { data: students = [] } = useStudents();
   const { data: tAtt = [] } = useTeacherAttendanceToday();
   const { data: sAtt = [] } = useStudentAttendanceToday();
@@ -43,6 +45,11 @@ function AnalyticsPage() {
     () => tAtt.filter((r) => teacherUserIds.has(r.teacher_user_id)),
     [tAtt, teacherUserIds],
   );
+  const headOnlyAtt = useMemo(
+    () => tAtt.filter((r) => headUserIds.has(r.teacher_user_id)),
+    [tAtt, headUserIds],
+  );
+
 
   // Denominator: registered teachers ∪ any teacher with an attendance row today.
   const teacherDenom = new Set<string>([
