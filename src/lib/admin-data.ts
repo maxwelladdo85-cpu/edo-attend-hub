@@ -238,11 +238,11 @@ export function useStudents() {
     queryKey: ["admin", "students"],
     queryFn: async () => {
       return await fetchAllPaged<StudentLite>(async (from, to) => {
-        const { data, error } = await supabase
+        const { data, error, count } = await supabase
           .from("students")
-          .select("id,school_id")
+          .select("id,school_id", { count: "exact" })
           .range(from, to);
-        return { data: data as StudentLite[] | null, error };
+        return { data: data as StudentLite[] | null, error, count };
       });
     },
     staleTime: REF_STALE,
