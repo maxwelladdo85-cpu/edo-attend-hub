@@ -202,6 +202,21 @@ function AnalyticsPage() {
         </ChartContainer>
       </div>
 
+      <TopLgaChart
+        title="Top 10 LGAs by teacher attendance"
+        dataKey="Teachers"
+        color={COLORS.green}
+        data={useMemo(() => buildLgaRank(schools, teachers, teacherOnlyAtt, "Teachers"), [schools, teachers, teacherOnlyAtt])}
+      />
+
+      <TopLgaChart
+        title="Top 10 LGAs by head teacher attendance"
+        dataKey="Head teachers"
+        color={COLORS.gold}
+        data={useMemo(() => buildLgaRank(schools, headTeachers, headOnlyAtt, "Head teachers"), [schools, headTeachers, headOnlyAtt])}
+      />
+
+
       <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card p-4 sm:p-5">
         <h3 className="font-display font-semibold mb-4">School type comparison</h3>
         <ChartContainer
