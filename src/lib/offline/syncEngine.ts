@@ -93,11 +93,11 @@ async function pullDeltas(schoolId: string) {
   ]);
 
   const sRows: CachedStudentAttendance[] = (sa ?? [])
-    .map((r: any) => ({ ...r, local_key: `${r.student_id}_${r.attendance_date}` }))
-    .filter((r) => !pendingKeys.has(r.local_key));
+    .map((r: any) => ({ ...r, local_key: `${r.student_id}_${r.attendance_date}` }) as CachedStudentAttendance)
+    .filter((r: CachedStudentAttendance) => !pendingKeys.has(r.local_key));
   const tRows: CachedTeacherAttendance[] = (ta ?? [])
-    .map((r: any) => ({ ...r, local_key: `${r.user_id}_${r.attendance_date}` }))
-    .filter((r) => !pendingKeys.has(r.local_key));
+    .map((r: any) => ({ ...r, local_key: `${r.user_id}_${r.attendance_date}` }) as CachedTeacherAttendance)
+    .filter((r: CachedTeacherAttendance) => !pendingKeys.has(r.local_key));
 
   if (sRows.length) await bulkUpsertStudentAttendance(sRows);
   if (tRows.length) await bulkUpsertTeacherAttendance(tRows);
