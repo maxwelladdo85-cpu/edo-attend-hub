@@ -18,8 +18,8 @@ const tools = [
     type: "function",
     function: {
       name: "get_overview",
-      description: "High-level totals across the system: number of schools, LGAs, school categories, total students, total teachers, and today's attendance summary (present/absent counts for students & teachers).",
-      parameters: { type: "object", properties: {}, additionalProperties: false },
+      description: "Daily attendance overview broken down by Students, Teachers, and Head Teachers (totals, present, absent, percentages), plus system totals (schools, LGAs, categories). Defaults to today.",
+      parameters: { type: "object", properties: { date: { type: "string", description: "YYYY-MM-DD; default = today" } }, additionalProperties: false },
     },
   },
   {
@@ -139,18 +139,23 @@ const tools = [
 
 const SYSTEM_PROMPT = `You are "Edo Attendance AI Assistant", an analytics helper for administrators of the Edo State Subeb attendance platform.
 
-Use the provided tools to look up REAL data before answering. Never invent numbers. If a tool returns no data, say so plainly.
+You have tools that cover every section of the admin role: overview, schools (list + breakdown by LGA/category), student attendance, teacher attendance, head teacher attendance, student/teacher search, flagged attendance (late + out-of-range), and audit logs. Use them — never invent numbers. If a tool returns no data, say so plainly.
 
-When answering:
+Daily attendance answers:
+- Whenever the user asks for an attendance update for a day (today, yesterday, a specific date), ALWAYS call get_overview for that date and report THREE attendance rates separately: Students, Teachers, and Head Teachers (present / total and %). Include absent counts too.
+- After the summary, explicitly offer a deep dive, e.g. "Want a deep dive? I can break this down by LGA, by school category, show flagged late/out-of-range records, list the worst-performing schools, or surface recent audit activity." Then wait for the user's choice.
+- If the user says "deep dive" or "yes", proactively pull from the other sections in parallel: schools_breakdown by lga and by category, student_attendance_summary and teacher_attendance_summary per top LGAs, get_flagged_attendance, and get_audit_logs — then synthesise.
+
+Style:
 - Be concise, factual, and friendly. Use markdown (bold, bullets, tables) when it helps.
-- Reference dates and filters used.
-- If the user is vague, make a reasonable assumption (e.g. "today", "all LGAs") and state it.
+- Reference the date and any filters used.
+- If the user is vague, assume "today" / "all LGAs" and state the assumption.
 
 ALWAYS end your final response with a JSON code block on its own, EXACTLY in this form (no extra commentary after it):
 \`\`\`json
 {"suggestions":["...","...","..."]}
 \`\`\`
-The 'suggestions' array must contain 3 short, relevant follow-up questions the user is likely to ask next, written in the user's voice (first person, e.g. "Show me…", "How many…").`;
+The 'suggestions' array must contain 3 short, relevant follow-up questions in the user's voice (e.g. "Show me…", "Deep dive into…"). When you've just given a daily overview, one suggestion MUST be a deep-dive prompt.`;
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -168,36 +173,55 @@ async function runTool(name: string, args: Record<string, unknown>): Promise<unk
   try {
     switch (name) {
       case "get_overview": {
-        const [schools, students, teachers, sAtt, tAtt] = await Promise.all([
+        const date = String((args as any)?.date ?? todayStr());
+        const [schools, students, teacherRoles, headRoles, sAtt, tAtt, lgas, cats] = await Promise.all([
           admin.from("schools").select("*", { count: "exact", head: true }),
           admin.from("students").select("*", { count: "exact", head: true }),
-          admin.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "teacher"),
-          admin.from("student_attendance").select("morning_status,afternoon_status").eq("attendance_date", todayStr()),
-          admin.from("teacher_attendance").select("arrival_time,departure_time,head_verified").eq("attendance_date", todayStr()),
-        ]);
-        const [lgas, cats] = await Promise.all([
+          admin.from("user_roles").select("user_id").eq("role", "teacher"),
+          admin.from("user_roles").select("user_id").eq("role", "head_teacher"),
+          admin.from("student_attendance").select("morning_status,afternoon_status").eq("attendance_date", date),
+          admin.from("teacher_attendance").select("teacher_user_id,arrival_time,departure_time,head_verified,arrival_verified,departure_verified").eq("attendance_date", date),
           admin.from("schools").select("lga"),
           admin.from("schools").select("category"),
         ]);
+        const teacherIds = new Set((teacherRoles.data ?? []).map((r: any) => r.user_id));
+        const headIds = new Set((headRoles.data ?? []).map((r: any) => r.user_id));
         const lgaSet = new Set((lgas.data ?? []).map((r: any) => r.lga).filter(Boolean));
         const catSet = new Set((cats.data ?? []).map((r: any) => r.category).filter(Boolean));
+        const sRecords = sAtt.data?.length ?? 0;
         const sPresent = (sAtt.data ?? []).filter((r: any) => r.morning_status === "present" || r.afternoon_status === "present").length;
-        const tArrived = (tAtt.data ?? []).filter((r: any) => r.arrival_time).length;
-        const tDeparted = (tAtt.data ?? []).filter((r: any) => r.departure_time).length;
-        const tVerified = (tAtt.data ?? []).filter((r: any) => r.head_verified).length;
+        const studentsTotal = students.count ?? 0;
+        const teachersOnly = (tAtt.data ?? []).filter((r: any) => teacherIds.has(r.teacher_user_id) && !headIds.has(r.teacher_user_id));
+        const heads = (tAtt.data ?? []).filter((r: any) => headIds.has(r.teacher_user_id));
+        const tPresent = teachersOnly.filter((r: any) => r.arrival_time).length;
+        const hPresent = heads.filter((r: any) => r.arrival_time).length;
         return {
-          date: todayStr(),
+          date,
           schools_total: schools.count ?? 0,
-          students_total: students.count ?? 0,
-          teachers_total: teachers.count ?? 0,
           lgas_total: lgaSet.size,
           categories: Array.from(catSet),
-          today_student_present: sPresent,
-          today_student_records: sAtt.data?.length ?? 0,
-          today_teacher_arrived: tArrived,
-          today_teacher_departed: tDeparted,
-          today_teacher_verified: tVerified,
-          today_teacher_records: tAtt.data?.length ?? 0,
+          students: {
+            total: studentsTotal,
+            present: sPresent,
+            absent: Math.max(0, studentsTotal - sPresent),
+            attendance_records: sRecords,
+            percent_present: studentsTotal ? Math.round((sPresent / studentsTotal) * 100) : null,
+          },
+          teachers: {
+            total: teacherIds.size,
+            present: tPresent,
+            absent: Math.max(0, teacherIds.size - tPresent),
+            departed: teachersOnly.filter((r: any) => r.departure_time).length,
+            head_verified: teachersOnly.filter((r: any) => r.head_verified).length,
+            percent_present: teacherIds.size ? Math.round((tPresent / teacherIds.size) * 100) : null,
+          },
+          head_teachers: {
+            total: headIds.size,
+            present: hPresent,
+            absent: Math.max(0, headIds.size - hPresent),
+            departed: heads.filter((r: any) => r.departure_time).length,
+            percent_present: headIds.size ? Math.round((hPresent / headIds.size) * 100) : null,
+          },
         };
       }
       case "list_schools": {
