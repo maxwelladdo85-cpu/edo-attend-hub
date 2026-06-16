@@ -14,6 +14,9 @@ import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { SyncStatusBar } from "@/components/SyncStatusBar";
+import { bootstrapOfflineData } from "@/lib/offline/bootstrap";
+import { startSyncEngine } from "@/lib/offline/syncEngine";
 
 export interface NavItem {
   to: string;
@@ -34,6 +37,18 @@ export function DashboardShell({
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Kick off offline bootstrap once we have a school, and start the sync
+  // engine so queued changes flush whenever connectivity returns.
+  useEffect(() => {
+    startSyncEngine(() => profile?.school_id ?? null);
+  }, [profile?.school_id]);
+  useEffect(() => {
+    if (!profile?.school_id) return;
+    void bootstrapOfflineData({ schoolId: profile.school_id }).catch((e) => {
+      console.warn("Offline bootstrap failed", e);
+    });
+  }, [profile?.school_id]);
 
   const handleLogout = async () => {
     await signOut();
@@ -133,6 +148,7 @@ export function DashboardShell({
         </header>
 
         <main className="flex-1 p-5 sm:p-8 lg:p-10 xl:p-12 pr-safe pl-safe pb-[calc(env(safe-area-inset-bottom)+1rem)]">
+          <SyncStatusBar className="mb-4" />
           {children}
         </main>
       </div>
