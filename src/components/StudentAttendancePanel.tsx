@@ -7,10 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { getCurrentPosition } from "@/lib/geo";
 import { StatCard } from "@/components/StatCard";
+import {
+  getStudentAttendanceForDate,
+  getStudentsForSchool,
+  markStudentAttendance,
+} from "@/lib/offline/localDb";
+import { syncNow } from "@/lib/offline/syncEngine";
 
 type Mark = "present" | "late" | "absent";
 type Session = "morning" | "afternoon";
@@ -59,32 +64,28 @@ export function StudentAttendancePanel() {
         setLoading(false);
         return;
       }
-      // Teachers need a class assigned; head teachers see all classes in the school
       if (!isHead && !profile?.class_taught) {
         setLoading(false);
         return;
       }
       setLoading(true);
-      let studentsQuery = supabase
-        .from("students")
-        .select("*")
-        .eq("school_id", profile.school_id)
-        .order("class", { ascending: true })
-        .order("student_id", { ascending: true });
-      if (!isHead) {
-        studentsQuery = studentsQuery.eq("class", profile.class_taught!);
-      }
-      const [{ data: st }, { data: att }] = await Promise.all([
-        studentsQuery,
-        supabase
-          .from("student_attendance")
-          .select("*")
-          .eq("school_id", profile.school_id)
-          .eq("attendance_date", dateStr),
+      // Read from the on-device cache so this works offline. The sync engine
+      // keeps the cache fresh in the background whenever we have internet.
+      const [allStudents, att] = await Promise.all([
+        getStudentsForSchool(profile.school_id),
+        getStudentAttendanceForDate(profile.school_id, dateStr),
       ]);
-      setStudents(st ?? []);
+      const filtered = isHead
+        ? allStudents
+        : allStudents.filter((s) => s.class === profile.class_taught);
+      filtered.sort((a, b) =>
+        a.class === b.class ? a.student_id.localeCompare(b.student_id) : a.class.localeCompare(b.class),
+      );
+      setStudents(filtered);
       const map: Record<string, AttendanceRow> = {};
-      (att ?? []).forEach((r: any) => { map[r.student_id] = r; });
+      att.forEach((r) => {
+        map[r.student_id] = r;
+      });
       setRows(map);
       setLoading(false);
     };
@@ -96,8 +97,6 @@ export function StudentAttendancePanel() {
     const key = `${student.id}-${session}`;
     setSavingKey(key);
     try {
-      const now = value ? new Date().toISOString() : null;
-
       // Best-effort location — does NOT block saving, only captured when marking present
       let lat: number | null = null;
       let lng: number | null = null;
@@ -111,38 +110,33 @@ export function StudentAttendancePanel() {
         }
       }
 
-      const existing = rows[student.id];
-      const isMorning = session === "morning";
-      const payload = {
+      const next = await markStudentAttendance({
         student_id: student.id,
         school_id: profile.school_id,
         attendance_date: dateStr,
-        morning_status: isMorning ? value : existing?.morning_status ?? null,
-        afternoon_status: !isMorning ? value : existing?.afternoon_status ?? null,
-        morning_marked_at: isMorning ? now : existing?.morning_marked_at ?? null,
-        afternoon_marked_at: !isMorning ? now : existing?.afternoon_marked_at ?? null,
-        morning_lat: isMorning ? lat : existing?.morning_lat ?? null,
-        morning_lng: isMorning ? lng : existing?.morning_lng ?? null,
-        afternoon_lat: !isMorning ? lat : existing?.afternoon_lat ?? null,
-        afternoon_lng: !isMorning ? lng : existing?.afternoon_lng ?? null,
+        session,
+        value,
         marked_by: user.id,
-      };
-      const { error } = await supabase
-        .from("student_attendance")
-        .upsert([payload], { onConflict: "student_id,attendance_date" });
-      if (error) throw error;
+        lat,
+        lng,
+      });
 
-      setRows((prev) => ({
-        ...prev,
-        [student.id]: { ...(prev[student.id] ?? {} as AttendanceRow), ...payload },
-      }));
+      setRows((prev) => ({ ...prev, [student.id]: next }));
 
+      const now = session === "morning" ? next.morning_marked_at : next.afternoon_marked_at;
       if (value && now) {
         const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        toast.success(`${student.full_name.split(" ")[0]} · ${session} marked at ${timeLabel}${lat !== null ? " · location captured" : ""}`);
+        toast.success(
+          `${student.full_name.split(" ")[0]} · ${session} marked at ${timeLabel}${
+            lat !== null ? " · location captured" : ""
+          }`,
+        );
       } else {
         toast.success(`${student.full_name.split(" ")[0]} · ${session} cleared`);
       }
+
+      // Fire-and-forget sync; falls back to retry on next online tick.
+      void syncNow(profile.school_id);
     } catch (e: any) {
       toast.error(e.message ?? "Could not save attendance");
     } finally {
