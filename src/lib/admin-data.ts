@@ -291,12 +291,12 @@ export function useStudentAttendanceToday() {
     queryKey: ["admin", "student-attendance", todayStr()],
     queryFn: async () => {
       const rows = await fetchAllPaged<StudentAttendanceLite>(async (from, to) => {
-        const { data, error } = await supabase
+        const { data, error, count } = await supabase
           .from("student_attendance")
-          .select("student_id,school_id,morning_status,afternoon_status")
+          .select("student_id,school_id,morning_status,afternoon_status", { count: "exact" })
           .eq("attendance_date", todayStr())
           .range(from, to);
-        return { data: data as StudentAttendanceLite[] | null, error };
+        return { data: data as StudentAttendanceLite[] | null, error, count };
       });
       // De-duplicate by student_id, merging morning + afternoon so a student
       // present in either slot is counted once.
