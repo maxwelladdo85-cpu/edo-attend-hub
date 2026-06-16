@@ -168,36 +168,55 @@ async function runTool(name: string, args: Record<string, unknown>): Promise<unk
   try {
     switch (name) {
       case "get_overview": {
-        const [schools, students, teachers, sAtt, tAtt] = await Promise.all([
+        const date = String((args as any)?.date ?? todayStr());
+        const [schools, students, teacherRoles, headRoles, sAtt, tAtt, lgas, cats] = await Promise.all([
           admin.from("schools").select("*", { count: "exact", head: true }),
           admin.from("students").select("*", { count: "exact", head: true }),
-          admin.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "teacher"),
-          admin.from("student_attendance").select("morning_status,afternoon_status").eq("attendance_date", todayStr()),
-          admin.from("teacher_attendance").select("arrival_time,departure_time,head_verified").eq("attendance_date", todayStr()),
-        ]);
-        const [lgas, cats] = await Promise.all([
+          admin.from("user_roles").select("user_id").eq("role", "teacher"),
+          admin.from("user_roles").select("user_id").eq("role", "head_teacher"),
+          admin.from("student_attendance").select("morning_status,afternoon_status").eq("attendance_date", date),
+          admin.from("teacher_attendance").select("teacher_user_id,arrival_time,departure_time,head_verified,arrival_verified,departure_verified").eq("attendance_date", date),
           admin.from("schools").select("lga"),
           admin.from("schools").select("category"),
         ]);
+        const teacherIds = new Set((teacherRoles.data ?? []).map((r: any) => r.user_id));
+        const headIds = new Set((headRoles.data ?? []).map((r: any) => r.user_id));
         const lgaSet = new Set((lgas.data ?? []).map((r: any) => r.lga).filter(Boolean));
         const catSet = new Set((cats.data ?? []).map((r: any) => r.category).filter(Boolean));
+        const sRecords = sAtt.data?.length ?? 0;
         const sPresent = (sAtt.data ?? []).filter((r: any) => r.morning_status === "present" || r.afternoon_status === "present").length;
-        const tArrived = (tAtt.data ?? []).filter((r: any) => r.arrival_time).length;
-        const tDeparted = (tAtt.data ?? []).filter((r: any) => r.departure_time).length;
-        const tVerified = (tAtt.data ?? []).filter((r: any) => r.head_verified).length;
+        const studentsTotal = students.count ?? 0;
+        const teachersOnly = (tAtt.data ?? []).filter((r: any) => teacherIds.has(r.teacher_user_id) && !headIds.has(r.teacher_user_id));
+        const heads = (tAtt.data ?? []).filter((r: any) => headIds.has(r.teacher_user_id));
+        const tPresent = teachersOnly.filter((r: any) => r.arrival_time).length;
+        const hPresent = heads.filter((r: any) => r.arrival_time).length;
         return {
-          date: todayStr(),
+          date,
           schools_total: schools.count ?? 0,
-          students_total: students.count ?? 0,
-          teachers_total: teachers.count ?? 0,
           lgas_total: lgaSet.size,
           categories: Array.from(catSet),
-          today_student_present: sPresent,
-          today_student_records: sAtt.data?.length ?? 0,
-          today_teacher_arrived: tArrived,
-          today_teacher_departed: tDeparted,
-          today_teacher_verified: tVerified,
-          today_teacher_records: tAtt.data?.length ?? 0,
+          students: {
+            total: studentsTotal,
+            present: sPresent,
+            absent: Math.max(0, studentsTotal - sPresent),
+            attendance_records: sRecords,
+            percent_present: studentsTotal ? Math.round((sPresent / studentsTotal) * 100) : null,
+          },
+          teachers: {
+            total: teacherIds.size,
+            present: tPresent,
+            absent: Math.max(0, teacherIds.size - tPresent),
+            departed: teachersOnly.filter((r: any) => r.departure_time).length,
+            head_verified: teachersOnly.filter((r: any) => r.head_verified).length,
+            percent_present: teacherIds.size ? Math.round((tPresent / teacherIds.size) * 100) : null,
+          },
+          head_teachers: {
+            total: headIds.size,
+            present: hPresent,
+            absent: Math.max(0, headIds.size - hPresent),
+            departed: heads.filter((r: any) => r.departure_time).length,
+            percent_present: headIds.size ? Math.round((hPresent / headIds.size) * 100) : null,
+          },
         };
       }
       case "list_schools": {
