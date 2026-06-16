@@ -196,8 +196,23 @@ function AssistantPage() {
                   m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
                 )}>
                   {m.role === "assistant" ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-2 prose-ul:my-2 prose-table:my-2">
-                      <ReactMarkdown>{m.content}</ReactMarkdown>
+                    <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-2 prose-ul:my-2">
+                      <ReactMarkdown
+                        components={{
+                          table: ({ children, ...props }) => (
+                            <div className="rounded-md border my-2 bg-background">
+                              <Table {...props}>{children}</Table>
+                            </div>
+                          ),
+                          thead: ({ children }) => <TableHeader>{children}</TableHeader>,
+                          tbody: ({ children }) => <TableBody>{children}</TableBody>,
+                          tr: ({ children }) => <TableRow>{children}</TableRow>,
+                          th: ({ children }) => <TableHead className="text-xs font-semibold text-foreground">{children}</TableHead>,
+                          td: ({ children }) => <TableCell className="text-xs">{children}</TableCell>,
+                        }}
+                      >
+                        {m.content}
+                      </ReactMarkdown>
                     </div>
                   ) : (
                     <p className="whitespace-pre-wrap">{m.content}</p>
