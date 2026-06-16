@@ -61,6 +61,16 @@ function AnalyticsPage() {
   const teachersOnTime = teacherOnlyAtt.filter((r) => r.arrival_status === "on_time" || r.arrival_status === "early").length;
   const teachersAbsent = Math.max(0, teacherDenom - teachersPresent);
 
+  // Head teacher counts
+  const headDenom = new Set<string>([
+    ...headTeachers.map((t) => t.user_id),
+    ...headOnlyAtt.map((r) => r.teacher_user_id),
+  ]).size;
+  const headsPresent = Math.min(headOnlyAtt.filter((r) => r.arrival_time).length, headDenom);
+  const headsLate = headOnlyAtt.filter((r) => r.arrival_status === "late").length;
+  const headsOnTime = headOnlyAtt.filter((r) => r.arrival_status === "on_time" || r.arrival_status === "early").length;
+  const headsAbsent = Math.max(0, headDenom - headsPresent);
+
   // Match Overview's pupil denominator (presentStudentIds count, not raw rows).
   const presentStudentIds = new Set(sAtt.filter(isStudentPresent).map((r) => r.student_id));
   const studentDenom = Math.max(students.length, presentStudentIds.size);
@@ -71,6 +81,11 @@ function AnalyticsPage() {
     { name: "On time", value: teachersOnTime, fill: COLORS.brightGreen },
     { name: "Late", value: teachersLate, fill: COLORS.gold },
     { name: "Absent", value: teachersAbsent, fill: COLORS.red },
+  ];
+  const headPie = [
+    { name: "On time", value: headsOnTime, fill: COLORS.brightGreen },
+    { name: "Late", value: headsLate, fill: COLORS.gold },
+    { name: "Absent", value: headsAbsent, fill: COLORS.red },
   ];
   const studentPie = [
     { name: "Present", value: studentsPresent, fill: COLORS.brightGreen },
