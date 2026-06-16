@@ -67,6 +67,8 @@ function useFlagged({ fromDate, toDate }: { fromDate: string; toDate: string }) 
           .gte("attendance_date", fromDate)
           .lte("attendance_date", toDate)
           .not("arrival_time", "is", null)
+          // Only pull rows that could be flagged: either late, or have coords to check range.
+          .or("arrival_status.eq.late,arrival_lat.not.is.null")
           .range(from, to);
         return { data: data as Row[] | null, error };
       });
@@ -124,8 +126,9 @@ function useFlagged({ fromDate, toDate }: { fromDate: string; toDate: string }) 
         })
         .filter((x) => x.late || x.outOfRange);
     },
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
+    placeholderData: (prev) => prev,
   });
 }
 
