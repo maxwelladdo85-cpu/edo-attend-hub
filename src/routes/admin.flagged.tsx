@@ -134,18 +134,14 @@ function todayStr() {
 }
 
 function FlaggedPage() {
-  const { data: earliestDate } = useEarliestAttendanceDate();
-  const [fromDate, setFromDate] = useState(todayStr());
-  const [toDate, setToDate] = useState(todayStr());
+  const [fromDate, setFromDate] = useState(daysAgoStr(7));
+  const [toDate, setToDate] = useState(daysAgoStr(0));
   const [filter, setFilter] = useState<"all" | "late" | "range">("all");
   const [q, setQ] = useState("");
   const [schoolType, setSchoolType] = useState<string>("all");
   const [lga, setLga] = useState<string>("all");
   const { data = [], isLoading } = useFlagged({ fromDate, toDate });
 
-  useEffect(() => {
-    if (earliestDate) setFromDate(earliestDate);
-  }, [earliestDate]);
 
   const filtered = useMemo(() => {
     return data.filter((x) => {
