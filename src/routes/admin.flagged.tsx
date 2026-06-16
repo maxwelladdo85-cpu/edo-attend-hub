@@ -126,8 +126,9 @@ function useFlagged({ fromDate, toDate }: { fromDate: string; toDate: string }) 
         })
         .filter((x) => x.late || x.outOfRange);
     },
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
+    placeholderData: (prev) => prev,
   });
 }
 
