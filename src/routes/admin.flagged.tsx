@@ -129,9 +129,6 @@ function useFlagged({ fromDate, toDate }: { fromDate: string; toDate: string }) 
   });
 }
 
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 function FlaggedPage() {
   const [fromDate, setFromDate] = useState(daysAgoStr(7));
