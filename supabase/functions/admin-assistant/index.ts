@@ -18,8 +18,8 @@ const tools = [
     type: "function",
     function: {
       name: "get_overview",
-      description: "High-level totals across the system: number of schools, LGAs, school categories, total students, total teachers, and today's attendance summary (present/absent counts for students & teachers).",
-      parameters: { type: "object", properties: {}, additionalProperties: false },
+      description: "Daily attendance overview broken down by Students, Teachers, and Head Teachers (totals, present, absent, percentages), plus system totals (schools, LGAs, categories). Defaults to today.",
+      parameters: { type: "object", properties: { date: { type: "string", description: "YYYY-MM-DD; default = today" } }, additionalProperties: false },
     },
   },
   {
