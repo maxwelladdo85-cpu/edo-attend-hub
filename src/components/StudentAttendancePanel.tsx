@@ -28,6 +28,7 @@ interface Student {
   full_name: string;
   class: string;
   gender: string | null;
+  school_id: string;
 }
 
 interface AttendanceRow {
