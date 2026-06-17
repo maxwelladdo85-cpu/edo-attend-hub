@@ -15,9 +15,11 @@ import {
   getStudentAttendanceForDate,
   getStudentsForSchool,
   markStudentAttendance,
+  outboxCount,
 } from "@/lib/offline/localDb";
-import { syncNow } from "@/lib/offline/syncEngine";
+import { getSyncState, subscribeSync, syncNow } from "@/lib/offline/syncEngine";
 import { supabase } from "@/integrations/supabase/client";
+
 
 type Mark = "present" | "late" | "absent";
 type Session = "morning" | "afternoon";
