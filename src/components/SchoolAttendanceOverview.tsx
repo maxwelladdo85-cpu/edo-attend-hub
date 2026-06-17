@@ -141,7 +141,7 @@ export function SchoolAttendanceOverview() {
             full_name: s.full_name,
             class: s.class,
             presentDays: present,
-            rate: Math.round((present / 5) * 100),
+            rate: present > 0 ? 100 : 0,
           };
         }).sort((a: StudentRow, b: StudentRow) => a.full_name.localeCompare(b.full_name));
         if (!cancelled) setStudentRows(rows);
