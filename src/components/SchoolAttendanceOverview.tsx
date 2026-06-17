@@ -106,7 +106,7 @@ export function SchoolAttendanceOverview() {
             user_id: p.user_id,
             full_name: p.full_name,
             class_taught: p.class_taught,
-            rate: Math.round((present / 5) * 100),
+            rate: present > 0 ? 100 : 0,
             presentDays: present,
             status,
           };
