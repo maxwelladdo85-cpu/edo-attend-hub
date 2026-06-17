@@ -57,10 +57,11 @@ export function SchoolAttendanceOverview() {
   const [loading, setLoading] = useState(false);
   const [teacherRows, setTeacherRows] = useState<TeacherRow[]>([]);
   const [studentRows, setStudentRows] = useState<StudentRow[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  const today = useMemo(() => toDateStr(new Date()), []);
-  const start = today;
-  const end = today;
+  const dateStr = useMemo(() => toDateStr(selectedDate), [selectedDate]);
+  const start = dateStr;
+  const end = dateStr;
 
 
   useEffect(() => {
