@@ -64,7 +64,31 @@ export function SchoolAttendanceOverview() {
   const end = dateStr;
 
 
+  const [reloadTick, setReloadTick] = useState(0);
+
+  // Live-refresh when teacher_attendance or student_attendance changes server-side.
   useEffect(() => {
+    if (!schoolId) return;
+    const channel = supabase
+      .channel(`school-attendance-${schoolId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "student_attendance", filter: `school_id=eq.${schoolId}` },
+        () => setReloadTick((n) => n + 1),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "teacher_attendance", filter: `school_id=eq.${schoolId}` },
+        () => setReloadTick((n) => n + 1),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [schoolId]);
+
+  useEffect(() => {
+
     if (!schoolId) return;
     let cancelled = false;
     (async () => {
