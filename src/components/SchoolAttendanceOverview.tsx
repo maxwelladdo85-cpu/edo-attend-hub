@@ -190,6 +190,37 @@ export function SchoolAttendanceOverview() {
     return <span className="text-muted-foreground text-xs">—</span>;
   };
 
+  const studentStatusLabel = (morning: string | null, afternoon: string | null) => {
+    const mk = (text: string, variant: "success" | "warning" | "destructive" | "muted") => {
+      if (variant === "success") return <Badge className="bg-success/15 text-success hover:bg-success/15 border-success/30">{text}</Badge>;
+      if (variant === "warning") return <Badge className="bg-amber-500/15 text-amber-600 hover:bg-amber-500/15 border-amber-500/30">{text}</Badge>;
+      if (variant === "destructive") return <Badge className="bg-destructive/15 text-destructive hover:bg-destructive/15 border-destructive/30">{text}</Badge>;
+      return <Badge variant="outline" className="text-muted-foreground">{text}</Badge>;
+    };
+    const mapStatus = (st: string | null) => {
+      if (!st) return null;
+      const s = st.toLowerCase();
+      if (s === "present") return mk("Present", "success");
+      if (s === "late") return mk("Late", "warning");
+      if (s === "absent") return mk("Absent", "destructive");
+      if (s === "excused") return mk("Excused", "muted");
+      return mk(st, "muted");
+    };
+    const m = mapStatus(morning);
+    const a = mapStatus(afternoon);
+    if (!m && !a) return mk("Not marked", "muted");
+    if (m && !a) return m;
+    if (!m && a) return a;
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">M</span>
+        {m}
+        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">A</span>
+        {a}
+      </div>
+    );
+  };
+
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-card space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
