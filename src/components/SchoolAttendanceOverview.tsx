@@ -44,8 +44,8 @@ type StudentRow = {
   id: string;
   full_name: string;
   class: string;
-  rate: number;
-  presentDays: number;
+  morningStatus: string | null;
+  afternoonStatus: string | null;
 };
 
 export function SchoolAttendanceOverview() {
@@ -157,20 +157,21 @@ export function SchoolAttendanceOverview() {
           .in("student_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"])
           .gte("attendance_date", start)
           .lte("attendance_date", end);
-        const byStudent: Record<string, Set<string>> = {};
+        const byStudent: Record<string, { morningStatus: string | null; afternoonStatus: string | null }> = {};
         (att ?? []).forEach((r: any) => {
-          if (r.morning_status || r.afternoon_status) {
-            (byStudent[r.student_id] ||= new Set()).add(r.attendance_date);
-          }
+          byStudent[r.student_id] = {
+            morningStatus: r.morning_status ?? null,
+            afternoonStatus: r.afternoon_status ?? null,
+          };
         });
         const rows: StudentRow[] = (studs ?? []).map((s: any) => {
-          const present = byStudent[s.id]?.size ?? 0;
+          const rec = byStudent[s.id];
           return {
             id: s.id,
             full_name: s.full_name,
             class: s.class,
-            presentDays: present,
-            rate: present > 0 ? 100 : 0,
+            morningStatus: rec?.morningStatus ?? null,
+            afternoonStatus: rec?.afternoonStatus ?? null,
           };
         }).sort((a: StudentRow, b: StudentRow) => a.full_name.localeCompare(b.full_name));
         if (!cancelled) setStudentRows(rows);
@@ -187,6 +188,37 @@ export function SchoolAttendanceOverview() {
     if (s === "on_time") return <Badge variant="secondary">On time</Badge>;
     if (s === "late") return <Badge className="bg-destructive/15 text-destructive hover:bg-destructive/15 border-destructive/30">Late</Badge>;
     return <span className="text-muted-foreground text-xs">—</span>;
+  };
+
+  const studentStatusLabel = (morning: string | null, afternoon: string | null) => {
+    const mk = (text: string, variant: "success" | "warning" | "destructive" | "muted") => {
+      if (variant === "success") return <Badge className="bg-success/15 text-success hover:bg-success/15 border-success/30">{text}</Badge>;
+      if (variant === "warning") return <Badge className="bg-amber-500/15 text-amber-600 hover:bg-amber-500/15 border-amber-500/30">{text}</Badge>;
+      if (variant === "destructive") return <Badge className="bg-destructive/15 text-destructive hover:bg-destructive/15 border-destructive/30">{text}</Badge>;
+      return <Badge variant="outline" className="text-muted-foreground">{text}</Badge>;
+    };
+    const mapStatus = (st: string | null) => {
+      if (!st) return null;
+      const s = st.toLowerCase();
+      if (s === "present") return mk("Present", "success");
+      if (s === "late") return mk("Late", "warning");
+      if (s === "absent") return mk("Absent", "destructive");
+      if (s === "excused") return mk("Excused", "muted");
+      return mk(st, "muted");
+    };
+    const m = mapStatus(morning);
+    const a = mapStatus(afternoon);
+    if (!m && !a) return mk("Not marked", "muted");
+    if (m && !a) return m;
+    if (!m && a) return a;
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">M</span>
+        {m}
+        <span className="text-[10px] text-muted-foreground uppercase tracking-wide">A</span>
+        {a}
+      </div>
+    );
   };
 
   return (
@@ -278,7 +310,7 @@ export function SchoolAttendanceOverview() {
               <TableRow>
                 <TableHead>Student name</TableHead>
                 <TableHead>Class</TableHead>
-                <TableHead>Marked</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -288,11 +320,7 @@ export function SchoolAttendanceOverview() {
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.full_name}</TableCell>
                   <TableCell>{s.class}</TableCell>
-                  <TableCell>
-                    {s.presentDays > 0
-                      ? <Badge className="bg-success/15 text-success hover:bg-success/15 border-success/30">Marked</Badge>
-                      : <Badge variant="outline" className="text-muted-foreground">Not marked</Badge>}
-                  </TableCell>
+                  <TableCell>{studentStatusLabel(s.morningStatus, s.afternoonStatus)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
