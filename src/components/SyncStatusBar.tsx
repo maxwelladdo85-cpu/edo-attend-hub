@@ -26,10 +26,10 @@ export function SyncStatusBar({ className }: { className?: string }) {
       : "Offline — changes will sync when you're back online"
     : s.syncing
       ? "Syncing…"
-      : s.pending > 0
-        ? `${s.pending} change${s.pending === 1 ? "" : "s"} pending`
-        : s.lastError
-          ? `Sync error: ${s.lastError}`
+      : s.lastError
+        ? `Sync error: ${s.lastError}`
+        : s.pending > 0
+          ? `${s.pending} change${s.pending === 1 ? "" : "s"} pending`
           : "Online";
 
   return (

@@ -159,7 +159,7 @@ export function SchoolAttendanceOverview() {
           .lte("attendance_date", end);
         const byStudent: Record<string, Set<string>> = {};
         (att ?? []).forEach((r: any) => {
-          if (r.morning_status === "present" || r.afternoon_status === "present" || r.morning_status === "late" || r.afternoon_status === "late") {
+          if (r.morning_status || r.afternoon_status) {
             (byStudent[r.student_id] ||= new Set()).add(r.attendance_date);
           }
         });
@@ -290,7 +290,7 @@ export function SchoolAttendanceOverview() {
                   <TableCell>{s.class}</TableCell>
                   <TableCell>
                     {s.presentDays > 0
-                      ? <Badge className="bg-success/15 text-success hover:bg-success/15 border-success/30">Present</Badge>
+                      ? <Badge className="bg-success/15 text-success hover:bg-success/15 border-success/30">Marked</Badge>
                       : <Badge variant="outline" className="text-muted-foreground">Not marked</Badge>}
                   </TableCell>
                 </TableRow>
