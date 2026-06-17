@@ -126,7 +126,12 @@ async function pullDeltas(schoolId: string) {
 }
 
 export async function syncNow(schoolId?: string | null): Promise<void> {
-  if (inFlight) return inFlight;
+  if (inFlight) {
+    // Coalesce: remember that another pass is needed once the current one ends.
+    rerunRequested = true;
+    if (schoolId) rerunSchoolId = schoolId;
+    return inFlight;
+  }
   if (!state.online) {
     setState({ pending: (await listOutbox()).length });
     return;
@@ -154,6 +159,15 @@ export async function syncNow(schoolId?: string | null): Promise<void> {
     } finally {
       setState({ syncing: false, pending: (await listOutbox()).length });
       inFlight = null;
+      // If marks landed in the outbox while we were syncing, drain them now.
+      if (rerunRequested) {
+        const nextSchool = rerunSchoolId ?? schoolId ?? null;
+        rerunRequested = false;
+        rerunSchoolId = null;
+        if ((await listOutbox()).length > 0) {
+          void syncNow(nextSchool);
+        }
+      }
     }
   })();
   return inFlight;
