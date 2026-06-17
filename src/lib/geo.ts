@@ -15,13 +15,56 @@ export function distanceMeters(
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-export function getCurrentPosition(): Promise<GeolocationPosition> {
+import { Capacitor } from "@capacitor/core";
+import { Geolocation } from "@capacitor/geolocation";
+
+type SimplePos = {
+  coords: { latitude: number; longitude: number; accuracy: number };
+  timestamp: number;
+};
+
+async function getNativePosition(): Promise<SimplePos> {
+  // Ensure location permissions are granted on native devices
+  try {
+    const perm = await Geolocation.checkPermissions();
+    if (perm.location !== "granted" && perm.coarseLocation !== "granted") {
+      const req = await Geolocation.requestPermissions();
+      if (req.location !== "granted" && req.coarseLocation !== "granted") {
+        throw new Error(
+          "Location permission denied. Open Settings and allow location access for EdoSAS.",
+        );
+      }
+    }
+  } catch (e: any) {
+    if (e?.message?.toLowerCase().includes("permission")) throw e;
+    // Some platforms may not implement checkPermissions — continue
+  }
+
+  // Try high accuracy first with a generous timeout
+  try {
+    const p = await Geolocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 25000,
+      maximumAge: 10000,
+    });
+    return p as unknown as SimplePos;
+  } catch {
+    // Fallback: low accuracy, allow a cached fix up to 5 minutes old
+    const p = await Geolocation.getCurrentPosition({
+      enableHighAccuracy: false,
+      timeout: 20000,
+      maximumAge: 300000,
+    });
+    return p as unknown as SimplePos;
+  }
+}
+
+function getWebPosition(): Promise<SimplePos> {
   return new Promise((resolve, reject) => {
     if (!("geolocation" in navigator)) {
       reject(new Error("Geolocation is not supported by this device"));
       return;
     }
-
     const geo = navigator.geolocation;
     let settled = false;
     const done = (fn: () => void) => {
@@ -29,14 +72,11 @@ export function getCurrentPosition(): Promise<GeolocationPosition> {
       settled = true;
       fn();
     };
-
-    // Try high-accuracy GPS first (longer timeout for phones acquiring a fix)
     geo.getCurrentPosition(
-      (pos) => done(() => resolve(pos)),
+      (pos) => done(() => resolve(pos as unknown as SimplePos)),
       () => {
-        // Fallback: low-accuracy (cell/wifi) with a cached position allowed
         geo.getCurrentPosition(
-          (pos) => done(() => resolve(pos)),
+          (pos) => done(() => resolve(pos as unknown as SimplePos)),
           (err) => {
             const msg =
               err.code === err.TIMEOUT
@@ -48,12 +88,39 @@ export function getCurrentPosition(): Promise<GeolocationPosition> {
                     : err.message || "Unable to get your location.";
             done(() => reject(new Error(msg)));
           },
-          { enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 },
+          { enableHighAccuracy: false, timeout: 20000, maximumAge: 300000 },
         );
       },
       { enableHighAccuracy: true, timeout: 25000, maximumAge: 10000 },
     );
   });
+}
+
+export async function getCurrentPosition(): Promise<SimplePos> {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      return await getNativePosition();
+    } catch (e: any) {
+      const m = (e?.message || "").toLowerCase();
+      if (m.includes("timeout") || m.includes("timed out")) {
+        throw new Error(
+          "Location request timed out. Make sure Location/GPS is ON, allow EdoSAS to access location 'While Using the App', step outside or near a window, then try again.",
+        );
+      }
+      if (m.includes("permission") || m.includes("denied")) {
+        throw new Error(
+          "Location permission denied. Open Settings → EdoSAS → Location and choose 'While Using the App'.",
+        );
+      }
+      if (m.includes("unavailable") || m.includes("disabled")) {
+        throw new Error(
+          "Location services are off. Turn on Location/GPS in your phone settings and try again.",
+        );
+      }
+      throw new Error(e?.message || "Unable to capture your location.");
+    }
+  }
+  return getWebPosition();
 }
 
 export function classifyArrival(
