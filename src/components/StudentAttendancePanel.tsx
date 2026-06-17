@@ -300,9 +300,31 @@ export function StudentAttendancePanel() {
           })}
         </div>
       )}
+      {!isHead && profile?.class_taught && students.length > 0 && (
+        <div className="sm:hidden sticky bottom-0 z-10 bg-head-teacher-card/95 backdrop-blur border-t border-border p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+          <Button
+            type="button"
+            className="w-full h-11 text-base font-semibold"
+            onClick={handleUpdate}
+            disabled={sync.syncing}
+          >
+            {sync.syncing ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Updating…</>
+            ) : sync.pending > 0 ? (
+              `Update (${sync.pending} pending)`
+            ) : (
+              "Update"
+            )}
+          </Button>
+          {sync.lastError && (
+            <div className="mt-2 text-xs text-destructive text-center truncate">{sync.lastError}</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
+
 
 function SessionCheck({ icon: Icon, label, current, markedAt, lat, lng, saving, onToggle }: {
   icon: any; label: string; current: Mark | null;
