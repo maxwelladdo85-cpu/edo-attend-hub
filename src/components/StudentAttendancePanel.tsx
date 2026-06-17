@@ -60,8 +60,13 @@ export function StudentAttendancePanel() {
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [classFilter, setClassFilter] = useState<string>("all");
+  const [reloadTick, setReloadTick] = useState(0);
+  const [sync, setSync] = useState(getSyncState());
+
+  useEffect(() => subscribeSync(setSync), []);
 
   const dateStr = format(date, "yyyy-MM-dd");
+
 
   useEffect(() => {
     const load = async () => {
