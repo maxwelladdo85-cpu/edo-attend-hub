@@ -170,9 +170,28 @@ export function SchoolAttendanceOverview() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="font-display font-semibold text-lg">School attendance overview</h3>
-          <p className="text-xs text-muted-foreground">Today ({today})</p>
+          <p className="text-xs text-muted-foreground">
+            {isToday ? "Today" : format(selectedDate, "EEEE, MMMM d, yyyy")} ({dateStr})
+          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("gap-2", !isToday && "border-primary text-primary")}>
+                <CalendarIcon className="h-4 w-4" />
+                {format(selectedDate, "MMM d, yyyy")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(d) => d && setSelectedDate(d)}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
           {isHead && (
             <Button
               variant={mode === "teachers" ? "default" : "outline"}
