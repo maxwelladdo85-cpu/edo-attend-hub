@@ -254,7 +254,7 @@ export function SchoolAttendanceOverview() {
               <TableRow>
                 <TableHead>Student name</TableHead>
                 <TableHead>Class</TableHead>
-                <TableHead>Marked today</TableHead>
+                <TableHead>Marked</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
