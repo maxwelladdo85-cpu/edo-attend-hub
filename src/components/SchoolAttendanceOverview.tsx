@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Users, GraduationCap } from "lucide-react";
+import { Loader2, Users, GraduationCap, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -53,10 +57,11 @@ export function SchoolAttendanceOverview() {
   const [loading, setLoading] = useState(false);
   const [teacherRows, setTeacherRows] = useState<TeacherRow[]>([]);
   const [studentRows, setStudentRows] = useState<StudentRow[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-  const today = useMemo(() => toDateStr(new Date()), []);
-  const start = today;
-  const end = today;
+  const dateStr = useMemo(() => toDateStr(selectedDate), [selectedDate]);
+  const start = dateStr;
+  const end = dateStr;
 
 
   useEffect(() => {
@@ -151,6 +156,8 @@ export function SchoolAttendanceOverview() {
     return () => { cancelled = true; };
   }, [mode, schoolId, start, end, isHead, teacherClass]);
 
+  const isToday = dateStr === toDateStr(new Date());
+
   const statusLabel = (s: TeacherRow["status"]) => {
     if (s === "early") return <Badge className="bg-success/15 text-success hover:bg-success/15 border-success/30">Early</Badge>;
     if (s === "on_time") return <Badge variant="secondary">On time</Badge>;
@@ -163,9 +170,28 @@ export function SchoolAttendanceOverview() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="font-display font-semibold text-lg">School attendance overview</h3>
-          <p className="text-xs text-muted-foreground">Today ({today})</p>
+          <p className="text-xs text-muted-foreground">
+            {isToday ? "Today" : format(selectedDate, "EEEE, MMMM d, yyyy")} ({dateStr})
+          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("gap-2", !isToday && "border-primary text-primary")}>
+                <CalendarIcon className="h-4 w-4" />
+                {format(selectedDate, "MMM d, yyyy")}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(d) => d && setSelectedDate(d)}
+                initialFocus
+                className="p-3 pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
           {isHead && (
             <Button
               variant={mode === "teachers" ? "default" : "outline"}
@@ -199,7 +225,7 @@ export function SchoolAttendanceOverview() {
               <TableRow>
                 <TableHead>Teacher name</TableHead>
                 <TableHead>Class taught</TableHead>
-                <TableHead>Marked today</TableHead>
+                <TableHead>Marked</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -228,7 +254,7 @@ export function SchoolAttendanceOverview() {
               <TableRow>
                 <TableHead>Student name</TableHead>
                 <TableHead>Class</TableHead>
-                <TableHead>Marked today</TableHead>
+                <TableHead>Marked</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
