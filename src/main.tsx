@@ -42,3 +42,8 @@ if (!rootElement.innerHTML) {
 
 // Initialize native shell after render (non-blocking)
 import("./lib/native-init").then(({ initNativeShell }) => initNativeShell());
+
+// Register the offline app-shell service worker (guarded — no-op in
+// dev/preview/iframe). Lets the app cold-launch with no internet.
+import("./lib/pwa/register").then(({ registerPwa }) => registerPwa());
+
