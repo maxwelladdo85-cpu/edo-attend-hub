@@ -156,6 +156,8 @@ export function SchoolAttendanceOverview() {
     return () => { cancelled = true; };
   }, [mode, schoolId, start, end, isHead, teacherClass]);
 
+  const isToday = dateStr === toDateStr(new Date());
+
   const statusLabel = (s: TeacherRow["status"]) => {
     if (s === "early") return <Badge className="bg-success/15 text-success hover:bg-success/15 border-success/30">Early</Badge>;
     if (s === "on_time") return <Badge variant="secondary">On time</Badge>;
