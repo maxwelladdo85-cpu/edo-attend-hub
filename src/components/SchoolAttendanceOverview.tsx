@@ -163,7 +163,7 @@ export function SchoolAttendanceOverview() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="font-display font-semibold text-lg">School attendance overview</h3>
-          <p className="text-xs text-muted-foreground">This week ({start} – {end})</p>
+          <p className="text-xs text-muted-foreground">Today ({today})</p>
         </div>
         <div className="flex gap-2">
           {isHead && (
