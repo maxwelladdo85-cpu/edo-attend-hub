@@ -178,7 +178,7 @@ export function SchoolAttendanceOverview() {
       if (!cancelled) setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [mode, schoolId, start, end, isHead, teacherClass]);
+  }, [mode, schoolId, start, end, isHead, teacherClass, reloadTick]);
 
   const isToday = dateStr === toDateStr(new Date());
 
