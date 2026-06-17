@@ -199,7 +199,7 @@ export function SchoolAttendanceOverview() {
               <TableRow>
                 <TableHead>Teacher name</TableHead>
                 <TableHead>Class taught</TableHead>
-                <TableHead>Attendance rate</TableHead>
+                <TableHead>Marked today</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -211,8 +211,9 @@ export function SchoolAttendanceOverview() {
                   <TableCell className="font-medium">{t.full_name ?? "—"}</TableCell>
                   <TableCell>{t.class_taught ?? "—"}</TableCell>
                   <TableCell>
-                    <span className="font-semibold text-primary">{t.rate}%</span>
-                    <span className="text-xs text-muted-foreground ml-2">({t.presentDays}/5)</span>
+                    {t.presentDays > 0
+                      ? <Badge className="bg-success/15 text-success hover:bg-success/15 border-success/30">Present</Badge>
+                      : <Badge variant="outline" className="text-muted-foreground">Not marked</Badge>}
                   </TableCell>
                   <TableCell>{statusLabel(t.status)}</TableCell>
                 </TableRow>
