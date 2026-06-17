@@ -55,24 +55,59 @@ export function subscribeSync(l: Listener): () => void {
   return () => listeners.delete(l);
 }
 
-async function pushOne(entry: OutboxEntry): Promise<void> {
+async function pushOne(entry: OutboxEntry, schoolId?: string | null): Promise<void> {
   if (entry.op === "upsert_student_attendance") {
-    const {
-      head_verified,
-      head_verified_by,
-      head_verified_at,
-      arrival_verified,
-      departure_verified,
-      ...payload
-    } = entry.payload as any;
+    const raw = entry.payload as any;
+    const [studentIdFromKey, dateFromKey] = entry.row_key.split("_");
+    const payload = {
+      student_id: raw.student_id ?? studentIdFromKey,
+      school_id: raw.school_id ?? schoolId,
+      attendance_date: raw.attendance_date ?? dateFromKey,
+      morning_status: raw.morning_status || null,
+      afternoon_status: raw.afternoon_status || null,
+      morning_marked_at: raw.morning_marked_at || null,
+      afternoon_marked_at: raw.afternoon_marked_at || null,
+      morning_lat: raw.morning_lat ?? null,
+      morning_lng: raw.morning_lng ?? null,
+      afternoon_lat: raw.afternoon_lat ?? null,
+      afternoon_lng: raw.afternoon_lng ?? null,
+      marked_by: raw.marked_by ?? null,
+    };
+    if (!payload.student_id || !payload.school_id || !payload.attendance_date) {
+      throw new Error("Student attendance sync is missing pupil, school, or date information");
+    }
     const { error } = await supabase
       .from("student_attendance")
       .upsert([payload], { onConflict: "student_id,attendance_date" });
     if (error) throw error;
   } else if (entry.op === "upsert_teacher_attendance") {
+    const raw = entry.payload as any;
+    const [teacherIdFromKey, dateFromKey] = entry.row_key.split("_");
+    const payload = {
+      teacher_user_id: raw.teacher_user_id ?? raw.user_id ?? teacherIdFromKey,
+      school_id: raw.school_id ?? schoolId,
+      attendance_date: raw.attendance_date ?? dateFromKey,
+      arrival_time: raw.arrival_time ?? raw.arrival_at ?? null,
+      arrival_lat: raw.arrival_lat ?? null,
+      arrival_lng: raw.arrival_lng ?? null,
+      arrival_status: raw.arrival_status ?? null,
+      arrival_verified: raw.arrival_verified ?? false,
+      departure_time: raw.departure_time ?? raw.departure_at ?? null,
+      departure_lat: raw.departure_lat ?? null,
+      departure_lng: raw.departure_lng ?? null,
+      departure_status: raw.departure_status ?? null,
+      departure_verified: raw.departure_verified ?? false,
+      head_verified: raw.head_verified ?? false,
+      head_verified_by: raw.head_verified_by ?? null,
+      head_verified_at: raw.head_verified_at ?? null,
+      device_info: raw.device_info ?? null,
+    };
+    if (!payload.teacher_user_id || !payload.school_id || !payload.attendance_date) {
+      throw new Error("Teacher attendance sync is missing teacher, school, or date information");
+    }
     const { error } = await supabase
       .from("teacher_attendance")
-      .upsert([entry.payload as any], { onConflict: "user_id,attendance_date" });
+      .upsert([payload], { onConflict: "teacher_user_id,attendance_date" });
     if (error) throw error;
   } else {
     throw new Error(`Unknown outbox op: ${entry.op}`);
@@ -145,7 +180,7 @@ export async function syncNow(schoolId?: string | null): Promise<void> {
       const entries = await listOutbox();
       for (const entry of entries) {
         try {
-          await pushOne(entry);
+          await pushOne(entry, schoolId);
           await removeOutboxEntry(entry);
         } catch (err: any) {
           const msg = err?.message ?? String(err);
