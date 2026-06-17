@@ -21,11 +21,38 @@ export function getCurrentPosition(): Promise<GeolocationPosition> {
       reject(new Error("Geolocation is not supported by this device"));
       return;
     }
-    navigator.geolocation.getCurrentPosition(resolve, reject, {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 0,
-    });
+
+    const geo = navigator.geolocation;
+    let settled = false;
+    const done = (fn: () => void) => {
+      if (settled) return;
+      settled = true;
+      fn();
+    };
+
+    // Try high-accuracy GPS first (longer timeout for phones acquiring a fix)
+    geo.getCurrentPosition(
+      (pos) => done(() => resolve(pos)),
+      () => {
+        // Fallback: low-accuracy (cell/wifi) with a cached position allowed
+        geo.getCurrentPosition(
+          (pos) => done(() => resolve(pos)),
+          (err) => {
+            const msg =
+              err.code === err.TIMEOUT
+                ? "Location request timed out. Please move to an open area, enable GPS/High-accuracy location, and try again."
+                : err.code === err.PERMISSION_DENIED
+                  ? "Location permission denied. Enable location access for this site in your browser settings."
+                  : err.code === err.POSITION_UNAVAILABLE
+                    ? "Location unavailable. Turn on GPS/Location services and try again."
+                    : err.message || "Unable to get your location.";
+            done(() => reject(new Error(msg)));
+          },
+          { enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 },
+        );
+      },
+      { enableHighAccuracy: true, timeout: 25000, maximumAge: 10000 },
+    );
   });
 }
 
