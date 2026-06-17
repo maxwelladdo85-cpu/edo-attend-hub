@@ -118,7 +118,24 @@ export function StudentAttendancePanel() {
       setLoading(false);
     };
     load();
-  }, [profile?.school_id, profile?.class_taught, dateStr, isHead]);
+  }, [profile?.school_id, profile?.class_taught, dateStr, isHead, reloadTick]);
+
+  const handleUpdate = async () => {
+    if (!profile?.school_id) return;
+    try {
+      await syncNow(profile.school_id);
+      setReloadTick((t) => t + 1);
+      const pending = await outboxCount();
+      if (pending === 0) {
+        toast.success("Attendance updated");
+      } else {
+        toast.message(`${pending} change${pending === 1 ? "" : "s"} still pending`);
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Update failed");
+    }
+  };
+
 
   const mark = async (student: Student, session: Session, value: Mark | null) => {
     if (!user || !profile?.school_id) return;
