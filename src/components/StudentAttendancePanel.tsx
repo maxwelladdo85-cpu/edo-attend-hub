@@ -15,9 +15,11 @@ import {
   getStudentAttendanceForDate,
   getStudentsForSchool,
   markStudentAttendance,
+  outboxCount,
 } from "@/lib/offline/localDb";
-import { syncNow } from "@/lib/offline/syncEngine";
+import { getSyncState, subscribeSync, syncNow } from "@/lib/offline/syncEngine";
 import { supabase } from "@/integrations/supabase/client";
+
 
 type Mark = "present" | "late" | "absent";
 type Session = "morning" | "afternoon";
@@ -58,8 +60,13 @@ export function StudentAttendancePanel() {
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [classFilter, setClassFilter] = useState<string>("all");
+  const [reloadTick, setReloadTick] = useState(0);
+  const [sync, setSync] = useState(getSyncState());
+
+  useEffect(() => subscribeSync(setSync), []);
 
   const dateStr = format(date, "yyyy-MM-dd");
+
 
   useEffect(() => {
     const load = async () => {
@@ -111,7 +118,24 @@ export function StudentAttendancePanel() {
       setLoading(false);
     };
     load();
-  }, [profile?.school_id, profile?.class_taught, dateStr, isHead]);
+  }, [profile?.school_id, profile?.class_taught, dateStr, isHead, reloadTick]);
+
+  const handleUpdate = async () => {
+    if (!profile?.school_id) return;
+    try {
+      await syncNow(profile.school_id);
+      setReloadTick((t) => t + 1);
+      const pending = await outboxCount();
+      if (pending === 0) {
+        toast.success("Attendance updated");
+      } else {
+        toast.message(`${pending} change${pending === 1 ? "" : "s"} still pending`);
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Update failed");
+    }
+  };
+
 
   const mark = async (student: Student, session: Session, value: Mark | null) => {
     if (!user || !profile?.school_id) return;
@@ -174,7 +198,8 @@ export function StudentAttendancePanel() {
   const pmAbsent = total - pmPresent;
 
   return (
-    <div className={`rounded-2xl border border-border bg-head-teacher-card shadow-card overflow-hidden`}>
+    <div className={`mx-2 sm:mx-0 rounded-2xl border border-border bg-head-teacher-card shadow-card overflow-hidden`}>
+
       {isHead && total > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 p-3 sm:p-5">
           <StatCard icon={Users} label="Total" value={total} tone="default" className="bg-head-teacher-card" />
@@ -275,9 +300,31 @@ export function StudentAttendancePanel() {
           })}
         </div>
       )}
+      {!isHead && profile?.class_taught && students.length > 0 && (
+        <div className="sm:hidden sticky bottom-0 z-10 bg-head-teacher-card/95 backdrop-blur border-t border-border p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+          <Button
+            type="button"
+            className="w-full h-11 text-base font-semibold"
+            onClick={handleUpdate}
+            disabled={sync.syncing}
+          >
+            {sync.syncing ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Updating…</>
+            ) : sync.pending > 0 ? (
+              `Update (${sync.pending} pending)`
+            ) : (
+              "Update"
+            )}
+          </Button>
+          {sync.lastError && (
+            <div className="mt-2 text-xs text-destructive text-center truncate">{sync.lastError}</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
+
 
 function SessionCheck({ icon: Icon, label, current, markedAt, lat, lng, saving, onToggle }: {
   icon: any; label: string; current: Mark | null;
