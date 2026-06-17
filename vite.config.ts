@@ -22,6 +22,8 @@ export default defineConfig({
       manifest: false, // we ship our own /manifest.webmanifest in public/
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,webp,woff,woff2}"],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+
         // OAuth redirect must always hit the network; never serve cached HTML.
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
