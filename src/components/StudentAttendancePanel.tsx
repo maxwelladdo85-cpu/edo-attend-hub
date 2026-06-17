@@ -73,10 +73,28 @@ export function StudentAttendancePanel() {
       setLoading(true);
       // Read from the on-device cache so this works offline. The sync engine
       // keeps the cache fresh in the background whenever we have internet.
-      const [allStudents, att] = await Promise.all([
+      const [cachedStudents, att] = await Promise.all([
         getStudentsForSchool(profile.school_id),
         getStudentAttendanceForDate(profile.school_id, dateStr),
       ]);
+      let allStudents = cachedStudents;
+      // If the offline cache is still empty (first login, bootstrap not done
+      // yet, or cleared storage), fall back to a direct fetch so the teacher
+      // doesn't see an empty class.
+      if (allStudents.length === 0 && navigator.onLine !== false) {
+        const { data, error } = await supabase
+          .from("students")
+          .select("id, student_id, full_name, class, gender, school_id")
+          .eq("school_id", profile.school_id);
+        if (!error && data && data.length > 0) {
+          allStudents = data as Student[];
+          try {
+            await bulkUpsertStudents(data as any);
+          } catch {
+            /* best effort */
+          }
+        }
+      }
       const filtered = isHead
         ? allStudents
         : allStudents.filter((s) => s.class === profile.class_taught);
