@@ -54,17 +54,10 @@ export function SchoolAttendanceOverview() {
   const [teacherRows, setTeacherRows] = useState<TeacherRow[]>([]);
   const [studentRows, setStudentRows] = useState<StudentRow[]>([]);
 
-  const monday = useMemo(getMondayOfThisWeek, []);
-  const weekDates = useMemo(
-    () =>
-      Array.from({ length: 5 }, (_, i) => {
-        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
-        return toDateStr(d);
-      }),
-    [monday]
-  );
-  const start = weekDates[0];
-  const end = weekDates[4];
+  const today = useMemo(() => toDateStr(new Date()), []);
+  const start = today;
+  const end = today;
+
 
   useEffect(() => {
     if (!schoolId) return;
