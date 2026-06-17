@@ -157,20 +157,21 @@ export function SchoolAttendanceOverview() {
           .in("student_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"])
           .gte("attendance_date", start)
           .lte("attendance_date", end);
-        const byStudent: Record<string, Set<string>> = {};
+        const byStudent: Record<string, { morningStatus: string | null; afternoonStatus: string | null }> = {};
         (att ?? []).forEach((r: any) => {
-          if (r.morning_status || r.afternoon_status) {
-            (byStudent[r.student_id] ||= new Set()).add(r.attendance_date);
-          }
+          byStudent[r.student_id] = {
+            morningStatus: r.morning_status ?? null,
+            afternoonStatus: r.afternoon_status ?? null,
+          };
         });
         const rows: StudentRow[] = (studs ?? []).map((s: any) => {
-          const present = byStudent[s.id]?.size ?? 0;
+          const rec = byStudent[s.id];
           return {
             id: s.id,
             full_name: s.full_name,
             class: s.class,
-            presentDays: present,
-            rate: present > 0 ? 100 : 0,
+            morningStatus: rec?.morningStatus ?? null,
+            afternoonStatus: rec?.afternoonStatus ?? null,
           };
         }).sort((a: StudentRow, b: StudentRow) => a.full_name.localeCompare(b.full_name));
         if (!cancelled) setStudentRows(rows);
