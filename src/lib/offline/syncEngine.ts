@@ -32,6 +32,11 @@ let state: SyncState = {
 const listeners = new Set<Listener>();
 let started = false;
 let inFlight: Promise<void> | null = null;
+// Set when syncNow is called while another sync is already running. Ensures
+// rows enqueued after the in-flight sync snapshotted the outbox get pushed
+// immediately instead of waiting for the next 60s tick.
+let rerunRequested = false;
+let rerunSchoolId: string | null = null;
 
 function emit() {
   for (const l of listeners) l(state);
