@@ -32,6 +32,7 @@ let state: SyncState = {
 const listeners = new Set<Listener>();
 let started = false;
 let inFlight: Promise<void> | null = null;
+let schoolIdGetter: (() => string | null | undefined) | null = null;
 // Set when syncNow is called while another sync is already running. Ensures
 // rows enqueued after the in-flight sync snapshotted the outbox get pushed
 // immediately instead of waiting for the next 60s tick.
@@ -221,11 +222,12 @@ export async function refreshPendingCount() {
 
 /** Wire browser + Capacitor lifecycle events to trigger sync. Safe to call many times. */
 export function startSyncEngine(getSchoolId: () => string | null | undefined) {
+  schoolIdGetter = getSchoolId;
   if (started) return;
   started = true;
 
   const trigger = () => {
-    void syncNow(getSchoolId() ?? null);
+    void syncNow(schoolIdGetter?.() ?? null);
   };
 
   // Browser online/offline
