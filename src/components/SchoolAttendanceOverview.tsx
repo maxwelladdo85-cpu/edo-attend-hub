@@ -44,8 +44,8 @@ type StudentRow = {
   id: string;
   full_name: string;
   class: string;
-  rate: number;
-  presentDays: number;
+  morningStatus: string | null;
+  afternoonStatus: string | null;
 };
 
 export function SchoolAttendanceOverview() {
