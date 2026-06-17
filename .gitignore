@@ -41,3 +41,6 @@ ios/App/Pods/
 # Environment
 .env
 .env.local
+
+android/keystore/
+android/local.properties
