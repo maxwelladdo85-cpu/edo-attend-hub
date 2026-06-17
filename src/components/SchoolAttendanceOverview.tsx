@@ -279,7 +279,7 @@ export function SchoolAttendanceOverview() {
               <TableRow>
                 <TableHead>Student name</TableHead>
                 <TableHead>Class</TableHead>
-                <TableHead>Marked</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -289,11 +289,7 @@ export function SchoolAttendanceOverview() {
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.full_name}</TableCell>
                   <TableCell>{s.class}</TableCell>
-                  <TableCell>
-                    {s.presentDays > 0
-                      ? <Badge className="bg-success/15 text-success hover:bg-success/15 border-success/30">Marked</Badge>
-                      : <Badge variant="outline" className="text-muted-foreground">Not marked</Badge>}
-                  </TableCell>
+                  <TableCell>{studentStatusLabel(s.morningStatus, s.afternoonStatus)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
