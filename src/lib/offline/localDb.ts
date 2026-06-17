@@ -94,8 +94,9 @@ export async function markStudentAttendance(input: MarkAttendanceInput): Promise
     afternoon_lng: !isMorning ? input.lng : existing?.afternoon_lng ?? null,
     marked_by: input.marked_by,
     updated_at: new Date().toISOString(),
-    // Teacher edit clears verification locally so the head teacher sees it as
-    // re-pending after the sync engine clears it on the server too.
+    // Keep verification fields local-only for now. The live student_attendance
+    // table does not have these columns, so sending them during sync would keep
+    // the outbox stuck with pending changes.
     head_verified: false,
     head_verified_by: null,
     head_verified_at: null,
@@ -120,12 +121,6 @@ export async function markStudentAttendance(input: MarkAttendanceInput): Promise
       afternoon_lat: next.afternoon_lat,
       afternoon_lng: next.afternoon_lng,
       marked_by: next.marked_by,
-      // The sync engine sends these to the server too, clearing prior approval.
-      head_verified: false,
-      head_verified_by: null,
-      head_verified_at: null,
-      arrival_verified: false,
-      departure_verified: false,
     },
   });
 
