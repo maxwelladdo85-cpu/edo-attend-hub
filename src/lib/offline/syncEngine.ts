@@ -138,24 +138,31 @@ export async function syncNow(schoolId?: string | null): Promise<void> {
   }
   inFlight = (async () => {
     setState({ syncing: true, lastError: null });
+    let firstError: string | null = null;
     try {
-      // 1) Drain outbox FIFO
+      // 1) Drain outbox FIFO — keep going on per-entry failure so one bad
+      // row doesn't block the rest of the queue.
       const entries = await listOutbox();
       for (const entry of entries) {
         try {
           await pushOne(entry);
           await removeOutboxEntry(entry);
         } catch (err: any) {
-          await markOutboxFailure(entry, err?.message ?? String(err));
-          // Stop on first failure to preserve order; will retry next tick.
-          throw err;
+          const msg = err?.message ?? String(err);
+          await markOutboxFailure(entry, msg);
+          if (!firstError) firstError = msg;
+          // Keep draining the next entries instead of aborting.
         }
       }
       // 2) Pull deltas (only if we know the school)
       if (schoolId) await pullDeltas(schoolId);
-      setState({ lastSyncedAt: new Date().toISOString(), pending: 0 });
+      setState({
+        lastSyncedAt: new Date().toISOString(),
+        lastError: firstError,
+      });
     } catch (err: any) {
-      setState({ lastError: err?.message ?? String(err), pending: (await listOutbox()).length });
+      setState({ lastError: err?.message ?? String(err) });
+
     } finally {
       setState({ syncing: false, pending: (await listOutbox()).length });
       inFlight = null;
