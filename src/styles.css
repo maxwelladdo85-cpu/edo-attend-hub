@@ -221,3 +221,20 @@
   .shadow-glow { box-shadow: var(--shadow-glow); }
   .bg-head-teacher-card { background-color: oklch(0.95 0.03 150); }
 }
+
+/* Keep Leaflet maps from painting over app chrome (mobile header, drawer, modals).
+   Leaflet's internal panes use z-index up to 700 and controls up to 1000, which
+   would otherwise leak above our sticky header (z-30) and mobile drawer (z-50). */
+.leaflet-container {
+  isolation: isolate;
+  z-index: 0;
+}
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 1 !important;
+}
+.leaflet-pane .leaflet-popup-pane,
+.leaflet-popup {
+  z-index: 5 !important;
+}

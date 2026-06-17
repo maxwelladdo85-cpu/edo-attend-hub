@@ -27,6 +27,8 @@ import { Route as AdminPupilAttendanceRouteImport } from "./routes/admin.pupil-a
 import { Route as AdminMapRouteImport } from "./routes/admin.map"
 import { Route as AdminLgaRouteImport } from "./routes/admin.lga"
 import { Route as AdminFlaggedRouteImport } from "./routes/admin.flagged"
+import { Route as AdminCalendarRouteImport } from "./routes/admin.calendar"
+import { Route as AdminAssistantRouteImport } from "./routes/admin.assistant"
 import { Route as AdminAssignRouteImport } from "./routes/admin.assign"
 import { Route as AdminAnalyticsRouteImport } from "./routes/admin.analytics"
 
@@ -120,6 +122,16 @@ const AdminFlaggedRoute = AdminFlaggedRouteImport.update({
   path: "/flagged",
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCalendarRoute = AdminCalendarRouteImport.update({
+  id: "/calendar",
+  path: "/calendar",
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAssistantRoute = AdminAssistantRouteImport.update({
+  id: "/assistant",
+  path: "/assistant",
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAssignRoute = AdminAssignRouteImport.update({
   id: "/assign",
   path: "/assign",
@@ -144,6 +156,8 @@ export interface FileRoutesByFullPath {
   "/terms": typeof TermsRoute
   "/admin/analytics": typeof AdminAnalyticsRoute
   "/admin/assign": typeof AdminAssignRoute
+  "/admin/assistant": typeof AdminAssistantRoute
+  "/admin/calendar": typeof AdminCalendarRoute
   "/admin/flagged": typeof AdminFlaggedRoute
   "/admin/lga": typeof AdminLgaRoute
   "/admin/map": typeof AdminMapRoute
@@ -165,6 +179,8 @@ export interface FileRoutesByTo {
   "/terms": typeof TermsRoute
   "/admin/analytics": typeof AdminAnalyticsRoute
   "/admin/assign": typeof AdminAssignRoute
+  "/admin/assistant": typeof AdminAssistantRoute
+  "/admin/calendar": typeof AdminCalendarRoute
   "/admin/flagged": typeof AdminFlaggedRoute
   "/admin/lga": typeof AdminLgaRoute
   "/admin/map": typeof AdminMapRoute
@@ -188,6 +204,8 @@ export interface FileRoutesById {
   "/terms": typeof TermsRoute
   "/admin/analytics": typeof AdminAnalyticsRoute
   "/admin/assign": typeof AdminAssignRoute
+  "/admin/assistant": typeof AdminAssistantRoute
+  "/admin/calendar": typeof AdminCalendarRoute
   "/admin/flagged": typeof AdminFlaggedRoute
   "/admin/lga": typeof AdminLgaRoute
   "/admin/map": typeof AdminMapRoute
@@ -212,6 +230,8 @@ export interface FileRouteTypes {
     | "/terms"
     | "/admin/analytics"
     | "/admin/assign"
+    | "/admin/assistant"
+    | "/admin/calendar"
     | "/admin/flagged"
     | "/admin/lga"
     | "/admin/map"
@@ -233,6 +253,8 @@ export interface FileRouteTypes {
     | "/terms"
     | "/admin/analytics"
     | "/admin/assign"
+    | "/admin/assistant"
+    | "/admin/calendar"
     | "/admin/flagged"
     | "/admin/lga"
     | "/admin/map"
@@ -255,6 +277,8 @@ export interface FileRouteTypes {
     | "/terms"
     | "/admin/analytics"
     | "/admin/assign"
+    | "/admin/assistant"
+    | "/admin/calendar"
     | "/admin/flagged"
     | "/admin/lga"
     | "/admin/map"
@@ -406,6 +430,20 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AdminFlaggedRouteImport
       parentRoute: typeof AdminRoute
     }
+    "/admin/calendar": {
+      id: "/admin/calendar"
+      path: "/calendar"
+      fullPath: "/admin/calendar"
+      preLoaderRoute: typeof AdminCalendarRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    "/admin/assistant": {
+      id: "/admin/assistant"
+      path: "/assistant"
+      fullPath: "/admin/assistant"
+      preLoaderRoute: typeof AdminAssistantRouteImport
+      parentRoute: typeof AdminRoute
+    }
     "/admin/assign": {
       id: "/admin/assign"
       path: "/assign"
@@ -426,6 +464,8 @@ declare module "@tanstack/react-router" {
 interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAssignRoute: typeof AdminAssignRoute
+  AdminAssistantRoute: typeof AdminAssistantRoute
+  AdminCalendarRoute: typeof AdminCalendarRoute
   AdminFlaggedRoute: typeof AdminFlaggedRoute
   AdminLgaRoute: typeof AdminLgaRoute
   AdminMapRoute: typeof AdminMapRoute
@@ -439,6 +479,8 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAssignRoute: AdminAssignRoute,
+  AdminAssistantRoute: AdminAssistantRoute,
+  AdminCalendarRoute: AdminCalendarRoute,
   AdminFlaggedRoute: AdminFlaggedRoute,
   AdminLgaRoute: AdminLgaRoute,
   AdminMapRoute: AdminMapRoute,

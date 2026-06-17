@@ -33,7 +33,9 @@ function AnalyticsPage() {
   const { data: schools = [] } = useSchools();
   const { data: staff = [] } = useStaffProfiles();
   const teachers = useMemo(() => staff.filter((s) => s.role === "teacher"), [staff]);
+  const headTeachers = useMemo(() => staff.filter((s) => s.role === "head_teacher"), [staff]);
   const teacherUserIds = useMemo(() => new Set(teachers.map((t) => t.user_id)), [teachers]);
+  const headUserIds = useMemo(() => new Set(headTeachers.map((t) => t.user_id)), [headTeachers]);
   const { data: students = [] } = useStudents();
   const { data: tAtt = [] } = useTeacherAttendanceToday();
   const { data: sAtt = [] } = useStudentAttendanceToday();
@@ -43,6 +45,11 @@ function AnalyticsPage() {
     () => tAtt.filter((r) => teacherUserIds.has(r.teacher_user_id)),
     [tAtt, teacherUserIds],
   );
+  const headOnlyAtt = useMemo(
+    () => tAtt.filter((r) => headUserIds.has(r.teacher_user_id)),
+    [tAtt, headUserIds],
+  );
+
 
   // Denominator: registered teachers ∪ any teacher with an attendance row today.
   const teacherDenom = new Set<string>([
@@ -54,6 +61,16 @@ function AnalyticsPage() {
   const teachersOnTime = teacherOnlyAtt.filter((r) => r.arrival_status === "on_time" || r.arrival_status === "early").length;
   const teachersAbsent = Math.max(0, teacherDenom - teachersPresent);
 
+  // Head teacher counts
+  const headDenom = new Set<string>([
+    ...headTeachers.map((t) => t.user_id),
+    ...headOnlyAtt.map((r) => r.teacher_user_id),
+  ]).size;
+  const headsPresent = Math.min(headOnlyAtt.filter((r) => r.arrival_time).length, headDenom);
+  const headsLate = headOnlyAtt.filter((r) => r.arrival_status === "late").length;
+  const headsOnTime = headOnlyAtt.filter((r) => r.arrival_status === "on_time" || r.arrival_status === "early").length;
+  const headsAbsent = Math.max(0, headDenom - headsPresent);
+
   // Match Overview's pupil denominator (presentStudentIds count, not raw rows).
   const presentStudentIds = new Set(sAtt.filter(isStudentPresent).map((r) => r.student_id));
   const studentDenom = Math.max(students.length, presentStudentIds.size);
@@ -64,6 +81,11 @@ function AnalyticsPage() {
     { name: "On time", value: teachersOnTime, fill: COLORS.brightGreen },
     { name: "Late", value: teachersLate, fill: COLORS.gold },
     { name: "Absent", value: teachersAbsent, fill: COLORS.red },
+  ];
+  const headPie = [
+    { name: "On time", value: headsOnTime, fill: COLORS.brightGreen },
+    { name: "Late", value: headsLate, fill: COLORS.gold },
+    { name: "Absent", value: headsAbsent, fill: COLORS.red },
   ];
   const studentPie = [
     { name: "Present", value: studentsPresent, fill: COLORS.brightGreen },
@@ -145,13 +167,26 @@ function AnalyticsPage() {
         }
       />
 
-      <div className="grid lg:grid-cols-2 gap-4 mb-6">
+      <div className="grid lg:grid-cols-3 gap-4 mb-6">
         <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card p-4 sm:p-5">
           <h3 className="font-display font-semibold mb-4">Teacher status today</h3>
           <ChartContainer config={{}} className="aspect-auto h-72">
             <PieChart>
               <Pie data={teacherPie} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
                 {teacherPie.map((e, i) => <Cell key={i} fill={e.fill} />)}
+              </Pie>
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Legend />
+            </PieChart>
+          </ChartContainer>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card p-4 sm:p-5">
+          <h3 className="font-display font-semibold mb-4">Head teacher status today</h3>
+          <ChartContainer config={{}} className="aspect-auto h-72">
+            <PieChart>
+              <Pie data={headPie} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label>
+                {headPie.map((e, i) => <Cell key={i} fill={e.fill} />)}
               </Pie>
               <ChartTooltip content={<ChartTooltipContent />} />
               <Legend />
@@ -195,6 +230,27 @@ function AnalyticsPage() {
         </ChartContainer>
       </div>
 
+      <LgaRankChart
+        title="Top 10 LGAs by teacher attendance"
+        seriesName="Teachers"
+        color={COLORS.green}
+        schools={schools}
+        people={teachers}
+        attendance={teacherOnlyAtt}
+      />
+
+      <LgaRankChart
+        title="Top 10 LGAs by head teacher attendance"
+        seriesName="Head teachers"
+        color={COLORS.gold}
+        schools={schools}
+        people={headTeachers}
+        attendance={headOnlyAtt}
+      />
+
+
+
+
       <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card p-4 sm:p-5">
         <h3 className="font-display font-semibold mb-4">School type comparison</h3>
         <ChartContainer
@@ -218,3 +274,57 @@ function AnalyticsPage() {
     </div>
   );
 }
+
+type LgaRankChartProps = {
+  title: string;
+  seriesName: string;
+  color: string;
+  schools: ReturnType<typeof useSchools>["data"] extends (infer U)[] | undefined ? U[] : never;
+  people: { user_id: string; school_id: string | null }[];
+  attendance: { school_id: string | null; arrival_time: string | null }[];
+};
+
+function LgaRankChart({ title, seriesName, color, schools, people, attendance }: LgaRankChartProps) {
+  const data = useMemo(() => {
+    const schoolToLga = new Map((schools ?? []).map((s) => [s.id, s.lga]));
+    const lgas = new Map<string, { lga: string; total: number; present: number }>();
+    for (const s of schools ?? []) {
+      if (!lgas.has(s.lga)) lgas.set(s.lga, { lga: s.lga, total: 0, present: 0 });
+    }
+    for (const p of people) {
+      const lga = p.school_id ? schoolToLga.get(p.school_id) : null;
+      if (!lga) continue;
+      lgas.get(lga)!.total += 1;
+    }
+    for (const r of attendance) {
+      const lga = r.school_id ? schoolToLga.get(r.school_id) : null;
+      if (!lga || !r.arrival_time) continue;
+      lgas.get(lga)!.present += 1;
+    }
+    return Array.from(lgas.values())
+      .map((r) => ({ name: prettyLga(r.lga), value: safePct(r.present, r.total) }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10);
+  }, [schools, people, attendance]);
+
+  return (
+    <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card p-4 sm:p-5 mb-6">
+      <h3 className="font-display font-semibold mb-1">{title}</h3>
+      <p className="text-xs text-muted-foreground mb-4">Percentage present today</p>
+      <ChartContainer
+        config={{ [seriesName]: { label: seriesName, color } }}
+        className="aspect-auto h-80"
+      >
+        <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 60 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" angle={-30} textAnchor="end" interval={0} tick={{ fontSize: 11 }} height={70} />
+          <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Legend />
+          <Bar dataKey="value" name={seriesName} fill={color} radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ChartContainer>
+    </div>
+  );
+}
+

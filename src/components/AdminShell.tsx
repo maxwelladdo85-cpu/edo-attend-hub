@@ -15,6 +15,8 @@ import {
   GraduationCap,
   Clock,
   FileDown,
+  CalendarDays,
+  Bot,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,7 @@ import {
   useTeacherAttendanceToday,
   useStudentAttendanceToday,
 } from "@/lib/admin-data";
+import { useAttendanceRealtime } from "@/lib/use-attendance-realtime";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 
@@ -36,12 +39,15 @@ const NAV = [
   { to: "/admin/school-type", label: "By School Type", icon: SchoolIcon, end: false },
   { to: "/admin/flagged", label: "Late & Out of Range", icon: AlertTriangle, end: false },
   { to: "/admin/students", label: "Admitted Pupils", icon: GraduationCap, end: false },
-  { to: "/admin/pupil-attendance", label: "Pupil Attendance", icon: Clock, end: false },
+  { to: "/admin/pupil-attendance", label: "Attendance (Deep Dive)", icon: Clock, end: false },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3, end: false },
   { to: "/admin/reports", label: "Reports", icon: FileDown, end: false },
   { to: "/admin/map", label: "Map", icon: Map, end: false },
+  { to: "/admin/calendar", label: "Academic Calendar", icon: CalendarDays, end: false },
   { to: "/admin/assign", label: "Assign Teachers", icon: UserPlus, end: false },
+  { to: "/admin/assistant", label: "AI Assistant", icon: Bot, end: false },
 ];
+
 
 
 export function AdminShell() {
@@ -57,6 +63,9 @@ export function AdminShell() {
   useStudents();
   useTeacherAttendanceToday();
   useStudentAttendanceToday();
+
+  // Live-refresh today's attendance the moment new rows are inserted/updated.
+  useAttendanceRealtime();
 
   useEffect(() => {
     if (loading) return;

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import authBg from "@/assets/auth-bg.png";
+import authBg from "@/assets/auth-bg.webp";
 
 export const Route = createFileRoute("/login")({
   head: () => ({

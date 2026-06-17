@@ -284,12 +284,19 @@ function OverviewPage() {
       </div>
 
       <div className="rounded-2xl p-6 bg-gradient-to-br from-primary via-primary/90 to-gold text-primary-foreground shadow-card mb-6">
-        <div className="grid sm:grid-cols-2 gap-6">
+        <div className="grid sm:grid-cols-3 gap-6">
           <div>
             <div className="text-xs uppercase tracking-wider opacity-80">Pupils present {activeFilters.length ? "(filtered)" : "statewide"}</div>
             <div className="mt-2 flex items-baseline gap-3">
               <div className="text-5xl font-bold font-display">{studentPct}%</div>
               <div className="text-sm opacity-90">{studentsPresent.toLocaleString()} of {studentDenom.toLocaleString()}</div>
+            </div>
+          </div>
+          <div>
+            <div className="text-xs uppercase tracking-wider opacity-80">Head teachers present {activeFilters.length ? "(filtered)" : "statewide"}</div>
+            <div className="mt-2 flex items-baseline gap-3">
+              <div className="text-5xl font-bold font-display">{headPct}%</div>
+              <div className="text-sm opacity-90">{headsPresent.toLocaleString()} of {headDenom.toLocaleString()}</div>
             </div>
           </div>
           <div>

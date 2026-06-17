@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Clock, MapPin, Search } from "lucide-react";
 import { AdminPageHeader } from "@/components/AdminShell";
@@ -48,22 +48,10 @@ type Profile = {
   phone: string | null;
 };
 
-function useEarliestAttendanceDate() {
-  return useQuery({
-    queryKey: ["admin", "earliest-attendance-date"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("teacher_attendance")
-        .select("attendance_date")
-        .order("attendance_date", { ascending: true })
-        .limit(1)
-        .single();
-      if (error) throw error;
-      return (data?.attendance_date as string) ?? "2020-01-01";
-    },
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-  });
+function daysAgoStr(days: number) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString().slice(0, 10);
 }
 
 function useFlagged({ fromDate, toDate }: { fromDate: string; toDate: string }) {
@@ -79,6 +67,8 @@ function useFlagged({ fromDate, toDate }: { fromDate: string; toDate: string }) 
           .gte("attendance_date", fromDate)
           .lte("attendance_date", toDate)
           .not("arrival_time", "is", null)
+          // Only pull rows that could be flagged: either late, or have coords to check range.
+          .or("arrival_status.eq.late,arrival_lat.not.is.null")
           .range(from, to);
         return { data: data as Row[] | null, error };
       });
@@ -136,28 +126,22 @@ function useFlagged({ fromDate, toDate }: { fromDate: string; toDate: string }) 
         })
         .filter((x) => x.late || x.outOfRange);
     },
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
+    placeholderData: (prev) => prev,
   });
 }
 
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 function FlaggedPage() {
-  const { data: earliestDate } = useEarliestAttendanceDate();
-  const [fromDate, setFromDate] = useState(todayStr());
-  const [toDate, setToDate] = useState(todayStr());
+  const [fromDate, setFromDate] = useState(daysAgoStr(7));
+  const [toDate, setToDate] = useState(daysAgoStr(0));
   const [filter, setFilter] = useState<"all" | "late" | "range">("all");
   const [q, setQ] = useState("");
   const [schoolType, setSchoolType] = useState<string>("all");
   const [lga, setLga] = useState<string>("all");
   const { data = [], isLoading } = useFlagged({ fromDate, toDate });
 
-  useEffect(() => {
-    if (earliestDate) setFromDate(earliestDate);
-  }, [earliestDate]);
 
   const filtered = useMemo(() => {
     return data.filter((x) => {
