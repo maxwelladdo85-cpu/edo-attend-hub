@@ -39,13 +39,21 @@ export async function getStudentsForSchool(schoolId: string): Promise<CachedStud
 }
 
 // ---------- Student attendance ----------
+// Conflict resolution: when pulling server rows we skip any row whose server
+// `updated_at` is older than what we already have locally. This keeps a
+// freshly-marked-offline edit from being clobbered by a stale server copy
+// during the same sync cycle. Pure last-write-wins by ISO timestamp.
 export async function bulkUpsertStudentAttendance(rows: CachedStudentAttendance[]) {
   await Promise.all(
-    rows.map((r) =>
-      studentAttendanceStore.setItem(studentAttendanceKey(r.student_id, r.attendance_date), r),
-    ),
+    rows.map(async (r) => {
+      const key = studentAttendanceKey(r.student_id, r.attendance_date);
+      const existing = (await studentAttendanceStore.getItem(key)) as CachedStudentAttendance | null;
+      if (existing?.updated_at && r.updated_at && existing.updated_at > r.updated_at) return;
+      await studentAttendanceStore.setItem(key, r);
+    }),
   );
 }
+
 
 export async function getStudentAttendanceForDate(
   schoolId: string,
@@ -130,11 +138,15 @@ export async function markStudentAttendance(input: MarkAttendanceInput): Promise
 // ---------- Teacher attendance ----------
 export async function bulkUpsertTeacherAttendance(rows: CachedTeacherAttendance[]) {
   await Promise.all(
-    rows.map((r) =>
-      teacherAttendanceStore.setItem(teacherAttendanceKey(r.user_id, r.attendance_date), r),
-    ),
+    rows.map(async (r) => {
+      const key = teacherAttendanceKey(r.user_id, r.attendance_date);
+      const existing = (await teacherAttendanceStore.getItem(key)) as CachedTeacherAttendance | null;
+      if (existing?.updated_at && r.updated_at && existing.updated_at > r.updated_at) return;
+      await teacherAttendanceStore.setItem(key, r);
+    }),
   );
 }
+
 
 // ---------- Outbox ----------
 export async function enqueue(entry: Omit<OutboxEntry, "id" | "created_at" | "attempts">) {

@@ -21,6 +21,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { DashboardShell, roleLabelFor } from "@/components/DashboardShell";
 import { AcademicPeriodsCard } from "@/components/AcademicPeriodsCard";
+import { OfflineDiagnosticsCard } from "@/components/OfflineDiagnosticsCard";
+
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — EdoSAS" }] }),
@@ -209,6 +211,9 @@ function SettingsPage() {
       </Card>
 
       {role === "admin" && <AcademicPeriodsCard />}
+
+      <OfflineDiagnosticsCard />
+
 
       <Card className="border-destructive/40">
         <CardHeader>
