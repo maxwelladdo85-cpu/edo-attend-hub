@@ -11,11 +11,13 @@ import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { getCurrentPosition } from "@/lib/geo";
 import { StatCard } from "@/components/StatCard";
 import {
+  bulkUpsertStudents,
   getStudentAttendanceForDate,
   getStudentsForSchool,
   markStudentAttendance,
 } from "@/lib/offline/localDb";
 import { syncNow } from "@/lib/offline/syncEngine";
+import { supabase } from "@/integrations/supabase/client";
 
 type Mark = "present" | "late" | "absent";
 type Session = "morning" | "afternoon";
