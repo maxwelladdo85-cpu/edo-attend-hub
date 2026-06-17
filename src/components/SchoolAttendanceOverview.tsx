@@ -54,17 +54,10 @@ export function SchoolAttendanceOverview() {
   const [teacherRows, setTeacherRows] = useState<TeacherRow[]>([]);
   const [studentRows, setStudentRows] = useState<StudentRow[]>([]);
 
-  const monday = useMemo(getMondayOfThisWeek, []);
-  const weekDates = useMemo(
-    () =>
-      Array.from({ length: 5 }, (_, i) => {
-        const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
-        return toDateStr(d);
-      }),
-    [monday]
-  );
-  const start = weekDates[0];
-  const end = weekDates[4];
+  const today = useMemo(() => toDateStr(new Date()), []);
+  const start = today;
+  const end = today;
+
 
   useEffect(() => {
     if (!schoolId) return;
@@ -113,7 +106,7 @@ export function SchoolAttendanceOverview() {
             user_id: p.user_id,
             full_name: p.full_name,
             class_taught: p.class_taught,
-            rate: Math.round((present / 5) * 100),
+            rate: present > 0 ? 100 : 0,
             presentDays: present,
             status,
           };
@@ -148,7 +141,7 @@ export function SchoolAttendanceOverview() {
             full_name: s.full_name,
             class: s.class,
             presentDays: present,
-            rate: Math.round((present / 5) * 100),
+            rate: present > 0 ? 100 : 0,
           };
         }).sort((a: StudentRow, b: StudentRow) => a.full_name.localeCompare(b.full_name));
         if (!cancelled) setStudentRows(rows);
@@ -170,7 +163,7 @@ export function SchoolAttendanceOverview() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="font-display font-semibold text-lg">School attendance overview</h3>
-          <p className="text-xs text-muted-foreground">This week ({start} – {end})</p>
+          <p className="text-xs text-muted-foreground">Today ({today})</p>
         </div>
         <div className="flex gap-2">
           {isHead && (
@@ -206,7 +199,7 @@ export function SchoolAttendanceOverview() {
               <TableRow>
                 <TableHead>Teacher name</TableHead>
                 <TableHead>Class taught</TableHead>
-                <TableHead>Attendance rate</TableHead>
+                <TableHead>Marked today</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -218,8 +211,9 @@ export function SchoolAttendanceOverview() {
                   <TableCell className="font-medium">{t.full_name ?? "—"}</TableCell>
                   <TableCell>{t.class_taught ?? "—"}</TableCell>
                   <TableCell>
-                    <span className="font-semibold text-primary">{t.rate}%</span>
-                    <span className="text-xs text-muted-foreground ml-2">({t.presentDays}/5)</span>
+                    {t.presentDays > 0
+                      ? <Badge className="bg-success/15 text-success hover:bg-success/15 border-success/30">Present</Badge>
+                      : <Badge variant="outline" className="text-muted-foreground">Not marked</Badge>}
                   </TableCell>
                   <TableCell>{statusLabel(t.status)}</TableCell>
                 </TableRow>
@@ -234,7 +228,7 @@ export function SchoolAttendanceOverview() {
               <TableRow>
                 <TableHead>Student name</TableHead>
                 <TableHead>Class</TableHead>
-                <TableHead>Attendance rate</TableHead>
+                <TableHead>Marked today</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -245,8 +239,9 @@ export function SchoolAttendanceOverview() {
                   <TableCell className="font-medium">{s.full_name}</TableCell>
                   <TableCell>{s.class}</TableCell>
                   <TableCell>
-                    <span className="font-semibold text-primary">{s.rate}%</span>
-                    <span className="text-xs text-muted-foreground ml-2">({s.presentDays}/5)</span>
+                    {s.presentDays > 0
+                      ? <Badge className="bg-success/15 text-success hover:bg-success/15 border-success/30">Present</Badge>
+                      : <Badge variant="outline" className="text-muted-foreground">Not marked</Badge>}
                   </TableCell>
                 </TableRow>
               ))}
