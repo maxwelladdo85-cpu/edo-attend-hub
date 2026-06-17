@@ -52,9 +52,17 @@ export function subscribeSync(l: Listener): () => void {
 
 async function pushOne(entry: OutboxEntry): Promise<void> {
   if (entry.op === "upsert_student_attendance") {
+    const {
+      head_verified,
+      head_verified_by,
+      head_verified_at,
+      arrival_verified,
+      departure_verified,
+      ...payload
+    } = entry.payload as any;
     const { error } = await supabase
       .from("student_attendance")
-      .upsert([entry.payload as any], { onConflict: "student_id,attendance_date" });
+      .upsert([payload], { onConflict: "student_id,attendance_date" });
     if (error) throw error;
   } else if (entry.op === "upsert_teacher_attendance") {
     const { error } = await supabase
