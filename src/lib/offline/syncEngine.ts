@@ -146,7 +146,11 @@ async function pullDeltas(schoolId: string) {
   const tRows: CachedTeacherAttendance[] = (ta ?? [])
     .map(
       (r: any) =>
-        ({ ...r, local_key: `${r.user_id}_${r.attendance_date}` }) as CachedTeacherAttendance,
+        ({
+          ...r,
+          user_id: r.teacher_user_id,
+          local_key: `${r.teacher_user_id}_${r.attendance_date}`,
+        }) as CachedTeacherAttendance,
     )
     .filter((r: CachedTeacherAttendance) => !pendingKeys.has(r.local_key));
 
