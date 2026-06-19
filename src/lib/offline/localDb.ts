@@ -243,20 +243,28 @@ export async function markTeacherAttendance(input: MarkTeacherAttendanceInput) {
     updated_at: new Date().toISOString(),
   };
 
+  // IMPORTANT: only include the fields for the kind that was just marked.
+  // This prevents the sync engine from overwriting the *other* half (e.g.
+  // wiping a server-side arrival to NULL when only departure was marked
+  // offline, or vice versa). Server-side merge happens in pushOne via upsert.
   const payload: Record<string, unknown> = {
     teacher_user_id: next.teacher_user_id,
     school_id: next.school_id,
     attendance_date: next.attendance_date,
-    arrival_time: next.arrival_time,
-    arrival_lat: next.arrival_lat,
-    arrival_lng: next.arrival_lng,
-    arrival_status: next.arrival_status,
-    departure_time: next.departure_time,
-    departure_lat: next.departure_lat,
-    departure_lng: next.departure_lng,
-    departure_status: next.departure_status,
     device_info: next.device_info,
+    _kind: input.kind, // hint for the sync engine; stripped before sending
   };
+  if (isArrival) {
+    payload.arrival_time = next.arrival_time;
+    payload.arrival_lat = next.arrival_lat;
+    payload.arrival_lng = next.arrival_lng;
+    payload.arrival_status = next.arrival_status;
+  } else {
+    payload.departure_time = next.departure_time;
+    payload.departure_lat = next.departure_lat;
+    payload.departure_lng = next.departure_lng;
+    payload.departure_status = next.departure_status;
+  }
   if (input.includeVerificationFields) {
     payload.arrival_verified = next.arrival_verified;
     payload.departure_verified = next.departure_verified;
@@ -271,6 +279,7 @@ export async function markTeacherAttendance(input: MarkTeacherAttendanceInput) {
     row_key: key,
     payload,
   });
+
 
   return next;
 }
