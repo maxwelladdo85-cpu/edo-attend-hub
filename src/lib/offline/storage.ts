@@ -30,6 +30,9 @@ export const studentAttendanceStore = makeStore<CachedStudentAttendance>("studen
 export const teacherAttendanceStore = makeStore<CachedTeacherAttendance>("teacher_attendance");
 export const outboxStore = makeStore<OutboxEntry>("outbox");
 export const metaStore = makeStore<unknown>("meta");
+// Cached school details so teachers can mark attendance offline without a
+// round trip. Keyed by school id.
+export const schoolsStore = makeStore<unknown>("schools");
 
 const META_KEY = "sync_meta";
 
@@ -51,6 +54,7 @@ export async function clearAllOfflineData() {
     teacherAttendanceStore.clear(),
     outboxStore.clear(),
     metaStore.clear(),
+    schoolsStore.clear(),
   ]);
 }
 
