@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { syncNow, useSyncState } from "@/lib/offline/useSync";
 import { cn } from "@/lib/utils";
+import { isTransientNetworkError } from "@/lib/offline/networkErrors";
 
 export function SyncStatusBar({ className }: { className?: string }) {
   const { profile } = useAuth();
@@ -27,7 +28,9 @@ export function SyncStatusBar({ className }: { className?: string }) {
     : s.syncing
       ? "Syncing…"
       : s.lastError
-        ? `Sync error: ${s.lastError}`
+        ? isTransientNetworkError(s.lastError)
+          ? "Connection unstable — saved changes will retry"
+          : `Sync error: ${s.lastError}`
         : s.pending > 0
           ? `${s.pending} change${s.pending === 1 ? "" : "s"} pending`
           : "Online";
