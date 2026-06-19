@@ -26,6 +26,7 @@ function makeStore<T>(name: string) {
 }
 
 export const studentsStore = makeStore<CachedStudent>("students");
+export const teacherProfilesStore = makeStore<unknown>("teacher_profiles");
 export const studentAttendanceStore = makeStore<CachedStudentAttendance>("student_attendance");
 export const teacherAttendanceStore = makeStore<CachedTeacherAttendance>("teacher_attendance");
 export const outboxStore = makeStore<OutboxEntry>("outbox");
@@ -50,6 +51,7 @@ export async function setMeta(patch: Partial<SyncMeta>): Promise<SyncMeta> {
 export async function clearAllOfflineData() {
   await Promise.all([
     studentsStore.clear(),
+    teacherProfilesStore.clear(),
     studentAttendanceStore.clear(),
     teacherAttendanceStore.clear(),
     outboxStore.clear(),
