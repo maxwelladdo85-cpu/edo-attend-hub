@@ -62,6 +62,7 @@ const MARKS: { value: Mark; label: string; cls: string }[] = [
 export function StudentAttendancePanel() {
   const { user, profile, roles } = useAuth();
   const isHead = primaryRole(roles) === "head_teacher";
+  const todayStr = format(new Date(), "yyyy-MM-dd");
   const [date, setDate] = useState<Date>(new Date());
   const [students, setStudents] = useState<Student[]>([]);
   const [rows, setRows] = useState<Record<string, AttendanceRow>>({});
