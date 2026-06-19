@@ -61,7 +61,7 @@ export function WeeklyAttendanceRecord({ teacherUserId }: { teacherUserId?: stri
   const rate = Math.round((presentDays / 5) * 100);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+    <div className="mx-2 sm:mx-0 rounded-2xl border border-border bg-card p-6 shadow-card">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-primary/10 grid place-items-center">
