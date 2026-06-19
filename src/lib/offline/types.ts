@@ -11,6 +11,15 @@ export interface CachedStudent {
   school_id: string;
 }
 
+export interface CachedTeacherProfile {
+  user_id: string;
+  full_name: string;
+  designation: string | null;
+  teacher_id: string | null;
+  class_taught: string | null;
+  school_id: string;
+}
+
 export interface CachedStudentAttendance {
   // Local primary key uses `${student_id}_${attendance_date}` so we can upsert
   // without needing a server-generated id while offline.
@@ -39,16 +48,25 @@ export interface CachedStudentAttendance {
 }
 
 export interface CachedTeacherAttendance {
-  local_key: string; // `${user_id}_${attendance_date}`
-  user_id: string;
+  local_key: string; // `${teacher_user_id}_${attendance_date}`
+  user_id?: string;
+  teacher_user_id: string;
   school_id: string;
   attendance_date: string;
-  arrival_at: string | null;
-  departure_at: string | null;
+  arrival_time: string | null;
+  arrival_status?: string | null;
   arrival_lat: number | null;
   arrival_lng: number | null;
+  arrival_verified?: boolean | null;
+  departure_time: string | null;
+  departure_status?: string | null;
   departure_lat: number | null;
   departure_lng: number | null;
+  departure_verified?: boolean | null;
+  head_verified?: boolean | null;
+  head_verified_by?: string | null;
+  head_verified_at?: string | null;
+  device_info?: string | null;
   updated_at: string;
 }
 
