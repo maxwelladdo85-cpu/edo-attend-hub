@@ -12,6 +12,8 @@ import { distanceMeters, getCurrentPosition, classifyArrival, classifyDeparture 
 import { haptic } from "@/lib/haptics";
 import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
 import { AdmitStudentCard } from "@/components/AdmitStudentCard";
+import { markTeacherAttendance, getTeacherAttendanceForDate } from "@/lib/offline/localDb";
+import { syncNow } from "@/lib/offline/syncEngine";
 
 
 export const Route = createFileRoute("/dashboard")({
@@ -116,18 +118,32 @@ function TeacherView() {
   const load = async () => {
     if (!user) return;
     const dateStr = new Date().toISOString().slice(0, 10);
-    const [{ data: s }, { data: a }, { data: st }] = await Promise.all([
-      profile?.school_id
-        ? supabase.from("schools").select("*").eq("id", profile.school_id).maybeSingle()
-        : Promise.resolve({ data: null } as any),
-      supabase.from("teacher_attendance").select("*").eq("teacher_user_id", user.id).eq("attendance_date", dateStr).maybeSingle(),
-      profile?.school_id && profile?.class_taught
-        ? supabase.from("students").select("*").eq("school_id", profile.school_id).eq("class", profile.class_taught).order("student_id", { ascending: true })
-        : Promise.resolve({ data: [] } as any),
-    ]);
-    setSchool(s);
-    setToday(a);
-    setStudents(st ?? []);
+    const online = typeof navigator === "undefined" ? true : navigator.onLine;
+    try {
+      const [{ data: s }, { data: a }, { data: st }] = await Promise.all([
+        profile?.school_id
+          ? supabase.from("schools").select("*").eq("id", profile.school_id).maybeSingle()
+          : Promise.resolve({ data: null } as any),
+        supabase.from("teacher_attendance").select("*").eq("teacher_user_id", user.id).eq("attendance_date", dateStr).maybeSingle(),
+        profile?.school_id && profile?.class_taught
+          ? supabase.from("students").select("*").eq("school_id", profile.school_id).eq("class", profile.class_taught).order("student_id", { ascending: true })
+          : Promise.resolve({ data: [] } as any),
+      ]);
+      if (s) setSchool(s);
+      // Prefer the locally cached row if it's newer than the server copy (offline edits not yet synced).
+      const local = await getTeacherAttendanceForDate(user.id, dateStr);
+      const localNewer =
+        local && (!a?.updated_at || (local.updated_at && local.updated_at > a.updated_at));
+      setToday(localNewer ? local : a ?? local ?? null);
+      setStudents(st ?? []);
+    } catch {
+      // Offline / network failure — fall back to local cache so the screen still works.
+      const local = await getTeacherAttendanceForDate(user.id, dateStr);
+      setToday(local ?? null);
+      if (!online) {
+        // Keep last-known school/students in state; do not overwrite with empty.
+      }
+    }
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id, profile?.school_id, profile?.class_taught]);
@@ -144,7 +160,7 @@ function TeacherView() {
       const dateStr = now.slice(0, 10);
 
       // GPS capture is REQUIRED — abort if unavailable so we never store an
-      // attendance record without a verifiable location.
+      // attendance record without a verifiable location. GPS works offline.
       let lat: number;
       let lng: number;
       let dist: number;
@@ -170,80 +186,63 @@ function TeacherView() {
       const allowedRadius = school.radius_meters ?? DEFAULT_RADIUS_M;
       verified = dist <= allowedRadius;
 
-      // Out-of-range: still record the attendance as unverified, but show a
-      // clear message. For head teachers, address them directly.
       if (!verified) {
         const teacherName = profile?.full_name ?? "Teacher";
         if (isHead) {
-          const msg = `Dear Head Teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m). Please ensure you are within the school premises when marking attendance.`;
-          setDistanceWarning(msg);
+          setDistanceWarning(`Dear Head Teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m). Please ensure you are within the school premises when marking attendance.`);
         } else {
-          const msg = `Dear teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m).`;
-          setDistanceWarning(msg);
+          setDistanceWarning(`Dear teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m).`);
         }
       } else {
         setDistanceWarning(null);
       }
 
+      const status =
+        kind === "arrival"
+          ? classifyArrival(now, school.resumption_time)
+          : classifyDeparture(now, school.closing_time);
+
+      // Offline-first: write locally + enqueue. Sync engine pushes when online.
+      const saved = await markTeacherAttendance({
+        user_id: user.id,
+        school_id: school.id,
+        attendance_date: dateStr,
+        kind,
+        time: now,
+        lat,
+        lng,
+        status,
+        verified,
+        device_info: navigator.userAgent.slice(0, 200),
+      });
+      setToday(saved);
+
+      const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      const online = typeof navigator === "undefined" ? true : navigator.onLine;
+      const offlineSuffix = online ? "" : " (saved offline — will sync when back online)";
+
       if (kind === "arrival") {
-        const status = classifyArrival(now, school.resumption_time);
-        const { error } = await supabase.from("teacher_attendance").upsert(
-          {
-            teacher_user_id: user.id,
-            school_id: school.id,
-            attendance_date: dateStr,
-            arrival_time: now,
-            arrival_lat: lat,
-            arrival_lng: lng,
-            arrival_status: status,
-            arrival_verified: verified,
-            device_info: navigator.userAgent.slice(0, 200),
-          },
-          { onConflict: "teacher_user_id,attendance_date" },
-        );
-        if (error) throw error;
-        const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
         const arrivalLabel = status === "early" ? "Well done, you arrived early" : status === "late" ? "You arrived late" : `Arrival marked at ${timeLabel} — on time`;
         if (verified) {
           void haptic("success");
-          toast.success(arrivalLabel);
+          toast.success(arrivalLabel + offlineSuffix);
         } else {
           void haptic("warning");
-          if (isHead) {
-            toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please mark attendance from within the school premises.`);
-          } else {
-            toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.`);
-          }
+          toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`);
         }
       } else {
-        const status = classifyDeparture(now, school.closing_time);
-        const { error } = await supabase
-          .from("teacher_attendance")
-          .update({
-            departure_time: now,
-            departure_lat: lat,
-            departure_lng: lng,
-            departure_status: status,
-            departure_verified: verified,
-          })
-          .eq("teacher_user_id", user.id)
-          .eq("attendance_date", dateStr);
-        if (error) throw error;
-        const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
         const departureLabel = status === "left_early" ? "Early" : status === "overtime" ? "Departed after closing time" : status.replace("_", " ");
         if (verified) {
           void haptic("success");
-          toast.success(`Departure marked at ${timeLabel} — ${departureLabel}`);
+          toast.success(`Departure marked at ${timeLabel} — ${departureLabel}${offlineSuffix}`);
         } else {
           void haptic("warning");
-          if (isHead) {
-            toast.warning(`Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}. Please mark attendance from within the school premises.`);
-          } else {
-            toast.warning(`Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.`);
-          }
+          toast.warning(`Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`);
         }
       }
-      await load();
+
+      // Fire-and-forget background sync attempt; harmless if offline.
+      if (online) void syncNow(school.id);
     } catch (e: any) {
       void haptic("error");
       toast.error(e.message ?? "Could not save attendance");

@@ -147,6 +147,78 @@ export async function bulkUpsertTeacherAttendance(rows: CachedTeacherAttendance[
   );
 }
 
+export async function getTeacherAttendanceForDate(
+  user_id: string,
+  attendance_date: string,
+): Promise<any | null> {
+  const key = teacherAttendanceKey(user_id, attendance_date);
+  return (await teacherAttendanceStore.getItem(key)) as any | null;
+}
+
+export interface MarkTeacherAttendanceInput {
+  user_id: string;
+  school_id: string;
+  attendance_date: string;
+  kind: "arrival" | "departure";
+  time: string; // ISO
+  lat: number | null;
+  lng: number | null;
+  status: string | null;
+  verified: boolean;
+  device_info?: string | null;
+}
+
+/** Write teacher attendance locally and enqueue an outbox entry. Works offline. */
+export async function markTeacherAttendance(input: MarkTeacherAttendanceInput) {
+  const key = teacherAttendanceKey(input.user_id, input.attendance_date);
+  const existing = (await teacherAttendanceStore.getItem(key)) as any | null;
+  const isArrival = input.kind === "arrival";
+
+  const next: any = {
+    local_key: key,
+    user_id: input.user_id,
+    teacher_user_id: input.user_id,
+    school_id: input.school_id,
+    attendance_date: input.attendance_date,
+    arrival_time: isArrival ? input.time : existing?.arrival_time ?? null,
+    arrival_lat: isArrival ? input.lat : existing?.arrival_lat ?? null,
+    arrival_lng: isArrival ? input.lng : existing?.arrival_lng ?? null,
+    arrival_status: isArrival ? input.status : existing?.arrival_status ?? null,
+    arrival_verified: isArrival ? input.verified : existing?.arrival_verified ?? false,
+    departure_time: !isArrival ? input.time : existing?.departure_time ?? null,
+    departure_lat: !isArrival ? input.lat : existing?.departure_lat ?? null,
+    departure_lng: !isArrival ? input.lng : existing?.departure_lng ?? null,
+    departure_status: !isArrival ? input.status : existing?.departure_status ?? null,
+    departure_verified: !isArrival ? input.verified : existing?.departure_verified ?? false,
+    device_info: input.device_info ?? existing?.device_info ?? null,
+    updated_at: new Date().toISOString(),
+  };
+
+  await teacherAttendanceStore.setItem(key, next);
+  await enqueue({
+    op: "upsert_teacher_attendance",
+    row_key: key,
+    payload: {
+      teacher_user_id: next.teacher_user_id,
+      school_id: next.school_id,
+      attendance_date: next.attendance_date,
+      arrival_time: next.arrival_time,
+      arrival_lat: next.arrival_lat,
+      arrival_lng: next.arrival_lng,
+      arrival_status: next.arrival_status,
+      arrival_verified: next.arrival_verified,
+      departure_time: next.departure_time,
+      departure_lat: next.departure_lat,
+      departure_lng: next.departure_lng,
+      departure_status: next.departure_status,
+      departure_verified: next.departure_verified,
+      device_info: next.device_info,
+    },
+  });
+
+  return next;
+}
+
 
 // ---------- Outbox ----------
 export async function enqueue(entry: Omit<OutboxEntry, "id" | "created_at" | "attempts">) {
