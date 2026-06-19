@@ -287,7 +287,9 @@ function TeacherView() {
         } else {
           void haptic("warning");
           toast.warning(
-            `Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`,
+            dist === null
+              ? `Arrival recorded at ${timeLabel} without GPS location${offlineSuffix}`
+              : `Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`,
           );
         }
       } else {
@@ -303,7 +305,9 @@ function TeacherView() {
         } else {
           void haptic("warning");
           toast.warning(
-            `Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`,
+            dist === null
+              ? `Departure recorded at ${timeLabel} without GPS location${offlineSuffix}`
+              : `Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`,
           );
         }
       }
