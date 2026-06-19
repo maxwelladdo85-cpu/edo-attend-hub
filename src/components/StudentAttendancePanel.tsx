@@ -148,6 +148,10 @@ export function StudentAttendancePanel() {
 
   const mark = async (student: Student, session: Session, value: Mark | null) => {
     if (!user || !profile?.school_id) return;
+    if (dateStr !== todayStr) {
+      toast.error("Attendance can only be marked for today");
+      return;
+    }
     if (session === "afternoon" && !rows[student.id]?.morning_status) {
       toast.error("Mark morning attendance first");
       return;
@@ -313,7 +317,7 @@ export function StudentAttendancePanel() {
                 mode="single"
                 selected={date}
                 onSelect={(d) => d && setDate(d)}
-                disabled={(d) => d > new Date()}
+                disabled={(d) => format(d, "yyyy-MM-dd") !== todayStr}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
               />
