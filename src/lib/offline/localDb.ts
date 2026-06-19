@@ -216,12 +216,10 @@ export async function markTeacherAttendance(input: MarkTeacherAttendanceInput) {
       arrival_lat: next.arrival_lat,
       arrival_lng: next.arrival_lng,
       arrival_status: next.arrival_status,
-      arrival_verified: next.arrival_verified,
       departure_time: next.departure_time,
       departure_lat: next.departure_lat,
       departure_lng: next.departure_lng,
       departure_status: next.departure_status,
-      departure_verified: next.departure_verified,
       device_info: next.device_info,
     },
   });
