@@ -216,6 +216,7 @@ function SettingsPage() {
 
       <OfflineDiagnosticsCard />
 
+      <InstallAppCard />
 
       <Card className="border-destructive/40">
         <CardHeader>

@@ -212,6 +212,9 @@ function LoginPage() {
             </Button>
           </form>
 
+          <div className="mt-6">
+            <InstallAppCard />
+          </div>
         </div>
       </div>
     </div>
