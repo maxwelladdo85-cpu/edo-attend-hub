@@ -17,6 +17,7 @@ import {
   teacherAttendanceStore,
 } from "@/lib/offline/storage";
 import { syncNow, useSyncState } from "@/lib/offline/useSync";
+import { isTransientNetworkError } from "@/lib/offline/networkErrors";
 
 interface Counts {
   students: number;
@@ -123,7 +124,7 @@ export function OfflineDiagnosticsCard() {
           <Stat label="Pending sync" value={counts?.outbox} highlight={!!counts?.outbox} />
         </div>
 
-        {sync.lastError && (
+        {sync.lastError && !isTransientNetworkError(sync.lastError) && (
           <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive text-xs">
             Last error: {sync.lastError}
           </div>
