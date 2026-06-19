@@ -83,34 +83,69 @@ async function pushOne(entry: OutboxEntry, schoolId?: string | null): Promise<vo
       .upsert([payload], { onConflict: "student_id,attendance_date" });
     if (error) throw error;
   } else if (entry.op === "upsert_teacher_attendance") {
-    const raw = entry.payload as any;
+    const raw = { ...(entry.payload as any) };
+    const kindHint: "arrival" | "departure" | undefined = raw._kind;
+    delete raw._kind;
     const [teacherIdFromKey, dateFromKey] = entry.row_key.split("_");
-    const payload = {
-      teacher_user_id: raw.teacher_user_id ?? raw.user_id ?? teacherIdFromKey,
-      school_id: raw.school_id ?? schoolId,
-      attendance_date: raw.attendance_date ?? dateFromKey,
-      arrival_time: raw.arrival_time ?? raw.arrival_at ?? null,
-      arrival_lat: raw.arrival_lat ?? null,
-      arrival_lng: raw.arrival_lng ?? null,
-      arrival_status: raw.arrival_status ?? null,
-      departure_time: raw.departure_time ?? raw.departure_at ?? null,
-      departure_lat: raw.departure_lat ?? null,
-      departure_lng: raw.departure_lng ?? null,
-      departure_status: raw.departure_status ?? null,
-      device_info: raw.device_info ?? null,
-      ...("arrival_verified" in raw ? { arrival_verified: raw.arrival_verified } : {}),
-      ...("departure_verified" in raw ? { departure_verified: raw.departure_verified } : {}),
-      ...("head_verified" in raw ? { head_verified: raw.head_verified } : {}),
-      ...("head_verified_by" in raw ? { head_verified_by: raw.head_verified_by } : {}),
-      ...("head_verified_at" in raw ? { head_verified_at: raw.head_verified_at } : {}),
-    };
-    if (!payload.teacher_user_id || !payload.school_id || !payload.attendance_date) {
+    const teacher_user_id = raw.teacher_user_id ?? raw.user_id ?? teacherIdFromKey;
+    const school_id = raw.school_id ?? schoolId;
+    const attendance_date = raw.attendance_date ?? dateFromKey;
+    if (!teacher_user_id || !school_id || !attendance_date) {
       throw new Error("Teacher attendance sync is missing teacher, school, or date information");
     }
+
+    // Fetch the existing server row so we never overwrite the *other* half
+    // (e.g. wiping arrival_time when only departure was marked offline).
+    const { data: existing, error: fetchErr } = await supabase
+      .from("teacher_attendance")
+      .select("*")
+      .eq("teacher_user_id", teacher_user_id)
+      .eq("attendance_date", attendance_date)
+      .maybeSingle();
+    if (fetchErr) throw fetchErr;
+
+    const merged: Record<string, unknown> = {
+      ...(existing ?? {}),
+      ...raw, // local fields win for whichever side was just marked
+      teacher_user_id,
+      school_id,
+      attendance_date,
+    };
+    // If the local payload only touched one side, make sure we DO NOT include
+    // null overwrites for the other side. Strip keys that local didn't set.
+    if (kindHint === "arrival") {
+      delete merged.departure_time;
+      delete merged.departure_lat;
+      delete merged.departure_lng;
+      delete merged.departure_status;
+      // Preserve server's departure values if any
+      if (existing) {
+        merged.departure_time = (existing as any).departure_time ?? null;
+        merged.departure_lat = (existing as any).departure_lat ?? null;
+        merged.departure_lng = (existing as any).departure_lng ?? null;
+        merged.departure_status = (existing as any).departure_status ?? null;
+      }
+    } else if (kindHint === "departure") {
+      delete merged.arrival_time;
+      delete merged.arrival_lat;
+      delete merged.arrival_lng;
+      delete merged.arrival_status;
+      if (existing) {
+        merged.arrival_time = (existing as any).arrival_time ?? null;
+        merged.arrival_lat = (existing as any).arrival_lat ?? null;
+        merged.arrival_lng = (existing as any).arrival_lng ?? null;
+        merged.arrival_status = (existing as any).arrival_status ?? null;
+      }
+    }
+    // Drop server-managed metadata so upsert doesn't fight triggers
+    delete (merged as any).created_at;
+    delete (merged as any).updated_at;
+
     const { error } = await supabase
       .from("teacher_attendance")
-      .upsert([payload], { onConflict: "teacher_user_id,attendance_date" });
+      .upsert([merged], { onConflict: "teacher_user_id,attendance_date" });
     if (error) throw error;
+
   } else {
     throw new Error(`Unknown outbox op: ${entry.op}`);
   }
