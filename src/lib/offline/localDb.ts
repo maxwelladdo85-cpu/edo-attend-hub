@@ -4,6 +4,7 @@
 import {
   allEntries,
   outboxStore,
+  schoolsStore,
   studentAttendanceStore,
   studentsStore,
   teacherAttendanceStore,
