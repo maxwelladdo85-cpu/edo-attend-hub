@@ -632,6 +632,45 @@ function HeadTeacherView() {
     load(); /* eslint-disable-next-line */
   }, [profile?.school_id, user?.id]);
 
+  // Live updates: whenever any teacher in this school marks/updates attendance,
+  // refresh the Head Teacher's roster so it shows up immediately.
+  useEffect(() => {
+    if (!profile?.school_id) return;
+    const channel = supabase
+      .channel(`head-teacher-attendance-${profile.school_id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "teacher_attendance",
+          filter: `school_id=eq.${profile.school_id}`,
+        },
+        () => {
+          load();
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    /* eslint-disable-next-line */
+  }, [profile?.school_id]);
+
+  // Also refresh whenever the tab regains focus or the device comes back online,
+  // so head teachers see fresh data even if the realtime socket missed an event.
+  useEffect(() => {
+    const onFocus = () => load();
+    const onOnline = () => load();
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onOnline);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onOnline);
+    };
+    /* eslint-disable-next-line */
+  }, [profile?.school_id]);
+
   const verify = async (id: string) => {
     const { error } = await supabase
       .from("teacher_attendance")
