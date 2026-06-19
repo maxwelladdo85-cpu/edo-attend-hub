@@ -47,6 +47,28 @@ function setState(patch: Partial<SyncState>) {
   emit();
 }
 
+// Network-layer failures ("Failed to fetch", "Network request failed", aborted
+// requests, DNS errors, etc.) really just mean "device thinks it's online but
+// can't reach the server right now". We treat these as transient offline blips
+// and hide them from the UI — they would otherwise show up as a red
+// "Sync error: TypeError: Failed to fetch" banner that alarms users.
+function isTransientNetworkError(msg: string | null | undefined): boolean {
+  if (!msg) return false;
+  const m = msg.toLowerCase();
+  return (
+    m.includes("failed to fetch") ||
+    m.includes("network request failed") ||
+    m.includes("networkerror") ||
+    m.includes("load failed") ||
+    m.includes("err_internet_disconnected") ||
+    m.includes("err_network") ||
+    m.includes("err_name_not_resolved") ||
+    m.includes("err_connection") ||
+    m.includes("the internet connection appears to be offline") ||
+    m.includes("typeerror: fetch")
+  );
+}
+
 export function getSyncState(): SyncState {
   return state;
 }
