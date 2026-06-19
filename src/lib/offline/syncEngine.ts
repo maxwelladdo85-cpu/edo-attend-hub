@@ -47,6 +47,28 @@ function setState(patch: Partial<SyncState>) {
   emit();
 }
 
+// Network-layer failures ("Failed to fetch", "Network request failed", aborted
+// requests, DNS errors, etc.) really just mean "device thinks it's online but
+// can't reach the server right now". We treat these as transient offline blips
+// and hide them from the UI — they would otherwise show up as a red
+// "Sync error: TypeError: Failed to fetch" banner that alarms users.
+function isTransientNetworkError(msg: string | null | undefined): boolean {
+  if (!msg) return false;
+  const m = msg.toLowerCase();
+  return (
+    m.includes("failed to fetch") ||
+    m.includes("network request failed") ||
+    m.includes("networkerror") ||
+    m.includes("load failed") ||
+    m.includes("err_internet_disconnected") ||
+    m.includes("err_network") ||
+    m.includes("err_name_not_resolved") ||
+    m.includes("err_connection") ||
+    m.includes("the internet connection appears to be offline") ||
+    m.includes("typeerror: fetch")
+  );
+}
+
 export function getSyncState(): SyncState {
   return state;
 }
@@ -186,18 +208,37 @@ export async function syncNow(schoolId?: string | null): Promise<void> {
         } catch (err: any) {
           const msg = err?.message ?? String(err);
           await markOutboxFailure(entry, msg);
-          if (!firstError) firstError = msg;
-          // Keep draining the next entries instead of aborting.
+          // Hide transient network failures from the UI — they just mean
+          // we'll retry next time the device comes back online.
+          if (!firstError && !isTransientNetworkError(msg)) firstError = msg;
+          if (isTransientNetworkError(msg)) {
+            // No point hammering Supabase for the remaining entries — we're offline.
+            setState({ online: false });
+            break;
+          }
         }
       }
       // 2) Pull deltas (only if we know the school)
-      if (schoolId) await pullDeltas(schoolId);
+      if (schoolId) {
+        try {
+          await pullDeltas(schoolId);
+        } catch (err: any) {
+          const msg = err?.message ?? String(err);
+          if (!isTransientNetworkError(msg)) {
+            if (!firstError) firstError = msg;
+          } else {
+            setState({ online: false });
+          }
+        }
+      }
       setState({
         lastSyncedAt: new Date().toISOString(),
         lastError: firstError,
       });
     } catch (err: any) {
-      setState({ lastError: err?.message ?? String(err) });
+      const msg = err?.message ?? String(err);
+      setState({ lastError: isTransientNetworkError(msg) ? null : msg });
+      if (isTransientNetworkError(msg)) setState({ online: false });
 
     } finally {
       setState({ syncing: false, pending: (await listOutbox()).length });
