@@ -93,12 +93,10 @@ async function pushOne(entry: OutboxEntry, schoolId?: string | null): Promise<vo
       arrival_lat: raw.arrival_lat ?? null,
       arrival_lng: raw.arrival_lng ?? null,
       arrival_status: raw.arrival_status ?? null,
-      arrival_verified: raw.arrival_verified ?? false,
       departure_time: raw.departure_time ?? raw.departure_at ?? null,
       departure_lat: raw.departure_lat ?? null,
       departure_lng: raw.departure_lng ?? null,
       departure_status: raw.departure_status ?? null,
-      departure_verified: raw.departure_verified ?? false,
       device_info: raw.device_info ?? null,
     };
     if (!payload.teacher_user_id || !payload.school_id || !payload.attendance_date) {
