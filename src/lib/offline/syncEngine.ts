@@ -208,18 +208,37 @@ export async function syncNow(schoolId?: string | null): Promise<void> {
         } catch (err: any) {
           const msg = err?.message ?? String(err);
           await markOutboxFailure(entry, msg);
-          if (!firstError) firstError = msg;
-          // Keep draining the next entries instead of aborting.
+          // Hide transient network failures from the UI — they just mean
+          // we'll retry next time the device comes back online.
+          if (!firstError && !isTransientNetworkError(msg)) firstError = msg;
+          if (isTransientNetworkError(msg)) {
+            // No point hammering Supabase for the remaining entries — we're offline.
+            setState({ online: false });
+            break;
+          }
         }
       }
       // 2) Pull deltas (only if we know the school)
-      if (schoolId) await pullDeltas(schoolId);
+      if (schoolId) {
+        try {
+          await pullDeltas(schoolId);
+        } catch (err: any) {
+          const msg = err?.message ?? String(err);
+          if (!isTransientNetworkError(msg)) {
+            if (!firstError) firstError = msg;
+          } else {
+            setState({ online: false });
+          }
+        }
+      }
       setState({
         lastSyncedAt: new Date().toISOString(),
         lastError: firstError,
       });
     } catch (err: any) {
-      setState({ lastError: err?.message ?? String(err) });
+      const msg = err?.message ?? String(err);
+      setState({ lastError: isTransientNetworkError(msg) ? null : msg });
+      if (isTransientNetworkError(msg)) setState({ online: false });
 
     } finally {
       setState({ syncing: false, pending: (await listOutbox()).length });
