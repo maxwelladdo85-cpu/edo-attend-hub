@@ -147,9 +147,13 @@ export function StudentAttendancePanel() {
 
   const mark = async (student: Student, session: Session, value: Mark | null) => {
     if (!user || !profile?.school_id) return;
+    if (session === "afternoon" && !rows[student.id]?.morning_status) {
+      toast.error("Mark morning attendance first");
+      return;
+    }
     const key = `${student.id}-${session}`;
     setSavingKey(key);
-    try {
+
       // Best-effort location — does NOT block saving, only captured when marking present
       let lat: number | null = null;
       let lng: number | null = null;
