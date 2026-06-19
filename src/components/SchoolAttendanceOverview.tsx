@@ -222,7 +222,7 @@ export function SchoolAttendanceOverview() {
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-card space-y-4">
+    <div className="mx-2 sm:mx-0 rounded-2xl border border-border bg-card p-5 shadow-card space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="font-display font-semibold text-lg">School attendance overview</h3>

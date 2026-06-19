@@ -99,7 +99,7 @@ function AttendanceRecordPage() {
         </div>
 
         {isHead && (
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-card space-y-4">
+          <div className="mx-2 sm:mx-0 rounded-2xl border border-border bg-card p-5 shadow-card space-y-4">
             <div className="flex items-center gap-3">
               <Button
                 variant={viewingOwn ? "default" : "outline"}
@@ -155,7 +155,7 @@ function AttendanceRecordPage() {
         {viewingId ? (
           <WeeklyAttendanceRecord key={viewingId} teacherUserId={viewingId} />
         ) : isHead ? (
-          <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
+          <div className="mx-2 sm:mx-0 rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-sm text-muted-foreground">
             Select a teacher above to view their attendance record, or view your own record.
           </div>
         ) : null}
