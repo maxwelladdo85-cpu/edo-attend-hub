@@ -12,6 +12,7 @@ import {
 } from "./localDb";
 import { getMeta, setMeta } from "./storage";
 import type { CachedStudentAttendance, CachedTeacherAttendance, OutboxEntry } from "./types";
+import { errorText, isTransientNetworkError } from "./networkErrors";
 
 type Listener = (state: SyncState) => void;
 export interface SyncState {
@@ -45,28 +46,6 @@ function emit() {
 function setState(patch: Partial<SyncState>) {
   state = { ...state, ...patch };
   emit();
-}
-
-// Network-layer failures ("Failed to fetch", "Network request failed", aborted
-// requests, DNS errors, etc.) really just mean "device thinks it's online but
-// can't reach the server right now". We treat these as transient offline blips
-// and hide them from the UI — they would otherwise show up as a red
-// "Sync error: TypeError: Failed to fetch" banner that alarms users.
-function isTransientNetworkError(msg: string | null | undefined): boolean {
-  if (!msg) return false;
-  const m = msg.toLowerCase();
-  return (
-    m.includes("failed to fetch") ||
-    m.includes("network request failed") ||
-    m.includes("networkerror") ||
-    m.includes("load failed") ||
-    m.includes("err_internet_disconnected") ||
-    m.includes("err_network") ||
-    m.includes("err_name_not_resolved") ||
-    m.includes("err_connection") ||
-    m.includes("the internet connection appears to be offline") ||
-    m.includes("typeerror: fetch")
-  );
 }
 
 export function getSyncState(): SyncState {
@@ -120,9 +99,6 @@ async function pushOne(entry: OutboxEntry, schoolId?: string | null): Promise<vo
       departure_lng: raw.departure_lng ?? null,
       departure_status: raw.departure_status ?? null,
       departure_verified: raw.departure_verified ?? false,
-      head_verified: raw.head_verified ?? false,
-      head_verified_by: raw.head_verified_by ?? null,
-      head_verified_at: raw.head_verified_at ?? null,
       device_info: raw.device_info ?? null,
     };
     if (!payload.teacher_user_id || !payload.school_id || !payload.attendance_date) {
@@ -206,7 +182,7 @@ export async function syncNow(schoolId?: string | null): Promise<void> {
           await pushOne(entry, schoolId);
           await removeOutboxEntry(entry);
         } catch (err: any) {
-          const msg = err?.message ?? String(err);
+          const msg = errorText(err);
           await markOutboxFailure(entry, msg);
           // Hide transient network failures from the UI — they just mean
           // we'll retry next time the device comes back online.
@@ -223,7 +199,7 @@ export async function syncNow(schoolId?: string | null): Promise<void> {
         try {
           await pullDeltas(schoolId);
         } catch (err: any) {
-          const msg = err?.message ?? String(err);
+          const msg = errorText(err);
           if (!isTransientNetworkError(msg)) {
             if (!firstError) firstError = msg;
           } else {
@@ -236,7 +212,7 @@ export async function syncNow(schoolId?: string | null): Promise<void> {
         lastError: firstError,
       });
     } catch (err: any) {
-      const msg = err?.message ?? String(err);
+      const msg = errorText(err);
       setState({ lastError: isTransientNetworkError(msg) ? null : msg });
       if (isTransientNetworkError(msg)) setState({ online: false });
 
