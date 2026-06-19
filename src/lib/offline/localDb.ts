@@ -27,6 +27,15 @@ export const studentAttendanceKey = (student_id: string, attendance_date: string
 export const teacherAttendanceKey = (user_id: string, attendance_date: string) =>
   `${user_id}_${attendance_date}`;
 
+// ---------- Schools (cached for offline use) ----------
+export async function cacheSchool(school: any) {
+  if (!school?.id) return;
+  await schoolsStore.setItem(school.id, school);
+}
+export async function getCachedSchool(schoolId: string): Promise<any | null> {
+  return (await schoolsStore.getItem(schoolId)) as any | null;
+}
+
 // ---------- Students ----------
 export async function upsertStudent(s: CachedStudent) {
   await studentsStore.setItem(s.id, s);
