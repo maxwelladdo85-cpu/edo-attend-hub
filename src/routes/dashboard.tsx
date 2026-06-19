@@ -205,33 +205,33 @@ function TeacherView() {
       const now = new Date().toISOString();
       const dateStr = now.slice(0, 10);
 
-      // GPS capture is REQUIRED — abort if unavailable so we never store an
-      // attendance record without a verifiable location. GPS works offline.
-      let lat: number;
-      let lng: number;
+      // Same offline-first behavior as student attendance: GPS is best-effort.
+      // Some Android browsers try a network location lookup and throw
+      // "TypeError: Failed to fetch" when offline; that must not block saving.
+      let lat: number | null = null;
+      let lng: number | null = null;
       let verified = false;
+      let dist: number | null = null;
       try {
         const pos = await getCurrentPosition();
         lat = pos.coords.latitude;
         lng = pos.coords.longitude;
       } catch (err: any) {
-        void haptic("error");
-        const msg =
-          err?.code === 1
-            ? "Location permission denied. Enable location access for this app and try again."
-            : err?.code === 2
-              ? "Could not determine your location. Move to an open area with GPS signal and try again."
-              : err?.code === 3
-                ? "Location request timed out. Please try again."
-                : (err?.message ?? "Unable to capture your GPS location. Please try again.");
-        toast.error(msg);
-        return;
+        console.warn("Teacher attendance location unavailable; saving without GPS", err);
       }
-      const dist = distanceMeters(lat, lng, school.latitude, school.longitude);
-      const allowedRadius = school.radius_meters ?? DEFAULT_RADIUS_M;
-      verified = dist <= allowedRadius;
 
-      if (!verified) {
+      const allowedRadius = school.radius_meters ?? DEFAULT_RADIUS_M;
+      if (
+        lat !== null &&
+        lng !== null &&
+        school.latitude !== null &&
+        school.longitude !== null
+      ) {
+        dist = distanceMeters(lat, lng, school.latitude, school.longitude);
+        verified = dist <= allowedRadius;
+      }
+
+      if (!verified && dist !== null) {
         const teacherName = profile?.full_name ?? "Teacher";
         if (isHead) {
           setDistanceWarning(
