@@ -98,6 +98,11 @@ async function pushOne(entry: OutboxEntry, schoolId?: string | null): Promise<vo
       departure_lng: raw.departure_lng ?? null,
       departure_status: raw.departure_status ?? null,
       device_info: raw.device_info ?? null,
+      ...("arrival_verified" in raw ? { arrival_verified: raw.arrival_verified } : {}),
+      ...("departure_verified" in raw ? { departure_verified: raw.departure_verified } : {}),
+      ...("head_verified" in raw ? { head_verified: raw.head_verified } : {}),
+      ...("head_verified_by" in raw ? { head_verified_by: raw.head_verified_by } : {}),
+      ...("head_verified_at" in raw ? { head_verified_at: raw.head_verified_at } : {}),
     };
     if (!payload.teacher_user_id || !payload.school_id || !payload.attendance_date) {
       throw new Error("Teacher attendance sync is missing teacher, school, or date information");
