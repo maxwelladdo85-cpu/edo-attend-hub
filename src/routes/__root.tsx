@@ -4,12 +4,14 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  redirect,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "../contexts/AuthContext";
 import { Toaster } from "../components/ui/sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -88,6 +90,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "Real-time GPS attendance tracking for teachers and students across Edo State public primary schools." },
     ],
   }),
+  beforeLoad: async ({ location }) => {
+    const publicPaths = ["/", "/login", "/signup", "/privacy", "/terms", "/cookies"];
+    if (publicPaths.includes(location.pathname)) return;
+
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      throw redirect({ to: "/login" });
+    }
+  },
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
