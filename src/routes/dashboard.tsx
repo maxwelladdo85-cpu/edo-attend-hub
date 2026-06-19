@@ -28,6 +28,7 @@ import {
   getTeacherAttendanceForSchoolDate,
   getTeacherProfilesForSchool,
   bulkUpsertTeacherProfiles,
+  bulkUpsertTeacherAttendance,
   cacheSchool,
   getCachedSchool,
 } from "@/lib/offline/localDb";
