@@ -650,46 +650,47 @@ function HeadTeacherView() {
       const dateStr = now.slice(0, 10);
       const existing = records[teacher.user_id];
 
-      if (kind === "arrival") {
-        const status = classifyArrival(now, school.resumption_time);
-        const { error } = await supabase.from("teacher_attendance").upsert(
-          {
-            teacher_user_id: teacher.user_id,
-            school_id: school.id,
-            attendance_date: dateStr,
-            arrival_time: now,
-            arrival_status: status,
-            arrival_verified: true,
-            head_verified: true,
-            head_verified_by: user.id,
-            head_verified_at: now,
-            device_info: `marked by head teacher (${profile?.full_name ?? user.id})`,
-          },
-          { onConflict: "teacher_user_id,attendance_date" },
-        );
-        if (error) throw error;
-        toast.success(`Arrival marked for ${teacher.full_name}`);
-      } else {
-        if (!existing?.arrival_time) {
-          toast.error("Mark arrival first");
-          return;
-        }
-        const status = classifyDeparture(now, school.closing_time);
-        const { error } = await supabase
-          .from("teacher_attendance")
-          .update({
-            departure_time: now,
-            departure_status: status,
-            departure_verified: true,
-          })
-          .eq("teacher_user_id", teacher.user_id)
-          .eq("attendance_date", dateStr);
-        if (error) throw error;
-        toast.success(`Departure marked for ${teacher.full_name}`);
+      if (kind === "departure" && !existing?.arrival_time) {
+        toast.error("Mark arrival first");
+        return;
       }
-      await load();
+
+      const status =
+        kind === "arrival"
+          ? classifyArrival(now, school.resumption_time)
+          : classifyDeparture(now, school.closing_time);
+
+      const saved = await markTeacherAttendance({
+        user_id: teacher.user_id,
+        school_id: school.id,
+        attendance_date: dateStr,
+        kind,
+        time: now,
+        lat: null,
+        lng: null,
+        status,
+        verified: true,
+        includeVerificationFields: true,
+        head_verified: true,
+        head_verified_by: user.id,
+        head_verified_at: now,
+        device_info: `marked by head teacher (${profile?.full_name ?? user.id})`,
+      });
+
+      setRecords((prev) => ({ ...prev, [teacher.user_id]: saved }));
+      toast.success(`${kind === "arrival" ? "Arrival" : "Departure"} marked for ${teacher.full_name}`);
+
+      if (navigator.onLine !== false) {
+        void syncNow(school.id).catch((err) => {
+          if (!isTransientNetworkError(err)) console.warn("Teacher attendance sync failed", err);
+        });
+      }
     } catch (e: any) {
-      toast.error(e.message ?? "Could not save");
+      if (isTransientNetworkError(e)) {
+        toast.success("Attendance saved on this phone. It will sync when the connection is stable.");
+      } else {
+        toast.error(e.message ?? "Could not save");
+      }
     } finally {
       setBusy(null);
     }
