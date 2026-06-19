@@ -25,6 +25,10 @@ import { AdmitStudentCard } from "@/components/AdmitStudentCard";
 import {
   markTeacherAttendance,
   getTeacherAttendanceForDate,
+  getTeacherAttendanceForSchoolDate,
+  getTeacherProfilesForSchool,
+  bulkUpsertTeacherProfiles,
+  bulkUpsertTeacherAttendance,
   cacheSchool,
   getCachedSchool,
 } from "@/lib/offline/localDb";
@@ -201,33 +205,33 @@ function TeacherView() {
       const now = new Date().toISOString();
       const dateStr = now.slice(0, 10);
 
-      // GPS capture is REQUIRED — abort if unavailable so we never store an
-      // attendance record without a verifiable location. GPS works offline.
-      let lat: number;
-      let lng: number;
+      // Same offline-first behavior as student attendance: GPS is best-effort.
+      // Some Android browsers try a network location lookup and throw
+      // "TypeError: Failed to fetch" when offline; that must not block saving.
+      let lat: number | null = null;
+      let lng: number | null = null;
       let verified = false;
+      let dist: number | null = null;
       try {
         const pos = await getCurrentPosition();
         lat = pos.coords.latitude;
         lng = pos.coords.longitude;
       } catch (err: any) {
-        void haptic("error");
-        const msg =
-          err?.code === 1
-            ? "Location permission denied. Enable location access for this app and try again."
-            : err?.code === 2
-              ? "Could not determine your location. Move to an open area with GPS signal and try again."
-              : err?.code === 3
-                ? "Location request timed out. Please try again."
-                : (err?.message ?? "Unable to capture your GPS location. Please try again.");
-        toast.error(msg);
-        return;
+        console.warn("Teacher attendance location unavailable; saving without GPS", err);
       }
-      const dist = distanceMeters(lat, lng, school.latitude, school.longitude);
-      const allowedRadius = school.radius_meters ?? DEFAULT_RADIUS_M;
-      verified = dist <= allowedRadius;
 
-      if (!verified) {
+      const allowedRadius = school.radius_meters ?? DEFAULT_RADIUS_M;
+      if (
+        lat !== null &&
+        lng !== null &&
+        school.latitude !== null &&
+        school.longitude !== null
+      ) {
+        dist = distanceMeters(lat, lng, school.latitude, school.longitude);
+        verified = dist <= allowedRadius;
+      }
+
+      if (!verified && dist !== null) {
         const teacherName = profile?.full_name ?? "Teacher";
         if (isHead) {
           setDistanceWarning(
@@ -283,7 +287,9 @@ function TeacherView() {
         } else {
           void haptic("warning");
           toast.warning(
-            `Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`,
+            dist === null
+              ? `Arrival recorded at ${timeLabel} without GPS location${offlineSuffix}`
+              : `Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`,
           );
         }
       } else {
@@ -299,7 +305,9 @@ function TeacherView() {
         } else {
           void haptic("warning");
           toast.warning(
-            `Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`,
+            dist === null
+              ? `Departure recorded at ${timeLabel} without GPS location${offlineSuffix}`
+              : `Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`,
           );
         }
       }
@@ -575,22 +583,49 @@ function HeadTeacherView() {
       return;
     }
     const dateStr = new Date().toISOString().slice(0, 10);
-    const [{ data: sc }, { data: ts }, { data: rs }] = await Promise.all([
-      supabase.from("schools").select("*").eq("id", profile.school_id).maybeSingle(),
-      supabase
-        .from("profiles")
-        .select("user_id, full_name, designation, teacher_id, class_taught")
-        .eq("school_id", profile.school_id),
-      supabase
-        .from("teacher_attendance")
-        .select("*")
-        .eq("school_id", profile.school_id)
-        .eq("attendance_date", dateStr),
+    setLoading(true);
+
+    const [cachedSchool, cachedTeachers, cachedRecords] = await Promise.all([
+      getCachedSchool(profile.school_id),
+      getTeacherProfilesForSchool(profile.school_id),
+      getTeacherAttendanceForSchoolDate(profile.school_id, dateStr),
     ]);
-    setSchool(sc);
-    setTeachers((ts ?? []).filter((t: any) => t.user_id !== user?.id));
-    setRecords(Object.fromEntries((rs ?? []).map((r: any) => [r.teacher_user_id, r])));
-    setLoading(false);
+    if (cachedSchool) setSchool(cachedSchool);
+    if (cachedTeachers.length) setTeachers(cachedTeachers.filter((t: any) => t.user_id !== user?.id));
+    if (cachedRecords.length) {
+      setRecords(Object.fromEntries(cachedRecords.map((r: any) => [r.teacher_user_id, r])));
+    }
+
+    try {
+      const [{ data: sc }, { data: ts }, { data: rs }] = await Promise.all([
+        supabase.from("schools").select("*").eq("id", profile.school_id).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("user_id, full_name, designation, teacher_id, class_taught, school_id")
+          .eq("school_id", profile.school_id),
+        supabase
+          .from("teacher_attendance")
+          .select("*")
+          .eq("school_id", profile.school_id)
+          .eq("attendance_date", dateStr),
+      ]);
+      if (sc) {
+        setSchool(sc);
+        void cacheSchool(sc);
+      }
+      if (ts) {
+        setTeachers(ts.filter((t: any) => t.user_id !== user?.id));
+        void bulkUpsertTeacherProfiles(ts as any);
+      }
+      if (rs) {
+        setRecords(Object.fromEntries(rs.map((r: any) => [r.teacher_user_id, r])));
+        void bulkUpsertTeacherAttendance(rs.map((r: any) => ({ ...r, user_id: r.teacher_user_id })) as any);
+      }
+    } catch (e: any) {
+      if (!isTransientNetworkError(e)) console.warn("Teacher attendance list failed", e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -619,46 +654,47 @@ function HeadTeacherView() {
       const dateStr = now.slice(0, 10);
       const existing = records[teacher.user_id];
 
-      if (kind === "arrival") {
-        const status = classifyArrival(now, school.resumption_time);
-        const { error } = await supabase.from("teacher_attendance").upsert(
-          {
-            teacher_user_id: teacher.user_id,
-            school_id: school.id,
-            attendance_date: dateStr,
-            arrival_time: now,
-            arrival_status: status,
-            arrival_verified: true,
-            head_verified: true,
-            head_verified_by: user.id,
-            head_verified_at: now,
-            device_info: `marked by head teacher (${profile?.full_name ?? user.id})`,
-          },
-          { onConflict: "teacher_user_id,attendance_date" },
-        );
-        if (error) throw error;
-        toast.success(`Arrival marked for ${teacher.full_name}`);
-      } else {
-        if (!existing?.arrival_time) {
-          toast.error("Mark arrival first");
-          return;
-        }
-        const status = classifyDeparture(now, school.closing_time);
-        const { error } = await supabase
-          .from("teacher_attendance")
-          .update({
-            departure_time: now,
-            departure_status: status,
-            departure_verified: true,
-          })
-          .eq("teacher_user_id", teacher.user_id)
-          .eq("attendance_date", dateStr);
-        if (error) throw error;
-        toast.success(`Departure marked for ${teacher.full_name}`);
+      if (kind === "departure" && !existing?.arrival_time) {
+        toast.error("Mark arrival first");
+        return;
       }
-      await load();
+
+      const status =
+        kind === "arrival"
+          ? classifyArrival(now, school.resumption_time)
+          : classifyDeparture(now, school.closing_time);
+
+      const saved = await markTeacherAttendance({
+        user_id: teacher.user_id,
+        school_id: school.id,
+        attendance_date: dateStr,
+        kind,
+        time: now,
+        lat: null,
+        lng: null,
+        status,
+        verified: true,
+        includeVerificationFields: true,
+        head_verified: true,
+        head_verified_by: user.id,
+        head_verified_at: now,
+        device_info: `marked by head teacher (${profile?.full_name ?? user.id})`,
+      });
+
+      setRecords((prev) => ({ ...prev, [teacher.user_id]: saved }));
+      toast.success(`${kind === "arrival" ? "Arrival" : "Departure"} marked for ${teacher.full_name}`);
+
+      if (navigator.onLine !== false) {
+        void syncNow(school.id).catch((err) => {
+          if (!isTransientNetworkError(err)) console.warn("Teacher attendance sync failed", err);
+        });
+      }
     } catch (e: any) {
-      toast.error(e.message ?? "Could not save");
+      if (isTransientNetworkError(e)) {
+        toast.success("Attendance saved on this phone. It will sync when the connection is stable.");
+      } else {
+        toast.error(e.message ?? "Could not save");
+      }
     } finally {
       setBusy(null);
     }

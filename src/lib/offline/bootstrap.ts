@@ -7,11 +7,14 @@ import {
   bulkUpsertStudentAttendance,
   bulkUpsertStudents,
   bulkUpsertTeacherAttendance,
+  bulkUpsertTeacherProfiles,
+  cacheSchool,
 } from "./localDb";
 import { getMeta, setMeta } from "./storage";
 import type {
   CachedStudent,
   CachedStudentAttendance,
+  CachedTeacherProfile,
   CachedTeacherAttendance,
 } from "./types";
 
@@ -57,6 +60,17 @@ async function pullAllStudents(schoolId: string) {
   return collected.length;
 }
 
+async function pullTeacherProfiles(schoolId: string) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("user_id, full_name, designation, teacher_id, class_taught, school_id")
+    .eq("school_id", schoolId);
+  if (error) throw error;
+  const rows = (data ?? []).filter((r: any) => r.user_id && r.school_id) as CachedTeacherProfile[];
+  await bulkUpsertTeacherProfiles(rows);
+  return rows.length;
+}
+
 async function pullStudentAttendance(schoolId: string, start: string, end: string) {
   let from = 0;
   let total = 0;
@@ -94,7 +108,8 @@ async function pullTeacherAttendance(schoolId: string, start: string, end: strin
   if (error) throw error;
   const rows: CachedTeacherAttendance[] = (data ?? []).map((r: any) => ({
     ...r,
-    local_key: `${r.user_id}_${r.attendance_date}`,
+    user_id: r.teacher_user_id,
+    local_key: `${r.teacher_user_id}_${r.attendance_date}`,
     updated_at: r.updated_at ?? new Date().toISOString(),
   }));
   await bulkUpsertTeacherAttendance(rows);
@@ -113,11 +128,14 @@ export async function bootstrapOfflineData(opts: BootstrapOptions) {
     end: new Date().toISOString().slice(0, 10),
   };
 
-  const [students, sAtt, tAtt] = await Promise.all([
+  const [{ data: school }, students, teachers, sAtt, tAtt] = await Promise.all([
+    supabase.from("schools").select("*").eq("id", opts.schoolId).maybeSingle(),
     pullAllStudents(opts.schoolId),
+    pullTeacherProfiles(opts.schoolId),
     pullStudentAttendance(opts.schoolId, window.start, window.end),
     pullTeacherAttendance(opts.schoolId, window.start, window.end),
   ]);
+  if (school) await cacheSchool(school);
 
   const now = new Date().toISOString();
   await setMeta({
@@ -127,5 +145,5 @@ export async function bootstrapOfflineData(opts: BootstrapOptions) {
     teacher_attendance_pulled_at: now,
   });
 
-  return { skipped: false as const, students, sAtt, tAtt };
+  return { skipped: false as const, students, teachers, sAtt, tAtt };
 }

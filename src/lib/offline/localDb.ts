@@ -7,11 +7,13 @@ import {
   schoolsStore,
   studentAttendanceStore,
   studentsStore,
+  teacherProfilesStore,
   teacherAttendanceStore,
 } from "./storage";
 import type {
   CachedStudent,
   CachedStudentAttendance,
+  CachedTeacherProfile,
   CachedTeacherAttendance,
   Mark,
   OutboxEntry,
@@ -48,6 +50,15 @@ export async function bulkUpsertStudents(list: CachedStudent[]) {
 export async function getStudentsForSchool(schoolId: string): Promise<CachedStudent[]> {
   const all = await allEntries<CachedStudent>(studentsStore);
   return all.filter((s) => s.school_id === schoolId);
+}
+
+// ---------- Teacher profiles (cached in the same people store for offline head-teacher use) ----------
+export async function bulkUpsertTeacherProfiles(list: CachedTeacherProfile[]) {
+  await Promise.all(list.map((t) => teacherProfilesStore.setItem(t.user_id, t)));
+}
+export async function getTeacherProfilesForSchool(schoolId: string): Promise<CachedTeacherProfile[]> {
+  const all = await allEntries<CachedTeacherProfile>(teacherProfilesStore);
+  return all.filter((t) => t.school_id === schoolId);
 }
 
 // ---------- Student attendance ----------
@@ -154,12 +165,15 @@ export async function markStudentAttendance(
 export async function bulkUpsertTeacherAttendance(rows: CachedTeacherAttendance[]) {
   await Promise.all(
     rows.map(async (r) => {
-      const key = teacherAttendanceKey(r.user_id, r.attendance_date);
+      const teacherUserId = r.teacher_user_id ?? r.user_id;
+      if (!teacherUserId) return;
+      const key = teacherAttendanceKey(teacherUserId, r.attendance_date);
       const existing = (await teacherAttendanceStore.getItem(
         key,
       )) as CachedTeacherAttendance | null;
-      if (existing?.updated_at && r.updated_at && existing.updated_at > r.updated_at) return;
-      await teacherAttendanceStore.setItem(key, r);
+      const next = { ...r, local_key: key, teacher_user_id: teacherUserId, user_id: teacherUserId };
+      if (existing?.updated_at && next.updated_at && existing.updated_at > next.updated_at) return;
+      await teacherAttendanceStore.setItem(key, next);
     }),
   );
 }
@@ -170,6 +184,17 @@ export async function getTeacherAttendanceForDate(
 ): Promise<any | null> {
   const key = teacherAttendanceKey(user_id, attendance_date);
   return (await teacherAttendanceStore.getItem(key)) as any | null;
+}
+
+export async function getTeacherAttendanceForSchoolDate(
+  schoolId: string,
+  attendance_date: string,
+): Promise<any[]> {
+  const out: any[] = [];
+  await teacherAttendanceStore.iterate<any, void>((value) => {
+    if (value.school_id === schoolId && value.attendance_date === attendance_date) out.push(value);
+  });
+  return out;
 }
 
 export interface MarkTeacherAttendanceInput {
@@ -183,6 +208,10 @@ export interface MarkTeacherAttendanceInput {
   status: string | null;
   verified: boolean;
   device_info?: string | null;
+  includeVerificationFields?: boolean;
+  head_verified?: boolean | null;
+  head_verified_by?: string | null;
+  head_verified_at?: string | null;
 }
 
 /** Write teacher attendance locally and enqueue an outbox entry. Works offline. */
@@ -207,28 +236,40 @@ export async function markTeacherAttendance(input: MarkTeacherAttendanceInput) {
     departure_lng: !isArrival ? input.lng : (existing?.departure_lng ?? null),
     departure_status: !isArrival ? input.status : (existing?.departure_status ?? null),
     departure_verified: !isArrival ? input.verified : (existing?.departure_verified ?? false),
+    head_verified: input.head_verified ?? existing?.head_verified ?? false,
+    head_verified_by: input.head_verified_by ?? existing?.head_verified_by ?? null,
+    head_verified_at: input.head_verified_at ?? existing?.head_verified_at ?? null,
     device_info: input.device_info ?? existing?.device_info ?? null,
     updated_at: new Date().toISOString(),
   };
+
+  const payload: Record<string, unknown> = {
+    teacher_user_id: next.teacher_user_id,
+    school_id: next.school_id,
+    attendance_date: next.attendance_date,
+    arrival_time: next.arrival_time,
+    arrival_lat: next.arrival_lat,
+    arrival_lng: next.arrival_lng,
+    arrival_status: next.arrival_status,
+    departure_time: next.departure_time,
+    departure_lat: next.departure_lat,
+    departure_lng: next.departure_lng,
+    departure_status: next.departure_status,
+    device_info: next.device_info,
+  };
+  if (input.includeVerificationFields) {
+    payload.arrival_verified = next.arrival_verified;
+    payload.departure_verified = next.departure_verified;
+    payload.head_verified = next.head_verified;
+    payload.head_verified_by = next.head_verified_by;
+    payload.head_verified_at = next.head_verified_at;
+  }
 
   await teacherAttendanceStore.setItem(key, next);
   await enqueue({
     op: "upsert_teacher_attendance",
     row_key: key,
-    payload: {
-      teacher_user_id: next.teacher_user_id,
-      school_id: next.school_id,
-      attendance_date: next.attendance_date,
-      arrival_time: next.arrival_time,
-      arrival_lat: next.arrival_lat,
-      arrival_lng: next.arrival_lng,
-      arrival_status: next.arrival_status,
-      departure_time: next.departure_time,
-      departure_lat: next.departure_lat,
-      departure_lng: next.departure_lng,
-      departure_status: next.departure_status,
-      device_info: next.device_info,
-    },
+    payload,
   });
 
   return next;
