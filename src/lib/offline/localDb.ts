@@ -12,6 +12,7 @@ import {
 import type {
   CachedStudent,
   CachedStudentAttendance,
+  CachedTeacherProfile,
   CachedTeacherAttendance,
   Mark,
   OutboxEntry,
@@ -48,6 +49,15 @@ export async function bulkUpsertStudents(list: CachedStudent[]) {
 export async function getStudentsForSchool(schoolId: string): Promise<CachedStudent[]> {
   const all = await allEntries<CachedStudent>(studentsStore);
   return all.filter((s) => s.school_id === schoolId);
+}
+
+// ---------- Teacher profiles (cached in the same people store for offline head-teacher use) ----------
+export async function bulkUpsertTeacherProfiles(list: CachedTeacherProfile[]) {
+  await Promise.all(list.map((t) => studentsStore.setItem(`teacher:${t.user_id}`, t as any)));
+}
+export async function getTeacherProfilesForSchool(schoolId: string): Promise<CachedTeacherProfile[]> {
+  const all = await allEntries<any>(studentsStore);
+  return all.filter((t) => t?.user_id && t?.school_id === schoolId && !t?.student_id);
 }
 
 // ---------- Student attendance ----------
@@ -154,12 +164,15 @@ export async function markStudentAttendance(
 export async function bulkUpsertTeacherAttendance(rows: CachedTeacherAttendance[]) {
   await Promise.all(
     rows.map(async (r) => {
-      const key = teacherAttendanceKey(r.user_id, r.attendance_date);
+      const teacherUserId = r.teacher_user_id ?? r.user_id;
+      if (!teacherUserId) return;
+      const key = teacherAttendanceKey(teacherUserId, r.attendance_date);
       const existing = (await teacherAttendanceStore.getItem(
         key,
       )) as CachedTeacherAttendance | null;
-      if (existing?.updated_at && r.updated_at && existing.updated_at > r.updated_at) return;
-      await teacherAttendanceStore.setItem(key, r);
+      const next = { ...r, local_key: key, teacher_user_id: teacherUserId, user_id: teacherUserId };
+      if (existing?.updated_at && next.updated_at && existing.updated_at > next.updated_at) return;
+      await teacherAttendanceStore.setItem(key, next);
     }),
   );
 }
@@ -170,6 +183,17 @@ export async function getTeacherAttendanceForDate(
 ): Promise<any | null> {
   const key = teacherAttendanceKey(user_id, attendance_date);
   return (await teacherAttendanceStore.getItem(key)) as any | null;
+}
+
+export async function getTeacherAttendanceForSchoolDate(
+  schoolId: string,
+  attendance_date: string,
+): Promise<any[]> {
+  const out: any[] = [];
+  await teacherAttendanceStore.iterate<any, void>((value) => {
+    if (value.school_id === schoolId && value.attendance_date === attendance_date) out.push(value);
+  });
+  return out;
 }
 
 export interface MarkTeacherAttendanceInput {
