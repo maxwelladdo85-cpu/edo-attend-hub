@@ -373,8 +373,8 @@ export function StudentAttendancePanel() {
           })}
         </div>
       )}
-      {!isHead && profile?.class_taught && students.length > 0 && (
-        <div className="sm:hidden sticky bottom-0 z-10 bg-head-teacher-card/95 backdrop-blur border-t border-border p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+      {((!isHead && profile?.class_taught) || isHead) && students.length > 0 && (
+        <div className="sticky bottom-0 z-10 bg-head-teacher-card/95 backdrop-blur border-t border-border p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
           <Button
             type="button"
             className="w-full h-11 text-base font-semibold"
