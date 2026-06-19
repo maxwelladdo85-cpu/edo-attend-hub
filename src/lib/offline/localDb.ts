@@ -7,6 +7,7 @@ import {
   schoolsStore,
   studentAttendanceStore,
   studentsStore,
+  teacherProfilesStore,
   teacherAttendanceStore,
 } from "./storage";
 import type {
@@ -53,11 +54,11 @@ export async function getStudentsForSchool(schoolId: string): Promise<CachedStud
 
 // ---------- Teacher profiles (cached in the same people store for offline head-teacher use) ----------
 export async function bulkUpsertTeacherProfiles(list: CachedTeacherProfile[]) {
-  await Promise.all(list.map((t) => studentsStore.setItem(`teacher:${t.user_id}`, t as any)));
+  await Promise.all(list.map((t) => teacherProfilesStore.setItem(t.user_id, t)));
 }
 export async function getTeacherProfilesForSchool(schoolId: string): Promise<CachedTeacherProfile[]> {
-  const all = await allEntries<any>(studentsStore);
-  return all.filter((t) => t?.user_id && t?.school_id === schoolId && !t?.student_id);
+  const all = await allEntries<CachedTeacherProfile>(teacherProfilesStore);
+  return all.filter((t) => t.school_id === schoolId);
 }
 
 // ---------- Student attendance ----------
