@@ -108,7 +108,8 @@ async function pullTeacherAttendance(schoolId: string, start: string, end: strin
   if (error) throw error;
   const rows: CachedTeacherAttendance[] = (data ?? []).map((r: any) => ({
     ...r,
-    local_key: `${r.user_id}_${r.attendance_date}`,
+    user_id: r.teacher_user_id,
+    local_key: `${r.teacher_user_id}_${r.attendance_date}`,
     updated_at: r.updated_at ?? new Date().toISOString(),
   }));
   await bulkUpsertTeacherAttendance(rows);
