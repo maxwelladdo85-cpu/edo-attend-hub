@@ -199,6 +199,10 @@ function TeacherView() {
       toast.error("Your school is not configured");
       return;
     }
+    if (kind === "departure" && !today?.arrival_time) {
+      toast.error("Mark arrival first");
+      return;
+    }
     setBusy(kind);
     try {
       // Capture the exact timestamp the moment the button is pressed
