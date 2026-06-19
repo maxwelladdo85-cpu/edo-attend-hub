@@ -579,22 +579,49 @@ function HeadTeacherView() {
       return;
     }
     const dateStr = new Date().toISOString().slice(0, 10);
-    const [{ data: sc }, { data: ts }, { data: rs }] = await Promise.all([
-      supabase.from("schools").select("*").eq("id", profile.school_id).maybeSingle(),
-      supabase
-        .from("profiles")
-        .select("user_id, full_name, designation, teacher_id, class_taught")
-        .eq("school_id", profile.school_id),
-      supabase
-        .from("teacher_attendance")
-        .select("*")
-        .eq("school_id", profile.school_id)
-        .eq("attendance_date", dateStr),
+    setLoading(true);
+
+    const [cachedSchool, cachedTeachers, cachedRecords] = await Promise.all([
+      getCachedSchool(profile.school_id),
+      getTeacherProfilesForSchool(profile.school_id),
+      getTeacherAttendanceForSchoolDate(profile.school_id, dateStr),
     ]);
-    setSchool(sc);
-    setTeachers((ts ?? []).filter((t: any) => t.user_id !== user?.id));
-    setRecords(Object.fromEntries((rs ?? []).map((r: any) => [r.teacher_user_id, r])));
-    setLoading(false);
+    if (cachedSchool) setSchool(cachedSchool);
+    if (cachedTeachers.length) setTeachers(cachedTeachers.filter((t: any) => t.user_id !== user?.id));
+    if (cachedRecords.length) {
+      setRecords(Object.fromEntries(cachedRecords.map((r: any) => [r.teacher_user_id, r])));
+    }
+
+    try {
+      const [{ data: sc }, { data: ts }, { data: rs }] = await Promise.all([
+        supabase.from("schools").select("*").eq("id", profile.school_id).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("user_id, full_name, designation, teacher_id, class_taught, school_id")
+          .eq("school_id", profile.school_id),
+        supabase
+          .from("teacher_attendance")
+          .select("*")
+          .eq("school_id", profile.school_id)
+          .eq("attendance_date", dateStr),
+      ]);
+      if (sc) {
+        setSchool(sc);
+        void cacheSchool(sc);
+      }
+      if (ts) {
+        setTeachers(ts.filter((t: any) => t.user_id !== user?.id));
+        void bulkUpsertTeacherProfiles(ts as any);
+      }
+      if (rs) {
+        setRecords(Object.fromEntries(rs.map((r: any) => [r.teacher_user_id, r])));
+        void bulkUpsertTeacherAttendance(rs.map((r: any) => ({ ...r, user_id: r.teacher_user_id })) as any);
+      }
+    } catch (e: any) {
+      if (!isTransientNetworkError(e)) console.warn("Teacher attendance list failed", e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
