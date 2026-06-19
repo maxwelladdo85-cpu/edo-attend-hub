@@ -153,6 +153,8 @@ export function StudentAttendancePanel() {
     }
     const key = `${student.id}-${session}`;
     setSavingKey(key);
+    try {
+
 
       // Best-effort location — does NOT block saving, only captured when marking present
       let lat: number | null = null;
