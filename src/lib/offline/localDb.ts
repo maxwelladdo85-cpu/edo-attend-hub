@@ -18,7 +18,9 @@ import type {
 } from "./types";
 
 function uuid() {
-  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return (
+    globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  );
 }
 
 export const studentAttendanceKey = (student_id: string, attendance_date: string) =>
@@ -57,13 +59,14 @@ export async function bulkUpsertStudentAttendance(rows: CachedStudentAttendance[
   await Promise.all(
     rows.map(async (r) => {
       const key = studentAttendanceKey(r.student_id, r.attendance_date);
-      const existing = (await studentAttendanceStore.getItem(key)) as CachedStudentAttendance | null;
+      const existing = (await studentAttendanceStore.getItem(
+        key,
+      )) as CachedStudentAttendance | null;
       if (existing?.updated_at && r.updated_at && existing.updated_at > r.updated_at) return;
       await studentAttendanceStore.setItem(key, r);
     }),
   );
 }
-
 
 export async function getStudentAttendanceForDate(
   schoolId: string,
@@ -90,7 +93,9 @@ export interface MarkAttendanceInput {
 }
 
 /** Write the attendance change locally AND enqueue an outbox entry in one step. */
-export async function markStudentAttendance(input: MarkAttendanceInput): Promise<CachedStudentAttendance> {
+export async function markStudentAttendance(
+  input: MarkAttendanceInput,
+): Promise<CachedStudentAttendance> {
   const key = studentAttendanceKey(input.student_id, input.attendance_date);
   const existing = (await studentAttendanceStore.getItem(key)) as CachedStudentAttendance | null;
   const now = input.value ? new Date().toISOString() : null;
@@ -102,14 +107,14 @@ export async function markStudentAttendance(input: MarkAttendanceInput): Promise
     student_id: input.student_id,
     school_id: input.school_id,
     attendance_date: input.attendance_date,
-    morning_status: isMorning ? input.value : existing?.morning_status ?? null,
-    afternoon_status: !isMorning ? input.value : existing?.afternoon_status ?? null,
-    morning_marked_at: isMorning ? now : existing?.morning_marked_at ?? null,
-    afternoon_marked_at: !isMorning ? now : existing?.afternoon_marked_at ?? null,
-    morning_lat: isMorning ? input.lat : existing?.morning_lat ?? null,
-    morning_lng: isMorning ? input.lng : existing?.morning_lng ?? null,
-    afternoon_lat: !isMorning ? input.lat : existing?.afternoon_lat ?? null,
-    afternoon_lng: !isMorning ? input.lng : existing?.afternoon_lng ?? null,
+    morning_status: isMorning ? input.value : (existing?.morning_status ?? null),
+    afternoon_status: !isMorning ? input.value : (existing?.afternoon_status ?? null),
+    morning_marked_at: isMorning ? now : (existing?.morning_marked_at ?? null),
+    afternoon_marked_at: !isMorning ? now : (existing?.afternoon_marked_at ?? null),
+    morning_lat: isMorning ? input.lat : (existing?.morning_lat ?? null),
+    morning_lng: isMorning ? input.lng : (existing?.morning_lng ?? null),
+    afternoon_lat: !isMorning ? input.lat : (existing?.afternoon_lat ?? null),
+    afternoon_lng: !isMorning ? input.lng : (existing?.afternoon_lng ?? null),
     marked_by: input.marked_by,
     updated_at: new Date().toISOString(),
     // Keep verification fields local-only for now. The live student_attendance
@@ -150,7 +155,9 @@ export async function bulkUpsertTeacherAttendance(rows: CachedTeacherAttendance[
   await Promise.all(
     rows.map(async (r) => {
       const key = teacherAttendanceKey(r.user_id, r.attendance_date);
-      const existing = (await teacherAttendanceStore.getItem(key)) as CachedTeacherAttendance | null;
+      const existing = (await teacherAttendanceStore.getItem(
+        key,
+      )) as CachedTeacherAttendance | null;
       if (existing?.updated_at && r.updated_at && existing.updated_at > r.updated_at) return;
       await teacherAttendanceStore.setItem(key, r);
     }),
@@ -190,16 +197,16 @@ export async function markTeacherAttendance(input: MarkTeacherAttendanceInput) {
     teacher_user_id: input.user_id,
     school_id: input.school_id,
     attendance_date: input.attendance_date,
-    arrival_time: isArrival ? input.time : existing?.arrival_time ?? null,
-    arrival_lat: isArrival ? input.lat : existing?.arrival_lat ?? null,
-    arrival_lng: isArrival ? input.lng : existing?.arrival_lng ?? null,
-    arrival_status: isArrival ? input.status : existing?.arrival_status ?? null,
-    arrival_verified: isArrival ? input.verified : existing?.arrival_verified ?? false,
-    departure_time: !isArrival ? input.time : existing?.departure_time ?? null,
-    departure_lat: !isArrival ? input.lat : existing?.departure_lat ?? null,
-    departure_lng: !isArrival ? input.lng : existing?.departure_lng ?? null,
-    departure_status: !isArrival ? input.status : existing?.departure_status ?? null,
-    departure_verified: !isArrival ? input.verified : existing?.departure_verified ?? false,
+    arrival_time: isArrival ? input.time : (existing?.arrival_time ?? null),
+    arrival_lat: isArrival ? input.lat : (existing?.arrival_lat ?? null),
+    arrival_lng: isArrival ? input.lng : (existing?.arrival_lng ?? null),
+    arrival_status: isArrival ? input.status : (existing?.arrival_status ?? null),
+    arrival_verified: isArrival ? input.verified : (existing?.arrival_verified ?? false),
+    departure_time: !isArrival ? input.time : (existing?.departure_time ?? null),
+    departure_lat: !isArrival ? input.lat : (existing?.departure_lat ?? null),
+    departure_lng: !isArrival ? input.lng : (existing?.departure_lng ?? null),
+    departure_status: !isArrival ? input.status : (existing?.departure_status ?? null),
+    departure_verified: !isArrival ? input.verified : (existing?.departure_verified ?? false),
     device_info: input.device_info ?? existing?.device_info ?? null,
     updated_at: new Date().toISOString(),
   };
@@ -226,7 +233,6 @@ export async function markTeacherAttendance(input: MarkTeacherAttendanceInput) {
 
   return next;
 }
-
 
 // ---------- Outbox ----------
 export async function enqueue(entry: Omit<OutboxEntry, "id" | "created_at" | "attempts">) {
