@@ -371,6 +371,8 @@ export function StudentAttendancePanel() {
                     lat={row?.afternoon_lat ?? null}
                     lng={row?.afternoon_lng ?? null}
                     saving={savingKey === `${s.id}-afternoon`}
+                    disabled={!row?.morning_status}
+                    disabledHint="Mark morning first"
                     onToggle={(checked) => mark(s, "afternoon", checked ? "present" : null)}
                   />
                 </div>
