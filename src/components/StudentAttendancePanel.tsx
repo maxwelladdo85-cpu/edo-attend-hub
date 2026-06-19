@@ -19,6 +19,7 @@ import {
 } from "@/lib/offline/localDb";
 import { getSyncState, subscribeSync, syncNow } from "@/lib/offline/syncEngine";
 import { supabase } from "@/integrations/supabase/client";
+import { isTransientNetworkError } from "@/lib/offline/networkErrors";
 
 
 type Mark = "present" | "late" | "absent";
@@ -181,9 +182,15 @@ export function StudentAttendancePanel() {
       }
 
       // Fire-and-forget sync; falls back to retry on next online tick.
-      void syncNow(profile.school_id);
+      void syncNow(profile.school_id).catch((err) => {
+        if (!isTransientNetworkError(err)) console.warn("Student attendance sync failed", err);
+      });
     } catch (e: any) {
-      toast.error(e.message ?? "Could not save attendance");
+      if (isTransientNetworkError(e)) {
+        toast.success("Attendance saved on this phone. It will sync when the connection is stable.");
+      } else {
+        toast.error(e.message ?? "Could not save attendance");
+      }
     } finally {
       setSavingKey(null);
     }
