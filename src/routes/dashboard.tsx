@@ -14,6 +14,7 @@ import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
 import { AdmitStudentCard } from "@/components/AdmitStudentCard";
 import { markTeacherAttendance, getTeacherAttendanceForDate, cacheSchool, getCachedSchool } from "@/lib/offline/localDb";
 import { syncNow } from "@/lib/offline/syncEngine";
+import { isTransientNetworkError } from "@/lib/offline/networkErrors";
 
 
 export const Route = createFileRoute("/dashboard")({
@@ -253,10 +254,18 @@ function TeacherView() {
       }
 
       // Fire-and-forget background sync attempt; harmless if offline.
-      if (online) void syncNow(school.id);
+      if (online) {
+        void syncNow(school.id).catch((err) => {
+          if (!isTransientNetworkError(err)) console.warn("Teacher attendance sync failed", err);
+        });
+      }
     } catch (e: any) {
       void haptic("error");
-      toast.error(e.message ?? "Could not save attendance");
+      if (isTransientNetworkError(e)) {
+        toast.success("Attendance saved on this phone. It will sync when the connection is stable.");
+      } else {
+        toast.error(e.message ?? "Could not save attendance");
+      }
     } finally {
       setBusy(null);
     }
