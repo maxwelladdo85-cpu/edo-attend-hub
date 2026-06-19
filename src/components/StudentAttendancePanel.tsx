@@ -418,6 +418,8 @@ function SessionCheck({
   lat,
   lng,
   saving,
+  disabled = false,
+  disabledHint,
   onToggle,
 }: {
   icon: any;
@@ -427,16 +429,21 @@ function SessionCheck({
   lat: number | null;
   lng: number | null;
   saving: boolean;
+  disabled?: boolean;
+  disabledHint?: string;
   onToggle: (checked: boolean) => void;
 }) {
   const checked = current === "present";
+  const locked = saving || disabled;
   return (
     <div
       role="button"
       tabIndex={0}
-      onClick={() => !saving && onToggle(!checked)}
+      title={disabled && disabledHint ? disabledHint : undefined}
+      aria-disabled={disabled}
+      onClick={() => !locked && onToggle(!checked)}
       onKeyDown={(e) => {
-        if (!saving && (e.key === " " || e.key === "Enter")) {
+        if (!locked && (e.key === " " || e.key === "Enter")) {
           e.preventDefault();
           onToggle(!checked);
         }
@@ -445,12 +452,13 @@ function SessionCheck({
         "flex flex-col gap-1 rounded-lg border border-border px-3 py-2 cursor-pointer transition select-none w-full sm:w-auto sm:min-w-[140px]",
         checked ? "bg-success/10 border-success/40" : "bg-background hover:bg-muted",
         saving && "opacity-60 cursor-wait",
+        disabled && !saving && "opacity-50 cursor-not-allowed hover:bg-background",
       )}
     >
       <div className="flex items-center gap-2">
         <Checkbox
           checked={checked}
-          disabled={saving}
+          disabled={locked}
           onCheckedChange={(v) => onToggle(v === true)}
           className="h-5 w-5"
         />
