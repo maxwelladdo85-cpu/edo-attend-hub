@@ -62,6 +62,7 @@ const MARKS: { value: Mark; label: string; cls: string }[] = [
 export function StudentAttendancePanel() {
   const { user, profile, roles } = useAuth();
   const isHead = primaryRole(roles) === "head_teacher";
+  const todayStr = format(new Date(), "yyyy-MM-dd");
   const [date, setDate] = useState<Date>(new Date());
   const [students, setStudents] = useState<Student[]>([]);
   const [rows, setRows] = useState<Record<string, AttendanceRow>>({});
@@ -147,6 +148,10 @@ export function StudentAttendancePanel() {
 
   const mark = async (student: Student, session: Session, value: Mark | null) => {
     if (!user || !profile?.school_id) return;
+    if (dateStr !== todayStr) {
+      toast.error("Attendance can only be marked for today");
+      return;
+    }
     if (session === "afternoon" && !rows[student.id]?.morning_status) {
       toast.error("Mark morning attendance first");
       return;
@@ -312,7 +317,7 @@ export function StudentAttendancePanel() {
                 mode="single"
                 selected={date}
                 onSelect={(d) => d && setDate(d)}
-                disabled={(d) => d > new Date()}
+                disabled={(d) => format(d, "yyyy-MM-dd") !== todayStr}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
               />
