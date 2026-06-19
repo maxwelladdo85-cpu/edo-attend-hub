@@ -12,6 +12,8 @@ import { distanceMeters, getCurrentPosition, classifyArrival, classifyDeparture 
 import { haptic } from "@/lib/haptics";
 import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
 import { AdmitStudentCard } from "@/components/AdmitStudentCard";
+import { markTeacherAttendance, getTeacherAttendanceForDate } from "@/lib/offline/localDb";
+import { syncNow } from "@/lib/offline/syncEngine";
 
 
 export const Route = createFileRoute("/dashboard")({
