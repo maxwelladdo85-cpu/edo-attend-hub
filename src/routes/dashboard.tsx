@@ -1,6 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, MapPin, LogIn, LogOut, Clock, AlertCircle, CheckCircle2, UserCheck, Building2 } from "lucide-react";
+import {
+  Loader2,
+  MapPin,
+  LogIn,
+  LogOut,
+  Clock,
+  AlertCircle,
+  CheckCircle2,
+  UserCheck,
+  Building2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,9 +22,14 @@ import { distanceMeters, getCurrentPosition, classifyArrival, classifyDeparture 
 import { haptic } from "@/lib/haptics";
 import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
 import { AdmitStudentCard } from "@/components/AdmitStudentCard";
-import { markTeacherAttendance, getTeacherAttendanceForDate, cacheSchool, getCachedSchool } from "@/lib/offline/localDb";
+import {
+  markTeacherAttendance,
+  getTeacherAttendanceForDate,
+  cacheSchool,
+  getCachedSchool,
+} from "@/lib/offline/localDb";
 import { syncNow } from "@/lib/offline/syncEngine";
-
+import { isTransientNetworkError } from "@/lib/offline/networkErrors";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — EdoSAS" }] }),
@@ -33,7 +48,9 @@ function DashboardPage() {
     supabase.auth.getSession().then(({ data }: { data: { session: any } }) => {
       if (!cancelled && !data.session) navigate({ to: "/login", replace: true });
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [loading, session, navigate]);
 
   // Redirect admins to the dedicated admin section
@@ -51,13 +68,13 @@ function DashboardPage() {
     );
   }
 
-   if (roles.length === 0 || !profile) {
-     return (
-       <div className="min-h-screen grid place-items-center">
-         <Loader2 className="h-6 w-6 animate-spin text-primary" />
-       </div>
-     );
-   }
+  if (roles.length === 0 || !profile) {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const role = primaryRole(roles);
   const label = roleLabelFor(role);
@@ -87,7 +104,10 @@ function DashboardPage() {
               <AlertCircle className="h-5 w-5 text-warning-foreground flex-shrink-0" />
               <div>
                 <div className="font-medium text-foreground">No school assigned yet</div>
-                <div className="text-muted-foreground mt-1">An EdoSAS administrator must assign you to a school before you can mark attendance.</div>
+                <div className="text-muted-foreground mt-1">
+                  An EdoSAS administrator must assign you to a school before you can mark
+                  attendance.
+                </div>
               </div>
             </div>
           )}
@@ -96,7 +116,6 @@ function DashboardPage() {
     </DashboardShell>
   );
 }
-
 
 /* ----------------------- TEACHER ----------------------- */
 function TeacherView() {
@@ -134,9 +153,19 @@ function TeacherView() {
         profile?.school_id
           ? supabase.from("schools").select("*").eq("id", profile.school_id).maybeSingle()
           : Promise.resolve({ data: null } as any),
-        supabase.from("teacher_attendance").select("*").eq("teacher_user_id", user.id).eq("attendance_date", dateStr).maybeSingle(),
+        supabase
+          .from("teacher_attendance")
+          .select("*")
+          .eq("teacher_user_id", user.id)
+          .eq("attendance_date", dateStr)
+          .maybeSingle(),
         profile?.school_id && profile?.class_taught
-          ? supabase.from("students").select("*").eq("school_id", profile.school_id).eq("class", profile.class_taught).order("student_id", { ascending: true })
+          ? supabase
+              .from("students")
+              .select("*")
+              .eq("school_id", profile.school_id)
+              .eq("class", profile.class_taught)
+              .order("student_id", { ascending: true })
           : Promise.resolve({ data: [] } as any),
       ]);
       if (s) {
@@ -147,7 +176,7 @@ function TeacherView() {
       const local = await getTeacherAttendanceForDate(user.id, dateStr);
       const localNewer =
         local && (!a?.updated_at || (local.updated_at && local.updated_at > a.updated_at));
-      setToday(localNewer ? local : a ?? local ?? null);
+      setToday(localNewer ? local : (a ?? local ?? null));
       setStudents(st ?? []);
     } catch {
       // Offline / network failure — local cache already loaded above; nothing to do.
@@ -157,7 +186,9 @@ function TeacherView() {
     }
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id, profile?.school_id, profile?.class_taught]);
+  useEffect(() => {
+    load(); /* eslint-disable-next-line */
+  }, [user?.id, profile?.school_id, profile?.class_taught]);
 
   const mark = async (kind: "arrival" | "departure") => {
     if (!user || !profile?.school_id || !school) {
@@ -174,7 +205,6 @@ function TeacherView() {
       // attendance record without a verifiable location. GPS works offline.
       let lat: number;
       let lng: number;
-      let dist: number;
       let verified = false;
       try {
         const pos = await getCurrentPosition();
@@ -186,23 +216,27 @@ function TeacherView() {
           err?.code === 1
             ? "Location permission denied. Enable location access for this app and try again."
             : err?.code === 2
-            ? "Could not determine your location. Move to an open area with GPS signal and try again."
-            : err?.code === 3
-            ? "Location request timed out. Please try again."
-            : err?.message ?? "Unable to capture your GPS location. Please try again.";
+              ? "Could not determine your location. Move to an open area with GPS signal and try again."
+              : err?.code === 3
+                ? "Location request timed out. Please try again."
+                : (err?.message ?? "Unable to capture your GPS location. Please try again.");
         toast.error(msg);
         return;
       }
-      dist = distanceMeters(lat, lng, school.latitude, school.longitude);
+      const dist = distanceMeters(lat, lng, school.latitude, school.longitude);
       const allowedRadius = school.radius_meters ?? DEFAULT_RADIUS_M;
       verified = dist <= allowedRadius;
 
       if (!verified) {
         const teacherName = profile?.full_name ?? "Teacher";
         if (isHead) {
-          setDistanceWarning(`Dear Head Teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m). Please ensure you are within the school premises when marking attendance.`);
+          setDistanceWarning(
+            `Dear Head Teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m). Please ensure you are within the school premises when marking attendance.`,
+          );
         } else {
-          setDistanceWarning(`Dear teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m).`);
+          setDistanceWarning(
+            `Dear teacher ${teacherName}, you marked your attendance out of range (${Math.round(dist)} m from your school, allowed radius ${allowedRadius} m).`,
+          );
         }
       } else {
         setDistanceWarning(null);
@@ -228,35 +262,63 @@ function TeacherView() {
       });
       setToday(saved);
 
-      const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      const timeLabel = new Date(now).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
       const online = typeof navigator === "undefined" ? true : navigator.onLine;
       const offlineSuffix = online ? "" : " (saved offline — will sync when back online)";
 
       if (kind === "arrival") {
-        const arrivalLabel = status === "early" ? "Well done, you arrived early" : status === "late" ? "You arrived late" : `Arrival marked at ${timeLabel} — on time`;
+        const arrivalLabel =
+          status === "early"
+            ? "Well done, you arrived early"
+            : status === "late"
+              ? "You arrived late"
+              : `Arrival marked at ${timeLabel} — on time`;
         if (verified) {
           void haptic("success");
           toast.success(arrivalLabel + offlineSuffix);
         } else {
           void haptic("warning");
-          toast.warning(`Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`);
+          toast.warning(
+            `Arrival recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`,
+          );
         }
       } else {
-        const departureLabel = status === "left_early" ? "Early" : status === "overtime" ? "Departed after closing time" : status.replace("_", " ");
+        const departureLabel =
+          status === "left_early"
+            ? "Early"
+            : status === "overtime"
+              ? "Departed after closing time"
+              : status.replace("_", " ");
         if (verified) {
           void haptic("success");
           toast.success(`Departure marked at ${timeLabel} — ${departureLabel}${offlineSuffix}`);
         } else {
           void haptic("warning");
-          toast.warning(`Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`);
+          toast.warning(
+            `Departure recorded at ${timeLabel}, but you are ${Math.round(dist)} m from ${school.name}.${offlineSuffix}`,
+          );
         }
       }
 
       // Fire-and-forget background sync attempt; harmless if offline.
-      if (online) void syncNow(school.id);
+      if (online) {
+        void syncNow(school.id).catch((err) => {
+          if (!isTransientNetworkError(err)) console.warn("Teacher attendance sync failed", err);
+        });
+      }
     } catch (e: any) {
       void haptic("error");
-      toast.error(e.message ?? "Could not save attendance");
+      if (isTransientNetworkError(e)) {
+        toast.success(
+          "Attendance saved on this phone. It will sync when the connection is stable.",
+        );
+      } else {
+        toast.error(e.message ?? "Could not save attendance");
+      }
     } finally {
       setBusy(null);
     }
@@ -265,12 +327,23 @@ function TeacherView() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold">Welcome, {profile?.full_name?.split(" ")[0] ?? "Teacher"}</h1>
-        <p className="text-sm text-muted-foreground mt-1">{school ? school.name : "No school assigned"} · {new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}</p>
+        <h1 className="text-2xl md:text-3xl font-bold">
+          Welcome, {profile?.full_name?.split(" ")[0] ?? "Teacher"}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {school ? school.name : "No school assigned"} ·{" "}
+          {new Date().toLocaleDateString(undefined, {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+          })}
+        </p>
         <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-sm">
           <UserCheck className="h-4 w-4 text-primary" />
           <span className="text-muted-foreground">{idLabel}:</span>
-          <span className="font-mono font-semibold text-foreground">{profile?.teacher_id ?? "—"}</span>
+          <span className="font-mono font-semibold text-foreground">
+            {profile?.teacher_id ?? "—"}
+          </span>
           {profile?.class_taught && (
             <>
               <span className="text-border">|</span>
@@ -295,9 +368,16 @@ function TeacherView() {
         <div className={`rounded-2xl border border-border ${cardBg} p-6 shadow-card`}>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Arrival</div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                Arrival
+              </div>
               <div className="mt-2 text-2xl font-bold font-display">
-                {today?.arrival_time ? new Date(today.arrival_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                {today?.arrival_time
+                  ? new Date(today.arrival_time).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "—"}
               </div>
               {today?.arrival_status && <StatusBadge status={today.arrival_status} />}
               {today?.arrival_lat != null && today?.arrival_lng != null && (
@@ -308,30 +388,64 @@ function TeacherView() {
                   className="mt-1.5 flex items-center gap-1 text-xs sm:text-[11px] text-primary font-mono hover:underline"
                 >
                   <MapPin className="h-3.5 w-3.5 sm:h-3 sm:w-3 flex-shrink-0" />
-                  <span className="break-all">{today.arrival_lat.toFixed(4)}, {today.arrival_lng.toFixed(4)}</span>
+                  <span className="break-all">
+                    {today.arrival_lat.toFixed(4)}, {today.arrival_lng.toFixed(4)}
+                  </span>
                 </a>
               )}
-              {today?.arrival_lat != null && today?.arrival_lng != null && school?.latitude != null && school?.longitude != null && (
-                <div className="mt-1 text-xs sm:text-[11px] text-muted-foreground">
-                  Distance: {Math.round(distanceMeters(today.arrival_lat, today.arrival_lng, school.latitude, school.longitude)).toLocaleString()} m from school
-                </div>
-              )}
+              {today?.arrival_lat != null &&
+                today?.arrival_lng != null &&
+                school?.latitude != null &&
+                school?.longitude != null && (
+                  <div className="mt-1 text-xs sm:text-[11px] text-muted-foreground">
+                    Distance:{" "}
+                    {Math.round(
+                      distanceMeters(
+                        today.arrival_lat,
+                        today.arrival_lng,
+                        school.latitude,
+                        school.longitude,
+                      ),
+                    ).toLocaleString()}{" "}
+                    m from school
+                  </div>
+                )}
             </div>
             <div className="h-12 w-12 rounded-xl bg-primary/10 grid place-items-center">
               <LogIn className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <Button onClick={() => mark("arrival")} disabled={!!busy || !!today?.arrival_time || !school} className="w-full mt-5 bg-gradient-primary hover:opacity-90 h-12 text-base">
-            {busy === "arrival" ? <Loader2 className="h-4 w-4 animate-spin" /> : today?.arrival_time ? "Already marked" : (<><MapPin className="h-4 w-4 mr-2" />Mark arrival</>)}
+          <Button
+            onClick={() => mark("arrival")}
+            disabled={!!busy || !!today?.arrival_time || !school}
+            className="w-full mt-5 bg-gradient-primary hover:opacity-90 h-12 text-base"
+          >
+            {busy === "arrival" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : today?.arrival_time ? (
+              "Already marked"
+            ) : (
+              <>
+                <MapPin className="h-4 w-4 mr-2" />
+                Mark arrival
+              </>
+            )}
           </Button>
         </div>
 
         <div className={`rounded-2xl border border-border ${cardBg} p-6 shadow-card`}>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Departure</div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                Departure
+              </div>
               <div className="mt-2 text-2xl font-bold font-display">
-                {today?.departure_time ? new Date(today.departure_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                {today?.departure_time
+                  ? new Date(today.departure_time).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "—"}
               </div>
               {today?.departure_status && <StatusBadge status={today.departure_status} />}
               {today?.departure_lat != null && today?.departure_lng != null && (
@@ -342,21 +456,51 @@ function TeacherView() {
                   className="mt-1.5 flex items-center gap-1 text-xs sm:text-[11px] text-primary font-mono hover:underline"
                 >
                   <MapPin className="h-3.5 w-3.5 sm:h-3 sm:w-3 flex-shrink-0" />
-                  <span className="break-all">{today.departure_lat.toFixed(4)}, {today.departure_lng.toFixed(4)}</span>
+                  <span className="break-all">
+                    {today.departure_lat.toFixed(4)}, {today.departure_lng.toFixed(4)}
+                  </span>
                 </a>
               )}
-              {today?.departure_lat != null && today?.departure_lng != null && school?.latitude != null && school?.longitude != null && (
-                <div className="mt-1 text-xs sm:text-[11px] text-muted-foreground">
-                  Distance: {Math.round(distanceMeters(today.departure_lat, today.departure_lng, school.latitude, school.longitude)).toLocaleString()} m from school
-                </div>
-              )}
+              {today?.departure_lat != null &&
+                today?.departure_lng != null &&
+                school?.latitude != null &&
+                school?.longitude != null && (
+                  <div className="mt-1 text-xs sm:text-[11px] text-muted-foreground">
+                    Distance:{" "}
+                    {Math.round(
+                      distanceMeters(
+                        today.departure_lat,
+                        today.departure_lng,
+                        school.latitude,
+                        school.longitude,
+                      ),
+                    ).toLocaleString()}{" "}
+                    m from school
+                  </div>
+                )}
             </div>
             <div className="h-12 w-12 rounded-xl bg-gold/15 grid place-items-center">
               <LogOut className="h-6 w-6 text-gold-foreground" />
             </div>
           </div>
-          <Button onClick={() => mark("departure")} disabled={!!busy || !today?.arrival_time || !!today?.departure_time || !school} variant="outline" className="w-full mt-5 h-12 text-base">
-            {busy === "departure" ? <Loader2 className="h-4 w-4 animate-spin" /> : today?.departure_time ? "Already marked" : !today?.arrival_time ? "Mark arrival first" : (<><MapPin className="h-4 w-4 mr-2" />Mark departure</>)}
+          <Button
+            onClick={() => mark("departure")}
+            disabled={!!busy || !today?.arrival_time || !!today?.departure_time || !school}
+            variant="outline"
+            className="w-full mt-5 h-12 text-base"
+          >
+            {busy === "departure" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : today?.departure_time ? (
+              "Already marked"
+            ) : !today?.arrival_time ? (
+              "Mark arrival first"
+            ) : (
+              <>
+                <MapPin className="h-4 w-4 mr-2" />
+                Mark departure
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -365,15 +509,17 @@ function TeacherView() {
         <div className={`rounded-2xl border border-border ${cardBg} p-6 shadow-card`}>
           <h3 className="font-display font-semibold mb-3">School details</h3>
           <div className="grid sm:grid-cols-2 gap-4 text-sm">
-            <Info label="Resumption time" value={school.resumption_time?.slice(0,5)} icon={Clock} />
-            <Info label="Closing time" value={school.closing_time?.slice(0,5)} icon={Clock} />
+            <Info
+              label="Resumption time"
+              value={school.resumption_time?.slice(0, 5)}
+              icon={Clock}
+            />
+            <Info label="Closing time" value={school.closing_time?.slice(0, 5)} icon={Clock} />
             <Info label="Approved radius" value={`${school.radius_meters} m`} icon={MapPin} />
             <Info label="LGA" value={school.lga} icon={Building2} />
           </div>
         </div>
       )}
-
-      
 
       <AdmitStudentCard schoolName={school?.name} onAdded={load} />
 
@@ -385,7 +531,9 @@ function TeacherView() {
 function Info({ label, value, icon: Icon }: any) {
   return (
     <div className="flex items-start gap-3">
-      <div className="h-9 w-9 rounded-lg bg-muted grid place-items-center"><Icon className="h-4 w-4 text-muted-foreground" /></div>
+      <div className="h-9 w-9 rounded-lg bg-muted grid place-items-center">
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </div>
       <div>
         <div className="text-xs text-muted-foreground">{label}</div>
         <div className="font-medium">{value ?? "—"}</div>
@@ -403,7 +551,13 @@ function StatusBadge({ status }: { status: string }) {
     overtime: { label: "Departed after closing time", cls: "bg-gold/20 text-gold-foreground" },
   };
   const s = map[status] ?? { label: status, cls: "bg-muted text-muted-foreground" };
-  return <span className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full mt-2 ${s.cls}`}>{s.label}</span>;
+  return (
+    <span
+      className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full mt-2 ${s.cls}`}
+    >
+      {s.label}
+    </span>
+  );
 }
 
 /* ----------------------- HEAD TEACHER ----------------------- */
@@ -416,12 +570,22 @@ function HeadTeacherView() {
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = async () => {
-    if (!profile?.school_id) { setLoading(false); return; }
+    if (!profile?.school_id) {
+      setLoading(false);
+      return;
+    }
     const dateStr = new Date().toISOString().slice(0, 10);
     const [{ data: sc }, { data: ts }, { data: rs }] = await Promise.all([
       supabase.from("schools").select("*").eq("id", profile.school_id).maybeSingle(),
-      supabase.from("profiles").select("user_id, full_name, designation, teacher_id, class_taught").eq("school_id", profile.school_id),
-      supabase.from("teacher_attendance").select("*").eq("school_id", profile.school_id).eq("attendance_date", dateStr),
+      supabase
+        .from("profiles")
+        .select("user_id, full_name, designation, teacher_id, class_taught")
+        .eq("school_id", profile.school_id),
+      supabase
+        .from("teacher_attendance")
+        .select("*")
+        .eq("school_id", profile.school_id)
+        .eq("attendance_date", dateStr),
     ]);
     setSchool(sc);
     setTeachers((ts ?? []).filter((t: any) => t.user_id !== user?.id));
@@ -429,11 +593,19 @@ function HeadTeacherView() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [profile?.school_id, user?.id]);
+  useEffect(() => {
+    load(); /* eslint-disable-next-line */
+  }, [profile?.school_id, user?.id]);
 
   const verify = async (id: string) => {
-    const { error } = await supabase.from("teacher_attendance").update({ head_verified: true, head_verified_at: new Date().toISOString() }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    const { error } = await supabase
+      .from("teacher_attendance")
+      .update({ head_verified: true, head_verified_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Verified");
     load();
   };
@@ -502,41 +674,84 @@ function HeadTeacherView() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl md:text-3xl font-bold">Head Teacher Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Today's teacher attendance · {new Date().toLocaleDateString()}</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Today's teacher attendance · {new Date().toLocaleDateString()}
+        </p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon={UserCheck} label="Present" value={present} tone="success" className="bg-head-teacher-card" />
-        <StatCard icon={Clock} label="Late" value={late} tone="warning" className="bg-head-teacher-card" />
-        <StatCard icon={LogOut} label="Left early" value={leftEarly} tone="destructive" className="bg-head-teacher-card" />
-        <StatCard icon={AlertCircle} label="Pending" value={pending} tone="gold" className="bg-head-teacher-card" />
+        <StatCard
+          icon={UserCheck}
+          label="Present"
+          value={present}
+          tone="success"
+          className="bg-head-teacher-card"
+        />
+        <StatCard
+          icon={Clock}
+          label="Late"
+          value={late}
+          tone="warning"
+          className="bg-head-teacher-card"
+        />
+        <StatCard
+          icon={LogOut}
+          label="Left early"
+          value={leftEarly}
+          tone="destructive"
+          className="bg-head-teacher-card"
+        />
+        <StatCard
+          icon={AlertCircle}
+          label="Pending"
+          value={pending}
+          tone="gold"
+          className="bg-head-teacher-card"
+        />
       </div>
 
       <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card overflow-hidden">
         <div className="p-5 border-b border-border">
           <h3 className="font-display font-semibold">Teachers in your school</h3>
-          <p className="text-xs text-muted-foreground mt-1">Mark on a teacher's behalf if they couldn't sign in.</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Mark on a teacher's behalf if they couldn't sign in.
+          </p>
         </div>
         {loading ? (
-          <div className="p-8 text-center text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin inline" /></div>
+          <div className="p-8 text-center text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin inline" />
+          </div>
         ) : teachers.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground text-sm">No teachers assigned to this school yet.</div>
+          <div className="p-8 text-center text-muted-foreground text-sm">
+            No teachers assigned to this school yet.
+          </div>
         ) : (
           <div className="divide-y divide-border">
             {teachers.map((t) => {
               const r = records[t.user_id];
               return (
-                <div key={t.user_id} className="p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+                <div
+                  key={t.user_id}
+                  className="p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3"
+                >
                   <div className="flex-1 min-w-0 sm:min-w-[180px]">
                     <div className="font-medium truncate">{t.full_name}</div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {t.teacher_id ?? "—"}{t.class_taught ? ` · ${t.class_taught}` : ""}
+                      {t.teacher_id ?? "—"}
+                      {t.class_taught ? ` · ${t.class_taught}` : ""}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3 sm:flex sm:gap-4 text-sm">
                     <div className="min-w-0 sm:min-w-[110px]">
                       <div className="text-muted-foreground text-xs">Arrival</div>
-                      <div>{r?.arrival_time ? new Date(r.arrival_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
+                      <div>
+                        {r?.arrival_time
+                          ? new Date(r.arrival_time).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "—"}
+                      </div>
                       {r?.arrival_status && <StatusBadge status={r.arrival_status} />}
                       {r?.arrival_lat != null && r?.arrival_lng != null && (
                         <a
@@ -546,13 +761,22 @@ function HeadTeacherView() {
                           className="mt-1 flex items-center gap-1 text-[11px] text-primary font-mono hover:underline"
                         >
                           <MapPin className="h-3 w-3 flex-shrink-0" />
-                          <span className="break-all">{r.arrival_lat.toFixed(4)}, {r.arrival_lng.toFixed(4)}</span>
+                          <span className="break-all">
+                            {r.arrival_lat.toFixed(4)}, {r.arrival_lng.toFixed(4)}
+                          </span>
                         </a>
                       )}
                     </div>
                     <div className="min-w-0 sm:min-w-[110px]">
                       <div className="text-muted-foreground text-xs">Departure</div>
-                      <div>{r?.departure_time ? new Date(r.departure_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
+                      <div>
+                        {r?.departure_time
+                          ? new Date(r.departure_time).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "—"}
+                      </div>
                       {r?.departure_status && <StatusBadge status={r.departure_status} />}
                       {r?.departure_lat != null && r?.departure_lng != null && (
                         <a
@@ -562,7 +786,9 @@ function HeadTeacherView() {
                           className="mt-1 flex items-center gap-1 text-[11px] text-primary font-mono hover:underline"
                         >
                           <MapPin className="h-3 w-3 flex-shrink-0" />
-                          <span className="break-all">{r.departure_lat.toFixed(4)}, {r.departure_lng.toFixed(4)}</span>
+                          <span className="break-all">
+                            {r.departure_lat.toFixed(4)}, {r.departure_lng.toFixed(4)}
+                          </span>
                         </a>
                       )}
                     </div>
@@ -573,24 +799,48 @@ function HeadTeacherView() {
                       variant={r?.arrival_time ? "outline" : "default"}
                       disabled={busy === `${t.user_id}-arrival` || !!r?.arrival_time}
                       onClick={() => markFor(t, "arrival")}
-                      className={!r?.arrival_time ? "bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none" : "flex-1 sm:flex-none"}
+                      className={
+                        !r?.arrival_time
+                          ? "bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none"
+                          : "flex-1 sm:flex-none"
+                      }
                     >
-                      {busy === `${t.user_id}-arrival` ? <Loader2 className="h-3 w-3 animate-spin" /> : r?.arrival_time ? "Arrived" : "Mark arrival"}
+                      {busy === `${t.user_id}-arrival` ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : r?.arrival_time ? (
+                        "Arrived"
+                      ) : (
+                        "Mark arrival"
+                      )}
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      disabled={busy === `${t.user_id}-departure` || !r?.arrival_time || !!r?.departure_time}
+                      disabled={
+                        busy === `${t.user_id}-departure` || !r?.arrival_time || !!r?.departure_time
+                      }
                       onClick={() => markFor(t, "departure")}
                       className="flex-1 sm:flex-none"
                     >
-                      {busy === `${t.user_id}-departure` ? <Loader2 className="h-3 w-3 animate-spin" /> : r?.departure_time ? "Left" : "Mark departure"}
+                      {busy === `${t.user_id}-departure` ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : r?.departure_time ? (
+                        "Left"
+                      ) : (
+                        "Mark departure"
+                      )}
                     </Button>
-                    {r?.arrival_time && (r.head_verified ? (
-                      <Badge className="bg-success/15 text-success border-success/20"><CheckCircle2 className="h-3 w-3 mr-1" />Verified</Badge>
-                    ) : (
-                      <Button size="sm" variant="ghost" onClick={() => verify(r.id)}>Verify</Button>
-                    ))}
+                    {r?.arrival_time &&
+                      (r.head_verified ? (
+                        <Badge className="bg-success/15 text-success border-success/20">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Verified
+                        </Badge>
+                      ) : (
+                        <Button size="sm" variant="ghost" onClick={() => verify(r.id)}>
+                          Verify
+                        </Button>
+                      ))}
                   </div>
                 </div>
               );
@@ -601,5 +851,3 @@ function HeadTeacherView() {
     </div>
   );
 }
-
-

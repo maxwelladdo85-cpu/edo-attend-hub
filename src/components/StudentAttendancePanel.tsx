@@ -19,7 +19,7 @@ import {
 } from "@/lib/offline/localDb";
 import { getSyncState, subscribeSync, syncNow } from "@/lib/offline/syncEngine";
 import { supabase } from "@/integrations/supabase/client";
-
+import { isTransientNetworkError } from "@/lib/offline/networkErrors";
 
 type Mark = "present" | "late" | "absent";
 type Session = "morning" | "afternoon";
@@ -46,9 +46,17 @@ interface AttendanceRow {
 }
 
 const MARKS: { value: Mark; label: string; cls: string }[] = [
-  { value: "present", label: "Present", cls: "bg-success text-success-foreground hover:bg-success/90" },
+  {
+    value: "present",
+    label: "Present",
+    cls: "bg-success text-success-foreground hover:bg-success/90",
+  },
   { value: "late", label: "Late", cls: "bg-gold text-gold-foreground hover:bg-gold/90" },
-  { value: "absent", label: "Absent", cls: "bg-destructive text-destructive-foreground hover:bg-destructive/90" },
+  {
+    value: "absent",
+    label: "Absent",
+    cls: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+  },
 ];
 
 export function StudentAttendancePanel() {
@@ -66,7 +74,6 @@ export function StudentAttendancePanel() {
   useEffect(() => subscribeSync(setSync), []);
 
   const dateStr = format(date, "yyyy-MM-dd");
-
 
   useEffect(() => {
     const load = async () => {
@@ -107,7 +114,9 @@ export function StudentAttendancePanel() {
         ? allStudents
         : allStudents.filter((s) => s.class === profile.class_taught);
       filtered.sort((a, b) =>
-        a.class === b.class ? a.student_id.localeCompare(b.student_id) : a.class.localeCompare(b.class),
+        a.class === b.class
+          ? a.student_id.localeCompare(b.student_id)
+          : a.class.localeCompare(b.class),
       );
       setStudents(filtered);
       const map: Record<string, AttendanceRow> = {};
@@ -135,7 +144,6 @@ export function StudentAttendancePanel() {
       toast.error(e?.message ?? "Update failed");
     }
   };
-
 
   const mark = async (student: Student, session: Session, value: Mark | null) => {
     if (!user || !profile?.school_id) return;
@@ -170,7 +178,10 @@ export function StudentAttendancePanel() {
 
       const now = session === "morning" ? next.morning_marked_at : next.afternoon_marked_at;
       if (value && now) {
-        const timeLabel = new Date(now).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const timeLabel = new Date(now).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
         toast.success(
           `${student.full_name.split(" ")[0]} · ${session} marked at ${timeLabel}${
             lat !== null ? " · location captured" : ""
@@ -181,15 +192,24 @@ export function StudentAttendancePanel() {
       }
 
       // Fire-and-forget sync; falls back to retry on next online tick.
-      void syncNow(profile.school_id);
+      void syncNow(profile.school_id).catch((err) => {
+        if (!isTransientNetworkError(err)) console.warn("Student attendance sync failed", err);
+      });
     } catch (e: any) {
-      toast.error(e.message ?? "Could not save attendance");
+      if (isTransientNetworkError(e)) {
+        toast.success(
+          "Attendance saved on this phone. It will sync when the connection is stable.",
+        );
+      } else {
+        toast.error(e.message ?? "Could not save attendance");
+      }
     } finally {
       setSavingKey(null);
     }
   };
 
-  const visible = isHead && classFilter !== "all" ? students.filter((s) => s.class === classFilter) : students;
+  const visible =
+    isHead && classFilter !== "all" ? students.filter((s) => s.class === classFilter) : students;
 
   const total = visible.length;
   const amPresent = visible.filter((s) => rows[s.id]?.morning_status === "present").length;
@@ -198,15 +218,50 @@ export function StudentAttendancePanel() {
   const pmAbsent = total - pmPresent;
 
   return (
-    <div className={`mx-2 sm:mx-0 rounded-2xl border border-border bg-head-teacher-card shadow-card overflow-hidden`}>
-
+    <div
+      className={`mx-2 sm:mx-0 rounded-2xl border border-border bg-head-teacher-card shadow-card overflow-hidden`}
+    >
       {isHead && total > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 p-3 sm:p-5">
-          <StatCard icon={Users} label="Total" value={total} tone="default" className="bg-head-teacher-card" />
-          <StatCard icon={Sun} label="AM Present" value={`${amPresent}`} hint={`${total > 0 ? Math.round((amPresent / total) * 100) : 0}%`} tone="success" className="bg-head-teacher-card" />
-          <StatCard icon={Sun} label="AM Absent" value={`${amAbsent}`} hint={`${total > 0 ? Math.round((amAbsent / total) * 100) : 0}%`} tone="destructive" className="bg-head-teacher-card" />
-          <StatCard icon={Sunset} label="PM Present" value={`${pmPresent}`} hint={`${total > 0 ? Math.round((pmPresent / total) * 100) : 0}%`} tone="success" className="bg-head-teacher-card" />
-          <StatCard icon={Sunset} label="PM Absent" value={`${pmAbsent}`} hint={`${total > 0 ? Math.round((pmAbsent / total) * 100) : 0}%`} tone="destructive" className="bg-head-teacher-card" />
+          <StatCard
+            icon={Users}
+            label="Total"
+            value={total}
+            tone="default"
+            className="bg-head-teacher-card"
+          />
+          <StatCard
+            icon={Sun}
+            label="AM Present"
+            value={`${amPresent}`}
+            hint={`${total > 0 ? Math.round((amPresent / total) * 100) : 0}%`}
+            tone="success"
+            className="bg-head-teacher-card"
+          />
+          <StatCard
+            icon={Sun}
+            label="AM Absent"
+            value={`${amAbsent}`}
+            hint={`${total > 0 ? Math.round((amAbsent / total) * 100) : 0}%`}
+            tone="destructive"
+            className="bg-head-teacher-card"
+          />
+          <StatCard
+            icon={Sunset}
+            label="PM Present"
+            value={`${pmPresent}`}
+            hint={`${total > 0 ? Math.round((pmPresent / total) * 100) : 0}%`}
+            tone="success"
+            className="bg-head-teacher-card"
+          />
+          <StatCard
+            icon={Sunset}
+            label="PM Absent"
+            value={`${pmAbsent}`}
+            hint={`${total > 0 ? Math.round((pmAbsent / total) * 100) : 0}%`}
+            tone="destructive"
+            className="bg-head-teacher-card"
+          />
         </div>
       )}
       <div className="p-5 border-b border-border flex flex-wrap items-center justify-between gap-3">
@@ -227,13 +282,21 @@ export function StudentAttendancePanel() {
             >
               <option value="all">All classes</option>
               {[...new Set(students.map((s) => s.class))].sort().map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
           )}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className={cn("justify-start text-left font-normal", !date && "text-muted-foreground")}>
+              <Button
+                variant="outline"
+                className={cn(
+                  "justify-start text-left font-normal",
+                  !date && "text-muted-foreground",
+                )}
+              >
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {format(date, "PPP")}
               </Button>
@@ -255,22 +318,32 @@ export function StudentAttendancePanel() {
       {!isHead && !profile?.class_taught ? (
         <div className="p-8 text-center text-muted-foreground text-sm">Class not assigned yet.</div>
       ) : loading ? (
-        <div className="p-8 text-center text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin inline" /></div>
+        <div className="p-8 text-center text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin inline" />
+        </div>
       ) : students.length === 0 ? (
-        <div className="p-8 text-center text-muted-foreground text-sm">{isHead ? "No students enrolled in this school yet." : "No students in your class yet."}</div>
+        <div className="p-8 text-center text-muted-foreground text-sm">
+          {isHead ? "No students enrolled in this school yet." : "No students in your class yet."}
+        </div>
       ) : (
         <div className="divide-y divide-border">
           {visible.map((s) => {
             const row = rows[s.id];
             return (
-              <div key={s.id} className="p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
+              <div
+                key={s.id}
+                className="p-3 sm:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3"
+              >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="h-9 min-w-[3.5rem] max-w-[5rem] rounded-lg bg-primary/10 flex items-center justify-center font-mono text-[10px] font-semibold text-primary flex-shrink-0 overflow-hidden px-1.5">
                     <span className="truncate">{s.student_id}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-medium truncate">{s.full_name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{s.class}{s.gender ? ` · ${s.gender}` : ""}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {s.class}
+                      {s.gender ? ` · ${s.gender}` : ""}
+                    </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:flex-1 sm:justify-end">
@@ -309,7 +382,9 @@ export function StudentAttendancePanel() {
             disabled={sync.syncing}
           >
             {sync.syncing ? (
-              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Updating…</>
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Updating…
+              </>
             ) : sync.pending > 0 ? (
               `Update (${sync.pending} pending)`
             ) : (
@@ -317,7 +392,9 @@ export function StudentAttendancePanel() {
             )}
           </Button>
           {sync.lastError && (
-            <div className="mt-2 text-xs text-destructive text-center truncate">{sync.lastError}</div>
+            <div className="mt-2 text-xs text-destructive text-center truncate">
+              {sync.lastError}
+            </div>
           )}
         </div>
       )}
@@ -325,11 +402,24 @@ export function StudentAttendancePanel() {
   );
 }
 
-
-function SessionCheck({ icon: Icon, label, current, markedAt, lat, lng, saving, onToggle }: {
-  icon: any; label: string; current: Mark | null;
-  markedAt: string | null; lat: number | null; lng: number | null;
-  saving: boolean; onToggle: (checked: boolean) => void;
+function SessionCheck({
+  icon: Icon,
+  label,
+  current,
+  markedAt,
+  lat,
+  lng,
+  saving,
+  onToggle,
+}: {
+  icon: any;
+  label: string;
+  current: Mark | null;
+  markedAt: string | null;
+  lat: number | null;
+  lng: number | null;
+  saving: boolean;
+  onToggle: (checked: boolean) => void;
 }) {
   const checked = current === "present";
   return (
@@ -337,13 +427,18 @@ function SessionCheck({ icon: Icon, label, current, markedAt, lat, lng, saving, 
       role="button"
       tabIndex={0}
       onClick={() => !saving && onToggle(!checked)}
-      onKeyDown={(e) => { if (!saving && (e.key === " " || e.key === "Enter")) { e.preventDefault(); onToggle(!checked); } }}
+      onKeyDown={(e) => {
+        if (!saving && (e.key === " " || e.key === "Enter")) {
+          e.preventDefault();
+          onToggle(!checked);
+        }
+      }}
       className={cn(
         "flex flex-col gap-1 rounded-lg border border-border px-3 py-2 cursor-pointer transition select-none w-full sm:w-auto sm:min-w-[140px]",
         checked ? "bg-success/10 border-success/40" : "bg-background hover:bg-muted",
         saving && "opacity-60 cursor-wait",
-      )}>
-
+      )}
+    >
       <div className="flex items-center gap-2">
         <Checkbox
           checked={checked}
@@ -358,7 +453,11 @@ function SessionCheck({ icon: Icon, label, current, markedAt, lat, lng, saving, 
       {checked && markedAt && (
         <div className="text-[10px] text-muted-foreground leading-tight pl-6">
           <div>
-            {new Date(markedAt).toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" })}
+            {new Date(markedAt).toLocaleDateString([], {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })}
             {" · "}
             {new Date(markedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
           </div>
@@ -370,7 +469,8 @@ function SessionCheck({ icon: Icon, label, current, markedAt, lat, lng, saving, 
               onClick={(e) => e.stopPropagation()}
               className="inline-flex items-center gap-0.5 text-primary hover:underline"
             >
-              <MapPin className="h-2.5 w-2.5" />{lat.toFixed(4)}, {lng.toFixed(4)}
+              <MapPin className="h-2.5 w-2.5" />
+              {lat.toFixed(4)}, {lng.toFixed(4)}
             </a>
           ) : (
             <span className="text-muted-foreground/70">no location</span>
