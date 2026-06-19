@@ -25,6 +25,9 @@ import { AdmitStudentCard } from "@/components/AdmitStudentCard";
 import {
   markTeacherAttendance,
   getTeacherAttendanceForDate,
+  getTeacherAttendanceForSchoolDate,
+  getTeacherProfilesForSchool,
+  bulkUpsertTeacherProfiles,
   cacheSchool,
   getCachedSchool,
 } from "@/lib/offline/localDb";
