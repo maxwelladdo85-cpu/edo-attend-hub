@@ -205,7 +205,7 @@ function TeacherView() {
       // attendance record without a verifiable location. GPS works offline.
       let lat: number;
       let lng: number;
-      let dist: number;
+      const dist = distanceMeters(lat, lng, school.latitude, school.longitude);
       let verified = false;
       try {
         const pos = await getCurrentPosition();
@@ -224,7 +224,6 @@ function TeacherView() {
         toast.error(msg);
         return;
       }
-      dist = distanceMeters(lat, lng, school.latitude, school.longitude);
       const allowedRadius = school.radius_meters ?? DEFAULT_RADIUS_M;
       verified = dist <= allowedRadius;
 
