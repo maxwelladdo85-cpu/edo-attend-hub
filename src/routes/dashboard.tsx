@@ -830,53 +830,22 @@ function HeadTeacherView() {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
-                    <Button
-                      size="sm"
-                      variant={r?.arrival_time ? "outline" : "default"}
-                      disabled={busy === `${t.user_id}-arrival` || !!r?.arrival_time}
-                      onClick={() => markFor(t, "arrival")}
-                      className={
-                        !r?.arrival_time
-                          ? "bg-gradient-primary hover:opacity-90 flex-1 sm:flex-none"
-                          : "flex-1 sm:flex-none"
-                      }
-                    >
-                      {busy === `${t.user_id}-arrival` ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : r?.arrival_time ? (
-                        "Arrived"
-                      ) : (
-                        "Mark arrival"
-                      )}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={
-                        busy === `${t.user_id}-departure` || !r?.arrival_time || !!r?.departure_time
-                      }
-                      onClick={() => markFor(t, "departure")}
-                      className="flex-1 sm:flex-none"
-                    >
-                      {busy === `${t.user_id}-departure` ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : r?.departure_time ? (
-                        "Left"
-                      ) : (
-                        "Mark departure"
-                      )}
-                    </Button>
-                    {r?.arrival_time &&
-                      (r.head_verified ? (
+                    {r?.arrival_time ? (
+                      r.head_verified ? (
                         <Badge className="bg-success/15 text-success border-success/20">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
                           Verified
                         </Badge>
                       ) : (
-                        <Button size="sm" variant="ghost" onClick={() => verify(r.id)}>
+                        <Button size="sm" variant="default" onClick={() => verify(r.id)}>
                           Verify
                         </Button>
-                      ))}
+                      )
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">
+                        Awaiting teacher to mark arrival
+                      </span>
+                    )}
                   </div>
                 </div>
               );
