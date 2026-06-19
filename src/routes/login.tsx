@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { InstallAppCard } from "@/components/InstallAppButton";
 import authBg from "@/assets/auth-bg.webp";
+
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -210,6 +212,9 @@ function LoginPage() {
             </Button>
           </form>
 
+          <div className="mt-6">
+            <InstallAppCard />
+          </div>
         </div>
       </div>
     </div>

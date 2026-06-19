@@ -22,6 +22,8 @@ import { useAuth, primaryRole } from "@/contexts/AuthContext";
 import { DashboardShell, roleLabelFor } from "@/components/DashboardShell";
 import { AcademicPeriodsCard } from "@/components/AcademicPeriodsCard";
 import { OfflineDiagnosticsCard } from "@/components/OfflineDiagnosticsCard";
+import { InstallAppCard } from "@/components/InstallAppButton";
+
 
 
 export const Route = createFileRoute("/settings")({
@@ -214,6 +216,7 @@ function SettingsPage() {
 
       <OfflineDiagnosticsCard />
 
+      <InstallAppCard />
 
       <Card className="border-destructive/40">
         <CardHeader>
