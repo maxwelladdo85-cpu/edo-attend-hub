@@ -12,7 +12,7 @@ import { distanceMeters, getCurrentPosition, classifyArrival, classifyDeparture 
 import { haptic } from "@/lib/haptics";
 import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
 import { AdmitStudentCard } from "@/components/AdmitStudentCard";
-import { markTeacherAttendance, getTeacherAttendanceForDate } from "@/lib/offline/localDb";
+import { markTeacherAttendance, getTeacherAttendanceForDate, cacheSchool, getCachedSchool } from "@/lib/offline/localDb";
 import { syncNow } from "@/lib/offline/syncEngine";
 
 
@@ -119,6 +119,16 @@ function TeacherView() {
     if (!user) return;
     const dateStr = new Date().toISOString().slice(0, 10);
     const online = typeof navigator === "undefined" ? true : navigator.onLine;
+
+    // ALWAYS hydrate from local cache first so the screen works instantly and
+    // the Mark buttons are usable even when there is no network.
+    if (profile?.school_id) {
+      const cached = await getCachedSchool(profile.school_id);
+      if (cached) setSchool(cached);
+    }
+    const localToday = await getTeacherAttendanceForDate(user.id, dateStr);
+    if (localToday) setToday(localToday);
+
     try {
       const [{ data: s }, { data: a }, { data: st }] = await Promise.all([
         profile?.school_id
@@ -129,7 +139,10 @@ function TeacherView() {
           ? supabase.from("students").select("*").eq("school_id", profile.school_id).eq("class", profile.class_taught).order("student_id", { ascending: true })
           : Promise.resolve({ data: [] } as any),
       ]);
-      if (s) setSchool(s);
+      if (s) {
+        setSchool(s);
+        void cacheSchool(s); // keep local copy fresh for next offline session
+      }
       // Prefer the locally cached row if it's newer than the server copy (offline edits not yet synced).
       const local = await getTeacherAttendanceForDate(user.id, dateStr);
       const localNewer =
@@ -137,9 +150,7 @@ function TeacherView() {
       setToday(localNewer ? local : a ?? local ?? null);
       setStudents(st ?? []);
     } catch {
-      // Offline / network failure — fall back to local cache so the screen still works.
-      const local = await getTeacherAttendanceForDate(user.id, dateStr);
-      setToday(local ?? null);
+      // Offline / network failure — local cache already loaded above; nothing to do.
       if (!online) {
         // Keep last-known school/students in state; do not overwrite with empty.
       }
