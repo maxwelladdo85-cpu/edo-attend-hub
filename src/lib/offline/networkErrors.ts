@@ -30,6 +30,8 @@ export function isTransientNetworkError(err: unknown): boolean {
   );
 }
 
-export function friendlyNetworkMessage(fallback = "Saved on this device. It will sync when the connection is stable.") {
+export function friendlyNetworkMessage(
+  fallback = "Saved on this device. It will sync when the connection is stable.",
+) {
   return fallback;
 }

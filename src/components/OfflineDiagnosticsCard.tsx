@@ -3,7 +3,15 @@
 // or wipe the local cache and re-bootstrap from the server.
 
 import { useCallback, useEffect, useState } from "react";
-import { Database, HardDriveDownload, Loader2, RefreshCw, Trash2, Wifi, WifiOff } from "lucide-react";
+import {
+  Database,
+  HardDriveDownload,
+  Loader2,
+  RefreshCw,
+  Trash2,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,7 +85,8 @@ export function OfflineDiagnosticsCard() {
   };
 
   const handleClear = async () => {
-    if (!window.confirm("Clear all offline data on this device? Unsynced changes will be lost.")) return;
+    if (!window.confirm("Clear all offline data on this device? Unsynced changes will be lost."))
+      return;
     setBusy("clear");
     try {
       await clearAllOfflineData();
@@ -131,16 +140,44 @@ export function OfflineDiagnosticsCard() {
         )}
 
         <div className="flex flex-wrap gap-2 pt-2">
-          <Button size="sm" variant="default" onClick={handleSync} disabled={busy !== null || !sync.online}>
-            {busy === "sync" ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1.5" />}
+          <Button
+            size="sm"
+            variant="default"
+            onClick={handleSync}
+            disabled={busy !== null || !sync.online}
+          >
+            {busy === "sync" ? (
+              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-1.5" />
+            )}
             Sync now
           </Button>
-          <Button size="sm" variant="outline" onClick={handleRebuild} disabled={busy !== null || !sync.online}>
-            {busy === "rebuild" ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <HardDriveDownload className="h-4 w-4 mr-1.5" />}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRebuild}
+            disabled={busy !== null || !sync.online}
+          >
+            {busy === "rebuild" ? (
+              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+            ) : (
+              <HardDriveDownload className="h-4 w-4 mr-1.5" />
+            )}
             Rebuild cache
           </Button>
-          <Button size="sm" variant="ghost" onClick={handleClear} disabled={busy !== null} className="text-destructive hover:text-destructive">
-            {busy === "clear" ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Trash2 className="h-4 w-4 mr-1.5" />}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleClear}
+            disabled={busy !== null}
+            className="text-destructive hover:text-destructive"
+          >
+            {busy === "clear" ? (
+              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4 mr-1.5" />
+            )}
             Clear offline data
           </Button>
         </div>
@@ -149,11 +186,24 @@ export function OfflineDiagnosticsCard() {
   );
 }
 
-function Stat({ label, value, highlight }: { label: string; value: number | undefined; highlight?: boolean }) {
+function Stat({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: number | undefined;
+  highlight?: boolean;
+}) {
   return (
     <div className="rounded-md border bg-muted/30 px-3 py-2">
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={"text-lg font-semibold tabular-nums " + (highlight ? "text-amber-600 dark:text-amber-400" : "")}>
+      <div
+        className={
+          "text-lg font-semibold tabular-nums " +
+          (highlight ? "text-amber-600 dark:text-amber-400" : "")
+        }
+      >
         {value ?? "—"}
       </div>
     </div>

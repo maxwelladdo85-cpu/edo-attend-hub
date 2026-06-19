@@ -140,17 +140,26 @@ async function pullDeltas(schoolId: string) {
   ]);
 
   const sRows: CachedStudentAttendance[] = (sa ?? [])
-    .map((r: any) => ({ ...r, local_key: `${r.student_id}_${r.attendance_date}` }) as CachedStudentAttendance)
+    .map(
+      (r: any) =>
+        ({ ...r, local_key: `${r.student_id}_${r.attendance_date}` }) as CachedStudentAttendance,
+    )
     .filter((r: CachedStudentAttendance) => !pendingKeys.has(r.local_key));
   const tRows: CachedTeacherAttendance[] = (ta ?? [])
-    .map((r: any) => ({ ...r, local_key: `${r.user_id}_${r.attendance_date}` }) as CachedTeacherAttendance)
+    .map(
+      (r: any) =>
+        ({ ...r, local_key: `${r.user_id}_${r.attendance_date}` }) as CachedTeacherAttendance,
+    )
     .filter((r: CachedTeacherAttendance) => !pendingKeys.has(r.local_key));
 
   if (sRows.length) await bulkUpsertStudentAttendance(sRows);
   if (tRows.length) await bulkUpsertTeacherAttendance(tRows);
 
   const newest = (arr: { updated_at?: string | null }[]) =>
-    arr.reduce<string | null>((acc, r) => (r.updated_at && (!acc || r.updated_at > acc) ? r.updated_at : acc), null);
+    arr.reduce<string | null>(
+      (acc, r) => (r.updated_at && (!acc || r.updated_at > acc) ? r.updated_at : acc),
+      null,
+    );
   const newSa = newest(sa ?? []);
   const newTa = newest(ta ?? []);
   await setMeta({
@@ -215,7 +224,6 @@ export async function syncNow(schoolId?: string | null): Promise<void> {
       const msg = errorText(err);
       setState({ lastError: isTransientNetworkError(msg) ? null : msg });
       if (isTransientNetworkError(msg)) setState({ online: false });
-
     } finally {
       setState({ syncing: false, pending: (await listOutbox()).length });
       inFlight = null;
