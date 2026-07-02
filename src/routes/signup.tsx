@@ -112,7 +112,7 @@ function SignupPage() {
         return;
       }
     } else if (!form.teacherId) {
-      toast.error("Please enter your Teacher ID");
+      toast.error("Please enter your Oracle ID");
       return;
     }
     if (needsSchool && !form.schoolId) {
@@ -220,7 +220,7 @@ function SignupPage() {
             ) : (
               <div className="space-y-1.5">
                 <Label htmlFor="teacherId">
-                  {form.role === "head_teacher" ? "Head Teacher ID" : "Teacher ID"}
+                  {form.role === "head_teacher" ? "Oracle ID" : "Oracle ID"}
                 </Label>
                 <Input id="teacherId" type="text" required value={form.teacherId} onChange={updateText("teacherId")} />
               </div>

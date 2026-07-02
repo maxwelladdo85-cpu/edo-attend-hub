@@ -145,7 +145,7 @@ function LoginPage() {
             {role === "teacher" || role === "head_teacher" ? (
               <>
                 <div className="space-y-1.5">
-                  <Label htmlFor="teacherId">{role === "head_teacher" ? "Head Teacher ID" : "Teacher ID"}</Label>
+                  <Label htmlFor="teacherId">{role === "head_teacher" ? "Oracle ID" : "Oracle ID"}</Label>
                   <Input
                     id="teacherId"
                     required

@@ -54,7 +54,7 @@ function TermsPage() {
             The App is provided for use by serving teachers, head teachers, and
             administrators of Edo State public primary schools, and authorised EdoSUBEB
             personnel. You must be at least 18 years old and provide accurate registration
-            information. You are responsible for keeping your password and Teacher ID
+            information. You are responsible for keeping your password and Oracle ID
             confidential and for all activity under your account.
           </p>
 

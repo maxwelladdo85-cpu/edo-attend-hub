@@ -210,7 +210,7 @@ export function AssignTeachersPanel() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or Teacher ID"
+              placeholder="Search by name or Oracle ID"
               className="pl-9"
             />
           </div>

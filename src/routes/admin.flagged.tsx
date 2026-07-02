@@ -202,7 +202,7 @@ function FlaggedPage() {
             rows={filtered}
             columns={[
               { header: "Teacher", accessor: (x) => x.profile?.full_name ?? "Unknown" },
-              { header: "Teacher ID", accessor: (x) => x.profile?.teacher_id ?? "" },
+              { header: "Oracle ID", accessor: (x) => x.profile?.teacher_id ?? "" },
               { header: "Phone", accessor: (x) => x.profile?.phone ?? "" },
               { header: "School", accessor: (x) => x.school?.name ?? "" },
               { header: "LGA", accessor: (x) => x.school?.lga ?? "" },

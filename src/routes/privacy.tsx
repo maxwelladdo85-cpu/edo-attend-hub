@@ -54,7 +54,7 @@ function PrivacyPage() {
           <ul className="list-disc pl-6 space-y-1">
             <li>
               <strong>Account information:</strong> full name, email address, phone number,
-              Teacher ID, role (Teacher, Head Teacher, Administrator), and the school /
+              Oracle ID, role (Teacher, Head Teacher, Administrator), and the school /
               Local Government Area you are assigned to.
             </li>
             <li>

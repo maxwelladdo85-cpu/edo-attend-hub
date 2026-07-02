@@ -449,7 +449,7 @@ function AttendanceDeepDivePage() {
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder={role === "student" ? "Name, student ID, or class" : "Name, teacher ID, or class"}
+            placeholder={role === "student" ? "Name, student ID, or class" : "Name, Oracle ID, or class"}
             className="pl-9"
           />
         </div>
@@ -515,7 +515,7 @@ function AttendanceDeepDivePage() {
               <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
                   <th className="text-left px-4 py-3">Name</th>
-                  <th className="text-left px-4 py-3">Teacher ID</th>
+                  <th className="text-left px-4 py-3">Oracle ID</th>
                   <th className="text-left px-4 py-3">Class</th>
                   <th className="text-left px-4 py-3">School</th>
                   <th className="text-left px-4 py-3">Arrival</th>
