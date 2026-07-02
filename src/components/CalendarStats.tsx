@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
 type DayType = "holiday" | "staff_only" | "all_present";
-type Row = { day_type: DayType; date: string };
+type Row = { day_type: DayType; holiday_date: string };
 
 export function CalendarStats() {
   const [rows, setRows] = useState<Row[]>([]);
@@ -16,7 +16,7 @@ export function CalendarStats() {
     (async () => {
       const { data, error } = await (supabase as any)
         .from("holidays")
-        .select("day_type,date");
+        .select("day_type,holiday_date");
       if (!mounted) return;
       if (!error) setRows((data as Row[]) ?? []);
       setLoading(false);
@@ -37,8 +37,8 @@ export function CalendarStats() {
   const { dayNumber, dayHint } = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     const staffDays = rows
-      .filter((r) => (r.day_type === "staff_only" || r.day_type === "all_present") && r.date <= today)
-      .map((r) => r.date)
+      .filter((r) => (r.day_type === "staff_only" || r.day_type === "all_present") && r.holiday_date <= today)
+      .map((r) => r.holiday_date)
       .sort();
     if (staffDays.length === 0) return { dayNumber: 0, dayHint: "No staff days yet" };
     return {
