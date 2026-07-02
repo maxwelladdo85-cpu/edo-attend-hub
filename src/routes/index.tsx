@@ -2,7 +2,8 @@ import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import landingBg from "@/assets/landing-bg.png";
+import landingBgAsset from "@/assets/teacher-2.png.asset.json";
+const landingBg = landingBgAsset.url;
 
 export const Route = createFileRoute("/")({
   beforeLoad: () => {
