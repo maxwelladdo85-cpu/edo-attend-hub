@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, CalendarOff, GraduationCap, Loader2, Users } from "lucide-react";
+import { CalendarCheck, CalendarDays, CalendarOff, GraduationCap, Loader2, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
 type DayType = "holiday" | "staff_only" | "all_present";
-type Row = { day_type: DayType };
+type Row = { day_type: DayType; date: string };
 
 export function CalendarStats() {
   const [rows, setRows] = useState<Row[]>([]);
@@ -16,7 +16,7 @@ export function CalendarStats() {
     (async () => {
       const { data, error } = await (supabase as any)
         .from("holidays")
-        .select("day_type");
+        .select("day_type,date");
       if (!mounted) return;
       if (!error) setRows((data as Row[]) ?? []);
       setLoading(false);
@@ -33,6 +33,19 @@ export function CalendarStats() {
   }, [rows]);
 
   const activeSchoolDays = counts.staff_only + counts.all_present;
+
+  const { dayNumber, dayHint } = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const staffDays = rows
+      .filter((r) => (r.day_type === "staff_only" || r.day_type === "all_present") && r.date <= today)
+      .map((r) => r.date)
+      .sort();
+    if (staffDays.length === 0) return { dayNumber: 0, dayHint: "No staff days yet" };
+    return {
+      dayNumber: staffDays.length,
+      dayHint: `Since ${staffDays[0]}`,
+    };
+  }, [rows]);
 
   const items = [
     {
@@ -66,10 +79,18 @@ export function CalendarStats() {
       iconClasses: "bg-primary/15 text-primary",
       hint: "Staff-only + All-present",
     },
+    {
+      label: `Day ${dayNumber}`,
+      value: dayNumber,
+      icon: CalendarCheck,
+      classes: "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400",
+      iconClasses: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+      hint: dayHint,
+    },
   ];
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {items.map((it) => {
         const Icon = it.icon;
         return (
