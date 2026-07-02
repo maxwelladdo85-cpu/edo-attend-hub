@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
 type DayType = "holiday" | "staff_only" | "all_present";
-type Row = { day_type: DayType; date: string };
+type Row = { day_type: DayType; holiday_date: string };
 
 export function CalendarStats() {
   const [rows, setRows] = useState<Row[]>([]);
