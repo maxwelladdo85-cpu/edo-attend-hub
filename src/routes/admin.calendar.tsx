@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AcademicPeriodsCard } from "@/components/AcademicPeriodsCard";
 import { HolidaysCard } from "@/components/HolidaysCard";
+import { CalendarStats } from "@/components/CalendarStats";
 
 export const Route = createFileRoute("/admin/calendar")({
   head: () => ({ meta: [{ title: "Academic Calendar — EdoSAS" }] }),
@@ -17,6 +18,7 @@ function AdminCalendarPage() {
           Weekends are automatically excluded from school days.
         </p>
       </div>
+      <CalendarStats />
       <AcademicPeriodsCard />
       <HolidaysCard />
     </div>
