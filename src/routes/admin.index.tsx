@@ -287,29 +287,30 @@ function OverviewPage() {
 
       <div className="rounded-2xl p-6 bg-gradient-to-br from-primary via-primary/90 to-gold text-primary-foreground shadow-card mb-6">
         <div className="grid sm:grid-cols-3 gap-6">
-          <div>
-            <div className="text-xs uppercase tracking-wider opacity-80">Pupils present {activeFilters.length ? "(filtered)" : "statewide"}</div>
-            <div className="mt-2 flex items-baseline gap-3">
-              <div className="text-5xl font-bold font-display">{studentPct}%</div>
-              <div className="text-sm opacity-90">{studentsPresent.toLocaleString()} of {studentDenom.toLocaleString()}</div>
+          <div className="min-w-0">
+            <div className="text-xs uppercase tracking-wider opacity-80 truncate">Pupils present {activeFilters.length ? "(filtered)" : "statewide"}</div>
+            <div className="mt-2 flex flex-col gap-1">
+              <div className="text-3xl sm:text-4xl font-bold font-display tabular-nums leading-none break-words">{studentPct}%</div>
+              <div className="text-sm opacity-90 tabular-nums">{studentsPresent.toLocaleString()} of {studentDenom.toLocaleString()}</div>
             </div>
           </div>
-          <div>
-            <div className="text-xs uppercase tracking-wider opacity-80">Head teachers present {activeFilters.length ? "(filtered)" : "statewide"}</div>
-            <div className="mt-2 flex items-baseline gap-3">
-              <div className="text-5xl font-bold font-display">{headPct}%</div>
-              <div className="text-sm opacity-90">{headsPresent.toLocaleString()} of {headDenom.toLocaleString()}</div>
+          <div className="min-w-0">
+            <div className="text-xs uppercase tracking-wider opacity-80 truncate">Head teachers present {activeFilters.length ? "(filtered)" : "statewide"}</div>
+            <div className="mt-2 flex flex-col gap-1">
+              <div className="text-3xl sm:text-4xl font-bold font-display tabular-nums leading-none break-words">{headPct}%</div>
+              <div className="text-sm opacity-90 tabular-nums">{headsPresent.toLocaleString()} of {headDenom.toLocaleString()}</div>
             </div>
           </div>
-          <div>
-            <div className="text-xs uppercase tracking-wider opacity-80">Teachers present {activeFilters.length ? "(filtered)" : "statewide"}</div>
-            <div className="mt-2 flex items-baseline gap-3">
-              <div className="text-5xl font-bold font-display">{teacherPct}%</div>
-              <div className="text-sm opacity-90">{teachersPresent.toLocaleString()} of {teacherDenom.toLocaleString()}</div>
+          <div className="min-w-0">
+            <div className="text-xs uppercase tracking-wider opacity-80 truncate">Teachers present {activeFilters.length ? "(filtered)" : "statewide"}</div>
+            <div className="mt-2 flex flex-col gap-1">
+              <div className="text-3xl sm:text-4xl font-bold font-display tabular-nums leading-none break-words">{teacherPct}%</div>
+              <div className="text-sm opacity-90 tabular-nums">{teachersPresent.toLocaleString()} of {teacherDenom.toLocaleString()}</div>
             </div>
           </div>
         </div>
       </div>
+
 
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-3">Network</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
