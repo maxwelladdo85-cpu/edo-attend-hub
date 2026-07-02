@@ -29,10 +29,11 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function pct(n: number, d: number): string {
-  if (!d) return "0.000";
+  if (!d) return "0.0000";
   const value = Math.min(n, d) / d * 100;
-  return value.toFixed(3);
+  return value.toFixed(4);
 }
+
 
 
 function OverviewPage() {
