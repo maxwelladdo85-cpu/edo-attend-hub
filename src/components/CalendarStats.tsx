@@ -79,6 +79,14 @@ export function CalendarStats() {
       iconClasses: "bg-primary/15 text-primary",
       hint: "Staff-only + All-present",
     },
+    {
+      label: `Day ${dayNumber}`,
+      value: dayNumber,
+      icon: CalendarCheck,
+      classes: "bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400",
+      iconClasses: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
+      hint: dayHint,
+    },
   ];
 
   return (
