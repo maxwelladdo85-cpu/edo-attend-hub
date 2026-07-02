@@ -37,8 +37,8 @@ export function CalendarStats() {
   const { dayNumber, dayHint } = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     const staffDays = rows
-      .filter((r) => (r.day_type === "staff_only" || r.day_type === "all_present") && r.date <= today)
-      .map((r) => r.date)
+      .filter((r) => (r.day_type === "staff_only" || r.day_type === "all_present") && r.holiday_date <= today)
+      .map((r) => r.holiday_date)
       .sort();
     if (staffDays.length === 0) return { dayNumber: 0, dayHint: "No staff days yet" };
     return {
