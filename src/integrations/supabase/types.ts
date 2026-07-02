@@ -176,6 +176,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          day_type: string
           holiday_date: string
           id: string
           label: string
@@ -184,6 +185,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          day_type?: string
           holiday_date: string
           id?: string
           label: string
@@ -192,6 +194,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          day_type?: string
           holiday_date?: string
           id?: string
           label?: string
