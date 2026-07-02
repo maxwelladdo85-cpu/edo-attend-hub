@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { InstallAppCard } from "@/components/InstallAppButton";
-import authBg from "@/assets/auth-bg.webp";
+import authBgAsset from "@/assets/teacher-auth.png.asset.json";
+const authBg = authBgAsset.url;
 
 
 export const Route = createFileRoute("/login")({
