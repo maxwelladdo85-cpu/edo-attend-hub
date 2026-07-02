@@ -28,10 +28,12 @@ export const Route = createFileRoute("/admin/")({
   component: OverviewPage,
 });
 
-function pct(n: number, d: number) {
-  if (!d) return 0;
-  return Math.round((n / d) * 100);
+function pct(n: number, d: number): string {
+  if (!d) return "0.000";
+  const value = Math.min(n, d) / d * 100;
+  return value.toFixed(3);
 }
+
 
 function OverviewPage() {
   const { data: schools = [] } = useSchools();
