@@ -135,7 +135,7 @@ function TeacherView() {
   const DEFAULT_RADIUS_M = 20;
 
   const isHead = primaryRole(roles) === "head_teacher";
-  const idLabel = isHead ? "Head Teacher ID" : "Teacher ID";
+  const idLabel = isHead ? "Oracle ID" : "Oracle ID";
   const cardBg = "bg-head-teacher-card";
 
   const load = async () => {

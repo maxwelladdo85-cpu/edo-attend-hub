@@ -131,7 +131,7 @@ function AttendanceRecordPage() {
                         ? "Loading teachers..."
                         : teachers.length === 0
                         ? "No teachers found"
-                        : "Choose a teacher ID"
+                        : "Choose a Oracle ID"
                     }
                   />
                 </SelectTrigger>

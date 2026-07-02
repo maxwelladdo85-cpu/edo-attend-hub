@@ -193,7 +193,7 @@ function ReportsPage() {
   const teacherColumns: ExportColumn<(typeof teacherRows)[number]>[] = [
     { header: "Date", accessor: (r) => r.attendance_date },
     { header: "Teacher", accessor: (r) => r.profile?.full_name ?? "" },
-    { header: "Teacher ID", accessor: (r) => r.profile?.teacher_id ?? "" },
+    { header: "Oracle ID", accessor: (r) => r.profile?.teacher_id ?? "" },
     {
       header: "School",
       accessor: (r) => (r.school_id ? schoolNameById.get(r.school_id)?.name ?? "" : ""),
