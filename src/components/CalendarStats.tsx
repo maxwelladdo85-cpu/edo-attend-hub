@@ -16,7 +16,7 @@ export function CalendarStats() {
     (async () => {
       const { data, error } = await (supabase as any)
         .from("holidays")
-        .select("day_type,date");
+        .select("day_type,holiday_date");
       if (!mounted) return;
       if (!error) setRows((data as Row[]) ?? []);
       setLoading(false);
