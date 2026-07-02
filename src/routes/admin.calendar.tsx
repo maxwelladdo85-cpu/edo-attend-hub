@@ -18,6 +18,7 @@ function AdminCalendarPage() {
           Weekends are automatically excluded from school days.
         </p>
       </div>
+      <CalendarStats />
       <AcademicPeriodsCard />
       <HolidaysCard />
     </div>
