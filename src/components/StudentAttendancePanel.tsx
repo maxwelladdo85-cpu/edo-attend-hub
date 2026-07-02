@@ -124,8 +124,27 @@ export function StudentAttendancePanel() {
       att.forEach((r) => {
         map[r.student_id] = r;
       });
+
+      // Always refresh from server when online so marks made on another
+      // device / another session appear immediately for this teacher.
+      if (navigator.onLine !== false) {
+        const { data: serverRows } = await supabase
+          .from("student_attendance")
+          .select(
+            "student_id, morning_status, afternoon_status, morning_marked_at, afternoon_marked_at, morning_lat, morning_lng, afternoon_lat, afternoon_lng",
+          )
+          .eq("school_id", profile.school_id)
+          .eq("attendance_date", dateStr);
+        if (serverRows) {
+          serverRows.forEach((r: any) => {
+            map[r.student_id] = r as AttendanceRow;
+          });
+        }
+      }
+
       setRows(map);
       setLoading(false);
+
     };
     load();
   }, [profile?.school_id, profile?.class_taught, dateStr, isHead, reloadTick]);
