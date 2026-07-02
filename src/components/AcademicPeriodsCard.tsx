@@ -116,12 +116,21 @@ export function AcademicPeriodsCard() {
         <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto] items-end">
           <div className="space-y-2">
             <Label htmlFor="ap_label">Label (optional)</Label>
-            <Input
-              id="ap_label"
-              placeholder="e.g. 2025/2026 First Term"
-              value={form.label}
-              onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
-            />
+            <Select
+              value={LABEL_PRESETS.includes(form.label) ? form.label : ""}
+              onValueChange={(v) => setForm((f) => ({ ...f, label: v }))}
+            >
+              <SelectTrigger id="ap_label">
+                <SelectValue placeholder="Select a term…" />
+              </SelectTrigger>
+              <SelectContent>
+                {LABEL_PRESETS.map((opt) => (
+                  <SelectItem key={opt} value={opt}>
+                    {opt}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="ap_start">Start date</Label>
