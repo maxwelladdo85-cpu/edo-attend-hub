@@ -73,7 +73,7 @@ export function CalendarStats() {
       {items.map((it) => {
         const Icon = it.icon;
         return (
-          <Card key={it.label} className={cn("border", it.classes)}>
+          <Card key={it.label} className={cn("border bg-card text-card-foreground", it.classes.replace(/text-[^\s]+/g, ""))}>
             <CardContent className="p-4 flex items-center gap-3">
               <div
                 className={cn(
@@ -83,11 +83,11 @@ export function CalendarStats() {
               >
                 <Icon className="h-5 w-5" />
               </div>
-              <div className="min-w-0">
-                <div className="text-xs font-medium opacity-80 truncate">
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-medium text-muted-foreground leading-tight">
                   {it.label}
                 </div>
-                <div className="text-2xl font-semibold leading-tight">
+                <div className="text-2xl font-semibold leading-tight text-foreground mt-0.5">
                   {loading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
@@ -95,7 +95,9 @@ export function CalendarStats() {
                   )}
                 </div>
                 {it.hint && (
-                  <div className="text-[10px] opacity-70 truncate">{it.hint}</div>
+                  <div className="text-[10px] text-muted-foreground truncate mt-0.5">
+                    {it.hint}
+                  </div>
                 )}
               </div>
             </CardContent>
@@ -105,3 +107,4 @@ export function CalendarStats() {
     </div>
   );
 }
+

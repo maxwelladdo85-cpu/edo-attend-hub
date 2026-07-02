@@ -113,14 +113,14 @@ export function AcademicPeriodsCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto] items-end">
-          <div className="space-y-2">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_auto] items-end">
+          <div className="space-y-2 min-w-0">
             <Label htmlFor="ap_label">Label (optional)</Label>
             <Select
               value={LABEL_PRESETS.includes(form.label) ? form.label : ""}
               onValueChange={(v) => setForm((f) => ({ ...f, label: v }))}
             >
-              <SelectTrigger id="ap_label">
+              <SelectTrigger id="ap_label" className="w-full">
                 <SelectValue placeholder="Select a term…" />
               </SelectTrigger>
               <SelectContent>
@@ -132,29 +132,37 @@ export function AcademicPeriodsCard() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-0">
             <Label htmlFor="ap_start">Start date</Label>
             <Input
               id="ap_start"
               type="date"
               value={form.start_date}
               onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
+              className="w-full"
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 min-w-0">
             <Label htmlFor="ap_end">End date</Label>
             <Input
               id="ap_end"
               type="date"
               value={form.end_date}
               onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
+              className="w-full"
             />
           </div>
-          <Button onClick={handleAdd} disabled={saving} className="tap-target">
+          <Button
+            onClick={handleAdd}
+            disabled={saving}
+            className="tap-target w-full sm:w-auto sm:col-span-2 lg:col-span-1"
+          >
             {saving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Plus className="h-4 w-4 mr-1.5" />}
             Add
           </Button>
         </div>
+
+
 
         <div className="border rounded-md divide-y">
           {loading ? (
