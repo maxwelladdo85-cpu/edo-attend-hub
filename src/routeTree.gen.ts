@@ -15,6 +15,7 @@ import { Route as SettingsRouteImport } from "./routes/settings"
 import { Route as PrivacyRouteImport } from "./routes/privacy"
 import { Route as LoginRouteImport } from "./routes/login"
 import { Route as DashboardRouteImport } from "./routes/dashboard"
+import { Route as CoursesRouteImport } from "./routes/courses"
 import { Route as CookiesRouteImport } from "./routes/cookies"
 import { Route as AttendanceRecordRouteImport } from "./routes/attendance-record"
 import { Route as AdminRouteImport } from "./routes/admin"
@@ -24,13 +25,16 @@ import { Route as AdminStudentsRouteImport } from "./routes/admin.students"
 import { Route as AdminSchoolTypeRouteImport } from "./routes/admin.school-type"
 import { Route as AdminReportsRouteImport } from "./routes/admin.reports"
 import { Route as AdminPupilAttendanceRouteImport } from "./routes/admin.pupil-attendance"
+import { Route as AdminOnboardingRouteImport } from "./routes/admin.onboarding"
 import { Route as AdminMapRouteImport } from "./routes/admin.map"
 import { Route as AdminLgaRouteImport } from "./routes/admin.lga"
 import { Route as AdminFlaggedRouteImport } from "./routes/admin.flagged"
+import { Route as AdminCoursesRouteImport } from "./routes/admin.courses"
 import { Route as AdminCalendarRouteImport } from "./routes/admin.calendar"
 import { Route as AdminAssistantRouteImport } from "./routes/admin.assistant"
 import { Route as AdminAssignRouteImport } from "./routes/admin.assign"
 import { Route as AdminAnalyticsRouteImport } from "./routes/admin.analytics"
+import { Route as AdminActiveUsersRouteImport } from "./routes/admin.active-users"
 
 const TermsRoute = TermsRouteImport.update({
   id: "/terms",
@@ -60,6 +64,11 @@ const LoginRoute = LoginRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: "/dashboard",
   path: "/dashboard",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesRoute = CoursesRouteImport.update({
+  id: "/courses",
+  path: "/courses",
   getParentRoute: () => rootRouteImport,
 } as any)
 const CookiesRoute = CookiesRouteImport.update({
@@ -107,6 +116,11 @@ const AdminPupilAttendanceRoute = AdminPupilAttendanceRouteImport.update({
   path: "/pupil-attendance",
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminOnboardingRoute = AdminOnboardingRouteImport.update({
+  id: "/onboarding",
+  path: "/onboarding",
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMapRoute = AdminMapRouteImport.update({
   id: "/map",
   path: "/map",
@@ -120,6 +134,11 @@ const AdminLgaRoute = AdminLgaRouteImport.update({
 const AdminFlaggedRoute = AdminFlaggedRouteImport.update({
   id: "/flagged",
   path: "/flagged",
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCoursesRoute = AdminCoursesRouteImport.update({
+  id: "/courses",
+  path: "/courses",
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminCalendarRoute = AdminCalendarRouteImport.update({
@@ -142,25 +161,34 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   path: "/analytics",
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminActiveUsersRoute = AdminActiveUsersRouteImport.update({
+  id: "/active-users",
+  path: "/active-users",
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/admin": typeof AdminRouteWithChildren
   "/attendance-record": typeof AttendanceRecordRoute
   "/cookies": typeof CookiesRoute
+  "/courses": typeof CoursesRoute
   "/dashboard": typeof DashboardRoute
   "/login": typeof LoginRoute
   "/privacy": typeof PrivacyRoute
   "/settings": typeof SettingsRoute
   "/signup": typeof SignupRoute
   "/terms": typeof TermsRoute
+  "/admin/active-users": typeof AdminActiveUsersRoute
   "/admin/analytics": typeof AdminAnalyticsRoute
   "/admin/assign": typeof AdminAssignRoute
   "/admin/assistant": typeof AdminAssistantRoute
   "/admin/calendar": typeof AdminCalendarRoute
+  "/admin/courses": typeof AdminCoursesRoute
   "/admin/flagged": typeof AdminFlaggedRoute
   "/admin/lga": typeof AdminLgaRoute
   "/admin/map": typeof AdminMapRoute
+  "/admin/onboarding": typeof AdminOnboardingRoute
   "/admin/pupil-attendance": typeof AdminPupilAttendanceRoute
   "/admin/reports": typeof AdminReportsRoute
   "/admin/school-type": typeof AdminSchoolTypeRoute
@@ -171,19 +199,23 @@ export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/attendance-record": typeof AttendanceRecordRoute
   "/cookies": typeof CookiesRoute
+  "/courses": typeof CoursesRoute
   "/dashboard": typeof DashboardRoute
   "/login": typeof LoginRoute
   "/privacy": typeof PrivacyRoute
   "/settings": typeof SettingsRoute
   "/signup": typeof SignupRoute
   "/terms": typeof TermsRoute
+  "/admin/active-users": typeof AdminActiveUsersRoute
   "/admin/analytics": typeof AdminAnalyticsRoute
   "/admin/assign": typeof AdminAssignRoute
   "/admin/assistant": typeof AdminAssistantRoute
   "/admin/calendar": typeof AdminCalendarRoute
+  "/admin/courses": typeof AdminCoursesRoute
   "/admin/flagged": typeof AdminFlaggedRoute
   "/admin/lga": typeof AdminLgaRoute
   "/admin/map": typeof AdminMapRoute
+  "/admin/onboarding": typeof AdminOnboardingRoute
   "/admin/pupil-attendance": typeof AdminPupilAttendanceRoute
   "/admin/reports": typeof AdminReportsRoute
   "/admin/school-type": typeof AdminSchoolTypeRoute
@@ -196,19 +228,23 @@ export interface FileRoutesById {
   "/admin": typeof AdminRouteWithChildren
   "/attendance-record": typeof AttendanceRecordRoute
   "/cookies": typeof CookiesRoute
+  "/courses": typeof CoursesRoute
   "/dashboard": typeof DashboardRoute
   "/login": typeof LoginRoute
   "/privacy": typeof PrivacyRoute
   "/settings": typeof SettingsRoute
   "/signup": typeof SignupRoute
   "/terms": typeof TermsRoute
+  "/admin/active-users": typeof AdminActiveUsersRoute
   "/admin/analytics": typeof AdminAnalyticsRoute
   "/admin/assign": typeof AdminAssignRoute
   "/admin/assistant": typeof AdminAssistantRoute
   "/admin/calendar": typeof AdminCalendarRoute
+  "/admin/courses": typeof AdminCoursesRoute
   "/admin/flagged": typeof AdminFlaggedRoute
   "/admin/lga": typeof AdminLgaRoute
   "/admin/map": typeof AdminMapRoute
+  "/admin/onboarding": typeof AdminOnboardingRoute
   "/admin/pupil-attendance": typeof AdminPupilAttendanceRoute
   "/admin/reports": typeof AdminReportsRoute
   "/admin/school-type": typeof AdminSchoolTypeRoute
@@ -222,19 +258,23 @@ export interface FileRouteTypes {
     | "/admin"
     | "/attendance-record"
     | "/cookies"
+    | "/courses"
     | "/dashboard"
     | "/login"
     | "/privacy"
     | "/settings"
     | "/signup"
     | "/terms"
+    | "/admin/active-users"
     | "/admin/analytics"
     | "/admin/assign"
     | "/admin/assistant"
     | "/admin/calendar"
+    | "/admin/courses"
     | "/admin/flagged"
     | "/admin/lga"
     | "/admin/map"
+    | "/admin/onboarding"
     | "/admin/pupil-attendance"
     | "/admin/reports"
     | "/admin/school-type"
@@ -245,19 +285,23 @@ export interface FileRouteTypes {
     | "/"
     | "/attendance-record"
     | "/cookies"
+    | "/courses"
     | "/dashboard"
     | "/login"
     | "/privacy"
     | "/settings"
     | "/signup"
     | "/terms"
+    | "/admin/active-users"
     | "/admin/analytics"
     | "/admin/assign"
     | "/admin/assistant"
     | "/admin/calendar"
+    | "/admin/courses"
     | "/admin/flagged"
     | "/admin/lga"
     | "/admin/map"
+    | "/admin/onboarding"
     | "/admin/pupil-attendance"
     | "/admin/reports"
     | "/admin/school-type"
@@ -269,19 +313,23 @@ export interface FileRouteTypes {
     | "/admin"
     | "/attendance-record"
     | "/cookies"
+    | "/courses"
     | "/dashboard"
     | "/login"
     | "/privacy"
     | "/settings"
     | "/signup"
     | "/terms"
+    | "/admin/active-users"
     | "/admin/analytics"
     | "/admin/assign"
     | "/admin/assistant"
     | "/admin/calendar"
+    | "/admin/courses"
     | "/admin/flagged"
     | "/admin/lga"
     | "/admin/map"
+    | "/admin/onboarding"
     | "/admin/pupil-attendance"
     | "/admin/reports"
     | "/admin/school-type"
@@ -294,6 +342,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AttendanceRecordRoute: typeof AttendanceRecordRoute
   CookiesRoute: typeof CookiesRoute
+  CoursesRoute: typeof CoursesRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -344,6 +393,13 @@ declare module "@tanstack/react-router" {
       path: "/dashboard"
       fullPath: "/dashboard"
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/courses": {
+      id: "/courses"
+      path: "/courses"
+      fullPath: "/courses"
+      preLoaderRoute: typeof CoursesRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/cookies": {
@@ -409,6 +465,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AdminPupilAttendanceRouteImport
       parentRoute: typeof AdminRoute
     }
+    "/admin/onboarding": {
+      id: "/admin/onboarding"
+      path: "/onboarding"
+      fullPath: "/admin/onboarding"
+      preLoaderRoute: typeof AdminOnboardingRouteImport
+      parentRoute: typeof AdminRoute
+    }
     "/admin/map": {
       id: "/admin/map"
       path: "/map"
@@ -428,6 +491,13 @@ declare module "@tanstack/react-router" {
       path: "/flagged"
       fullPath: "/admin/flagged"
       preLoaderRoute: typeof AdminFlaggedRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    "/admin/courses": {
+      id: "/admin/courses"
+      path: "/courses"
+      fullPath: "/admin/courses"
+      preLoaderRoute: typeof AdminCoursesRouteImport
       parentRoute: typeof AdminRoute
     }
     "/admin/calendar": {
@@ -458,17 +528,27 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
+    "/admin/active-users": {
+      id: "/admin/active-users"
+      path: "/active-users"
+      fullPath: "/admin/active-users"
+      preLoaderRoute: typeof AdminActiveUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminActiveUsersRoute: typeof AdminActiveUsersRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminAssignRoute: typeof AdminAssignRoute
   AdminAssistantRoute: typeof AdminAssistantRoute
   AdminCalendarRoute: typeof AdminCalendarRoute
+  AdminCoursesRoute: typeof AdminCoursesRoute
   AdminFlaggedRoute: typeof AdminFlaggedRoute
   AdminLgaRoute: typeof AdminLgaRoute
   AdminMapRoute: typeof AdminMapRoute
+  AdminOnboardingRoute: typeof AdminOnboardingRoute
   AdminPupilAttendanceRoute: typeof AdminPupilAttendanceRoute
   AdminReportsRoute: typeof AdminReportsRoute
   AdminSchoolTypeRoute: typeof AdminSchoolTypeRoute
@@ -477,13 +557,16 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminActiveUsersRoute: AdminActiveUsersRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminAssignRoute: AdminAssignRoute,
   AdminAssistantRoute: AdminAssistantRoute,
   AdminCalendarRoute: AdminCalendarRoute,
+  AdminCoursesRoute: AdminCoursesRoute,
   AdminFlaggedRoute: AdminFlaggedRoute,
   AdminLgaRoute: AdminLgaRoute,
   AdminMapRoute: AdminMapRoute,
+  AdminOnboardingRoute: AdminOnboardingRoute,
   AdminPupilAttendanceRoute: AdminPupilAttendanceRoute,
   AdminReportsRoute: AdminReportsRoute,
   AdminSchoolTypeRoute: AdminSchoolTypeRoute,
@@ -498,6 +581,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AttendanceRecordRoute: AttendanceRecordRoute,
   CookiesRoute: CookiesRoute,
+  CoursesRoute: CoursesRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
