@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { InstallAppCard } from "@/components/InstallAppButton";
-import authBgAsset from "@/assets/teacher-auth.png.asset.json";
+import authBgAsset from "@/assets/teacher-auth-new.jpeg.asset.json";
 const authBg = authBgAsset.url;
 
 
