@@ -9,7 +9,9 @@ import {
   X,
   Loader2,
   ClipboardList,
+  BookOpen,
 } from "lucide-react";
+import { NotificationsBell } from "@/components/NotificationsBell";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
@@ -61,6 +63,7 @@ export function DashboardShell({
   const sidebarNav: NavItem[] = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { to: "/attendance-record", label: "Attendance record", icon: ClipboardList },
+    { to: "/courses", label: "Courses", icon: BookOpen },
     { to: "/settings", label: "My Profile", icon: UserCircle },
     ...nav,
   ];
@@ -144,8 +147,12 @@ export function DashboardShell({
             <Logo className="h-7 w-7" />
             <span className="font-display font-bold text-sm">EdoSAS</span>
           </div>
-          <div className="w-8" />
+          <NotificationsBell />
         </header>
+
+        <div className="hidden md:flex sticky top-0 z-30 bg-card/60 backdrop-blur border-b border-border h-14 px-6 items-center justify-end">
+          <NotificationsBell />
+        </div>
 
         <main className="flex-1 p-5 sm:p-8 lg:p-10 xl:p-12 pr-safe pl-safe pb-[calc(env(safe-area-inset-bottom)+1rem)]">
           <SyncStatusBar className="mb-4" />

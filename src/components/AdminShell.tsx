@@ -17,7 +17,11 @@ import {
   FileDown,
   CalendarDays,
   Bot,
+  Activity,
+  UploadCloud,
+  BookOpen,
 } from "lucide-react";
+import { NotificationsBell } from "@/components/NotificationsBell";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { useAuth, primaryRole } from "@/contexts/AuthContext";
@@ -45,6 +49,9 @@ const NAV = [
   { to: "/admin/map", label: "Map", icon: Map, end: false },
   { to: "/admin/calendar", label: "Academic Calendar", icon: CalendarDays, end: false },
   { to: "/admin/assign", label: "Assign Teachers", icon: UserPlus, end: false },
+  { to: "/admin/onboarding", label: "Bulk Onboarding", icon: UploadCloud, end: false },
+  { to: "/admin/active-users", label: "Active Users", icon: Activity, end: false },
+  { to: "/admin/courses", label: "Courses", icon: BookOpen, end: false },
   { to: "/admin/assistant", label: "AI Assistant", icon: Bot, end: false },
 ];
 
@@ -183,7 +190,7 @@ export function AdminShell() {
             <Logo className="h-7 w-7" />
             <span className="font-display font-bold text-sm">EdoSAS</span>
           </div>
-          <div className="w-8" />
+          <NotificationsBell />
         </header>
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 pr-safe pl-safe pb-[calc(env(safe-area-inset-bottom)+1rem)]">
@@ -205,6 +212,9 @@ export function AdminPageHeader({ title, subtitle, icon: Icon, actions }: { titl
       <div className="min-w-0 flex-1">
         <h1 className="text-2xl md:text-3xl font-bold font-display truncate">{title}</h1>
         {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
+      </div>
+      <div className="hidden md:block">
+        <NotificationsBell />
       </div>
       {actions && <div className="flex-shrink-0">{actions}</div>}
     </div>
