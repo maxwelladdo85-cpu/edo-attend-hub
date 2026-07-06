@@ -29,29 +29,44 @@ export function NotificationsBell() {
   const load = async () => {
     if (!user) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("notifications" as any)
-      .select("id,title,body,type,link,read_at,created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(30);
-    setItems((data ?? []) as Notif[]);
+    try {
+      const { data, error } = await supabase
+        .from("notifications" as any)
+        .select("id,title,body,type,link,read_at,created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(30);
+      if (error) {
+        console.warn("Notifications table may not exist yet:", error.message);
+        setItems([]);
+      } else {
+        setItems((data ?? []) as Notif[]);
+      }
+    } catch (e) {
+      console.warn("Notifications query failed:", e);
+      setItems([]);
+    }
     setLoading(false);
   };
 
   useEffect(() => {
     if (!user) return;
     void load();
-    const channel = supabase
-      .channel(`notif-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        () => void load(),
-      )
-      .subscribe();
+    let channel: any;
+    try {
+      channel = supabase
+        .channel(`notif-${user.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+          () => void load(),
+        )
+        .subscribe();
+    } catch (e) {
+      console.warn("Notifications realtime subscription failed:", e);
+    }
     return () => {
-      void supabase.removeChannel(channel);
+      if (channel) void supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
@@ -60,20 +75,28 @@ export function NotificationsBell() {
 
   const markAllRead = async () => {
     if (!user) return;
-    await supabase
-      .from("notifications" as any)
-      .update({ read_at: new Date().toISOString() })
-      .eq("user_id", user.id)
-      .is("read_at", null);
-    void load();
+    try {
+      await supabase
+        .from("notifications" as any)
+        .update({ read_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+        .is("read_at", null);
+      void load();
+    } catch (e) {
+      console.warn("markAllRead failed:", e);
+    }
   };
 
   const markOne = async (id: string) => {
-    await supabase
-      .from("notifications" as any)
-      .update({ read_at: new Date().toISOString() })
-      .eq("id", id);
-    void load();
+    try {
+      await supabase
+        .from("notifications" as any)
+        .update({ read_at: new Date().toISOString() })
+        .eq("id", id);
+      void load();
+    } catch (e) {
+      console.warn("markOne failed:", e);
+    }
   };
 
   if (!user) return null;
