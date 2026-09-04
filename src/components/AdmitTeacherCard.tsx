@@ -66,7 +66,7 @@ export function AdmitTeacherCard({ schoolName, onAdded }: Props) {
       if (data?.error) throw new Error(data.error);
 
       toast.success(
-        `${fullName.trim()} admitted. Sign-in email: ${data?.email} · Password: EdoSAS@2026`,
+        `${fullName.trim()} admitted. Sign-in email: ${data?.email} · Password: edosubeb123`,
         { duration: 10000 },
       );
       reset();
@@ -157,7 +157,7 @@ export function AdmitTeacherCard({ schoolName, onAdded }: Props) {
           </div>
           <p className="sm:col-span-2 text-xs text-muted-foreground">
             The new teacher signs in with their Oracle ID and the temporary password{" "}
-            <span className="font-mono">EdoSAS@2026</span>.
+            <span className="font-mono">edosubeb123</span>.
           </p>
           <div className="sm:col-span-2 flex gap-2 justify-end pt-1">
             <Button

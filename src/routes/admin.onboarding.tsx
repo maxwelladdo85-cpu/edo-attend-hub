@@ -38,7 +38,7 @@ const TEMPLATE_HEADERS: (keyof TemplateRow)[] = [
 function OnboardingPage() {
   const { data: schools = [] } = useSchools();
   const [rows, setRows] = useState<TemplateRow[]>([]);
-  const [defaultPassword, setDefaultPassword] = useState("EdoSAS@2026");
+  const [defaultPassword, setDefaultPassword] = useState("edosubeb123");
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState<any[]>([]);
 
