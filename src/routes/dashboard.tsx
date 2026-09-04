@@ -22,6 +22,7 @@ import { distanceMeters, getCurrentPosition, classifyArrival, classifyDeparture 
 import { haptic } from "@/lib/haptics";
 import { StudentAttendancePanel } from "@/components/StudentAttendancePanel";
 import { AdmitStudentCard } from "@/components/AdmitStudentCard";
+import { AdmitTeacherCard } from "@/components/AdmitTeacherCard";
 import {
   markTeacherAttendance,
   getTeacherAttendanceForDate,
