@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
     const phone = body.phone ? String(body.phone).trim() : null;
     const classTaught = body.class_taught ? String(body.class_taught).trim() : null;
     const emailInput = body.email ? String(body.email).trim() : "";
-    const password = String(body.password ?? "").trim() || "EdoSAS@2026";
+    const password = String(body.password ?? "").trim() || "edosubeb123";
 
     if (!fullName || !teacherId) {
       return json({ error: "Full name and Oracle ID are required." }, 400);

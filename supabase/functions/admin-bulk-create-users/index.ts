@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const users: UserRow[] = body.users ?? [];
-    const defaultPassword: string = body.default_password ?? "EdoSAS@2026";
+    const defaultPassword: string = body.default_password ?? "edosubeb123";
 
     const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
     const results: any[] = [];
