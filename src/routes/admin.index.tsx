@@ -222,7 +222,7 @@ function OverviewPage() {
           <span className="font-medium">Filters</span>
         </div>
         <Select value={selectedLga} onValueChange={setSelectedLga}>
-          <SelectTrigger className="w-[200px] bg-background">
+          <SelectTrigger className="w-full sm:w-[200px] bg-background">
             <SelectValue placeholder="All LGAs" />
           </SelectTrigger>
           <SelectContent>
@@ -235,7 +235,7 @@ function OverviewPage() {
           </SelectContent>
         </Select>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-[200px] bg-background">
+          <SelectTrigger className="w-full sm:w-[200px] bg-background">
             <SelectValue placeholder="All School Types" />
           </SelectTrigger>
           <SelectContent>
@@ -252,7 +252,7 @@ function OverviewPage() {
           onValueChange={setSelectedSchoolId}
           disabled={schoolsInScope.length === 0}
         >
-          <SelectTrigger className="w-[260px] bg-background">
+          <SelectTrigger className="w-full sm:w-[260px] bg-background">
             <SelectValue placeholder="All Schools" />
           </SelectTrigger>
           <SelectContent className="max-h-[320px]">
@@ -287,7 +287,7 @@ function OverviewPage() {
         )}
       </div>
 
-      <div className="rounded-2xl p-6 bg-gradient-to-br from-primary via-primary/90 to-gold text-primary-foreground shadow-card mb-6">
+      <div className="rounded-2xl p-4 sm:p-6 bg-gradient-to-br from-primary via-primary/90 to-gold text-primary-foreground shadow-card mb-6">
         <div className="grid sm:grid-cols-3 gap-6">
           <div className="min-w-0">
             <div className="text-xs uppercase tracking-wider opacity-80 truncate">Pupils present {activeFilters.length ? "(filtered)" : "statewide"}</div>
