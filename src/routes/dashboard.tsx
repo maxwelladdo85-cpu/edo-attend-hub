@@ -790,6 +790,10 @@ function HeadTeacherView() {
         />
       </div>
 
+      <AdmitTeacherCard schoolName={school?.name} onAdded={load} />
+
+
+
       <div className="rounded-2xl border border-border bg-head-teacher-card shadow-card overflow-hidden">
         <div className="p-5 border-b border-border">
           <h3 className="font-display font-semibold">Teachers in your school</h3>
