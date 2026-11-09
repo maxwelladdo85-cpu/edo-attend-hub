@@ -157,14 +157,27 @@ export function useSchools() {
 // PostgREST caps each response at 1000 rows, so we have to chunk
 // .in("user_id", [...]) lookups when there are many users.
 async function fetchProfilesByUserIds<T>(ids: string[], columns: string): Promise<T[]> {
+  return fetchRowsByInIds<T>("profiles", ids, columns, "user_id");
+}
+
+// A single .in(...) with thousands of ids overflows the request URL, so large
+// lookups are split into chunks. Errors surface instead of silently returning
+// an empty list (which would blank out names/phones in reports).
+export async function fetchRowsByInIds<T>(
+  table: string,
+  ids: string[],
+  columns: string,
+  idColumn = "id",
+  chunkSize = 500,
+): Promise<T[]> {
   const out: T[] = [];
-  const CHUNK = 500;
+  const CHUNK = chunkSize;
   for (let i = 0; i < ids.length; i += CHUNK) {
     const slice = ids.slice(i, i + CHUNK);
     const { data, error } = await supabase
-      .from("profiles")
+      .from(table)
       .select(columns)
-      .in("user_id", slice);
+      .in(idColumn, slice);
     if (error) throw error;
     out.push(...((data ?? []) as T[]));
   }
