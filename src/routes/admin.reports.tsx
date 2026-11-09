@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportButton, type ExportColumn } from "@/components/ExportButton";
-import { useSchools, prettyLga, prettyCategory } from "@/lib/admin-data";
+import { useSchools, prettyLga, prettyCategory, fetchRowsByInIds } from "@/lib/admin-data";
 
 export const Route = createFileRoute("/admin/reports")({
   head: () => ({ meta: [{ title: "Attendance Reports — EdoSAS" }] }),
@@ -81,14 +81,12 @@ function useTeacherReport(start: string, end: string, enabled: boolean) {
         return { data: data as TeacherRow[] | null, error };
       });
       const ids = Array.from(new Set(rows.map((r) => r.teacher_user_id)));
-      const profiles = ids.length
-        ? (
-            await supabase
-              .from("profiles")
-              .select("user_id,full_name,teacher_id")
-              .in("user_id", ids)
-          ).data ?? []
-        : [];
+      const profiles = await fetchRowsByInIds<any>(
+        "profiles",
+        ids,
+        "user_id,full_name,teacher_id,phone",
+        "user_id",
+      );
       const byId = new Map(profiles.map((p: any) => [p.user_id, p]));
       return rows.map((r) => ({ ...r, profile: byId.get(r.teacher_user_id) as any }));
     },
@@ -113,14 +111,12 @@ function usePupilReport(start: string, end: string, enabled: boolean) {
         return { data: data as PupilRow[] | null, error };
       });
       const ids = Array.from(new Set(rows.map((r) => r.student_id)));
-      const students = ids.length
-        ? (
-            await supabase
-              .from("students")
-              .select("id,full_name,student_id,class")
-              .in("id", ids)
-          ).data ?? []
-        : [];
+      const students = await fetchRowsByInIds<any>(
+        "students",
+        ids,
+        "id,full_name,student_id,class",
+        "id",
+      );
       const byId = new Map(students.map((s: any) => [s.id, s]));
       return rows.map((r) => ({ ...r, student: byId.get(r.student_id) as any }));
     },
@@ -194,6 +190,7 @@ function ReportsPage() {
     { header: "Date", accessor: (r) => r.attendance_date },
     { header: "Teacher", accessor: (r) => r.profile?.full_name ?? "" },
     { header: "Oracle ID", accessor: (r) => r.profile?.teacher_id ?? "" },
+    { header: "Phone", accessor: (r) => r.profile?.phone ?? "" },
     {
       header: "School",
       accessor: (r) => (r.school_id ? schoolNameById.get(r.school_id)?.name ?? "" : ""),

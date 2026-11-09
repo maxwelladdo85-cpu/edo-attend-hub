@@ -36,6 +36,7 @@ export type StaffProfile = {
   user_id: string;
   full_name: string;
   teacher_id: string | null;
+  phone: string | null;
   class_taught: string | null;
   school_id: string | null;
   role: "teacher" | "head_teacher";
@@ -156,14 +157,27 @@ export function useSchools() {
 // PostgREST caps each response at 1000 rows, so we have to chunk
 // .in("user_id", [...]) lookups when there are many users.
 async function fetchProfilesByUserIds<T>(ids: string[], columns: string): Promise<T[]> {
+  return fetchRowsByInIds<T>("profiles", ids, columns, "user_id");
+}
+
+// A single .in(...) with thousands of ids overflows the request URL, so large
+// lookups are split into chunks. Errors surface instead of silently returning
+// an empty list (which would blank out names/phones in reports).
+export async function fetchRowsByInIds<T>(
+  table: string,
+  ids: string[],
+  columns: string,
+  idColumn = "id",
+  chunkSize = 500,
+): Promise<T[]> {
   const out: T[] = [];
-  const CHUNK = 500;
+  const CHUNK = chunkSize;
   for (let i = 0; i < ids.length; i += CHUNK) {
     const slice = ids.slice(i, i + CHUNK);
     const { data, error } = await supabase
-      .from("profiles")
+      .from(table)
       .select(columns)
-      .in("user_id", slice);
+      .in(idColumn, slice);
     if (error) throw error;
     out.push(...((data ?? []) as T[]));
   }
@@ -215,12 +229,13 @@ export function useStaffProfiles() {
       if (ids.length === 0) return [] as StaffProfile[];
       const rows = await fetchProfilesByUserIds<any>(
         ids,
-        "user_id,full_name,teacher_id,class_taught,school_id,created_at",
+        "user_id,full_name,teacher_id,phone,class_taught,school_id,created_at",
       );
       return rows.map((p) => ({
         user_id: p.user_id,
         full_name: p.full_name,
         teacher_id: p.teacher_id,
+        phone: p.phone ?? null,
         class_taught: p.class_taught,
         school_id: p.school_id,
         created_at: p.created_at ?? null,

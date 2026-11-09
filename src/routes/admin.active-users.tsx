@@ -66,6 +66,7 @@ function ActiveUsersPage() {
         user_id: s.user_id,
         name: s.full_name,
         oracle_id: s.teacher_id ?? "",
+        phone: s.phone ?? "",
         role: s.role === "head_teacher" ? "Head Teacher" : "Teacher",
         school: schoolNameById.get(s.school_id ?? "") ?? "Unassigned",
         class_taught: s.class_taught ?? "",
@@ -83,6 +84,7 @@ function ActiveUsersPage() {
       (r) =>
         r.name.toLowerCase().includes(q) ||
         r.oracle_id.toLowerCase().includes(q) ||
+        r.phone.toLowerCase().includes(q) ||
         r.school.toLowerCase().includes(q),
     );
   }, [rows, search]);
@@ -101,6 +103,7 @@ function ActiveUsersPage() {
             columns={[
               { header: "Full Name", accessor: (r) => r.name },
               { header: "Oracle ID", accessor: (r) => r.oracle_id },
+              { header: "Phone", accessor: (r) => r.phone },
               { header: "Role", accessor: (r) => r.role },
               { header: "School", accessor: (r) => r.school },
               { header: "Class Taught", accessor: (r) => r.class_taught },
@@ -119,7 +122,7 @@ function ActiveUsersPage() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name, Oracle ID or school"
+              placeholder="Search by name, Oracle ID, phone or school"
               className="pl-9"
             />
           </div>
@@ -130,6 +133,7 @@ function ActiveUsersPage() {
               <tr>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Oracle ID</th>
+                <th className="px-4 py-3">Phone</th>
                 <th className="px-4 py-3">Role</th>
                 <th className="px-4 py-3">School</th>
                 <th className="px-4 py-3">Class</th>
@@ -140,14 +144,15 @@ function ActiveUsersPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">Loading…</td></tr>
+                <tr><td colSpan={9} className="p-8 text-center text-muted-foreground">Loading…</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">No users found.</td></tr>
+                <tr><td colSpan={9} className="p-8 text-center text-muted-foreground">No users found.</td></tr>
               ) : (
                 filtered.map((r) => (
                   <tr key={r.user_id} className="hover:bg-muted/30">
                     <td className="px-4 py-3 font-medium">{r.name}</td>
                     <td className="px-4 py-3 font-mono text-xs">{r.oracle_id || "—"}</td>
+                    <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{r.phone || "—"}</td>
                     <td className="px-4 py-3">{r.role}</td>
                     <td className="px-4 py-3">{r.school}</td>
                     <td className="px-4 py-3">{r.class_taught || "—"}</td>
