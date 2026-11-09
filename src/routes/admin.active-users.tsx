@@ -122,7 +122,7 @@ function ActiveUsersPage() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name, Oracle ID or school"
+              placeholder="Search by name, Oracle ID, phone or school"
               className="pl-9"
             />
           </div>
