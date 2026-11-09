@@ -85,7 +85,7 @@ function useTeacherReport(start: string, end: string, enabled: boolean) {
         ? (
             await supabase
               .from("profiles")
-              .select("user_id,full_name,teacher_id")
+              .select("user_id,full_name,teacher_id,phone")
               .in("user_id", ids)
           ).data ?? []
         : [];
@@ -194,6 +194,7 @@ function ReportsPage() {
     { header: "Date", accessor: (r) => r.attendance_date },
     { header: "Teacher", accessor: (r) => r.profile?.full_name ?? "" },
     { header: "Oracle ID", accessor: (r) => r.profile?.teacher_id ?? "" },
+    { header: "Phone", accessor: (r) => r.profile?.phone ?? "" },
     {
       header: "School",
       accessor: (r) => (r.school_id ? schoolNameById.get(r.school_id)?.name ?? "" : ""),
