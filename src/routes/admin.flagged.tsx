@@ -1,3 +1,4 @@
+import { distSel, distFilter, getActiveDistrict } from "@/lib/senatorial";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -56,14 +57,14 @@ function daysAgoStr(days: number) {
 
 function useFlagged({ fromDate, toDate }: { fromDate: string; toDate: string }) {
   return useQuery({
-    queryKey: ["admin", "flagged", fromDate, toDate],
+    queryKey: ["admin", "flagged", fromDate, toDate, getActiveDistrict()],
     queryFn: async () => {
       const attendance = await fetchAllPaged<Row>(async (from, to) => {
-        const { data, error } = await supabase
+        const { data, error } = await distFilter(supabase
           .from("teacher_attendance")
           .select(
-            "id,teacher_user_id,school_id,attendance_date,arrival_time,arrival_status,arrival_lat,arrival_lng",
-          )
+            distSel("id,teacher_user_id,school_id,attendance_date,arrival_time,arrival_status,arrival_lat,arrival_lng"),
+          ) as any)
           .gte("attendance_date", fromDate)
           .lte("attendance_date", toDate)
           .not("arrival_time", "is", null)

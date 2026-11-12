@@ -1,3 +1,4 @@
+import { distSel, distFilter, getActiveDistrict } from "@/lib/senatorial";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -66,14 +67,14 @@ async function pageAll<T>(
 function useTeacherReport(start: string, end: string, enabled: boolean) {
   return useQuery({
     enabled,
-    queryKey: ["admin", "report", "teacher", start, end],
+    queryKey: ["admin", "report", "teacher", start, end, getActiveDistrict()],
     queryFn: async () => {
       const rows = await pageAll<TeacherRow>(async (from, to) => {
-        const { data, error } = await supabase
+        const { data, error } = await distFilter(supabase
           .from("teacher_attendance")
           .select(
-            "attendance_date,school_id,teacher_user_id,arrival_time,arrival_status,departure_time,departure_status,head_verified",
-          )
+            distSel("attendance_date,school_id,teacher_user_id,arrival_time,arrival_status,departure_time,departure_status,head_verified"),
+          ) as any)
           .gte("attendance_date", start)
           .lte("attendance_date", end)
           .order("attendance_date", { ascending: false })
@@ -96,14 +97,14 @@ function useTeacherReport(start: string, end: string, enabled: boolean) {
 function usePupilReport(start: string, end: string, enabled: boolean) {
   return useQuery({
     enabled,
-    queryKey: ["admin", "report", "pupil", start, end],
+    queryKey: ["admin", "report", "pupil", start, end, getActiveDistrict()],
     queryFn: async () => {
       const rows = await pageAll<PupilRow>(async (from, to) => {
-        const { data, error } = await supabase
+        const { data, error } = await distFilter(supabase
           .from("student_attendance")
           .select(
-            "attendance_date,school_id,student_id,morning_status,afternoon_status,morning_marked_at,afternoon_marked_at",
-          )
+            distSel("attendance_date,school_id,student_id,morning_status,afternoon_status,morning_marked_at,afternoon_marked_at"),
+          ) as any)
           .gte("attendance_date", start)
           .lte("attendance_date", end)
           .order("attendance_date", { ascending: false })

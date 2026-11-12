@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { distSel, distFilter, getActiveDistrict } from "@/lib/senatorial";
 
 export type SchoolLite = {
   id: string;
@@ -138,12 +139,12 @@ export async function fetchAllPaged<T>(
 
 export function useSchools() {
   return useQuery({
-    queryKey: ["admin", "schools"],
+    queryKey: ["admin", "schools", getActiveDistrict()],
     queryFn: async () => {
       return await fetchAllPaged<SchoolLite>(async (from, to) => {
-        const { data, error } = await supabase
+        const { data, error } = await distFilter(supabase
           .from("schools")
-          .select("id,name,lga,category,latitude,longitude")
+          .select("id,name,lga,category,latitude,longitude"), "lga")
           .range(from, to);
         return { data: data as SchoolLite[] | null, error };
       });
@@ -157,7 +158,10 @@ export function useSchools() {
 // PostgREST caps each response at 1000 rows, so we have to chunk
 // .in("user_id", [...]) lookups when there are many users.
 async function fetchProfilesByUserIds<T>(ids: string[], columns: string): Promise<T[]> {
-  return fetchRowsByInIds<T>("profiles", ids, columns, "user_id");
+  const lgas = (await import("@/lib/senatorial")).districtLgaValues();
+  if (!lgas) return fetchRowsByInIds<T>("profiles", ids, columns, "user_id");
+  const rows = await fetchRowsByInIds<any>("profiles", ids, `${columns},dsch:schools(lga)`, "user_id");
+  return rows.filter((r) => r.dsch && lgas.includes(r.dsch.lga)) as T[];
 }
 
 // A single .in(...) with thousands of ids overflows the request URL, so large
@@ -186,7 +190,7 @@ export async function fetchRowsByInIds<T>(
 
 export function useTeacherProfiles() {
   return useQuery({
-    queryKey: ["admin", "teacher-profiles"],
+    queryKey: ["admin", "teacher-profiles", getActiveDistrict()],
     queryFn: async () => {
       const roleRows = await fetchAllPaged<{ user_id: string }>(async (from, to) => {
         const { data, error } = await supabase
@@ -208,7 +212,7 @@ export function useTeacherProfiles() {
 
 export function useStaffProfiles() {
   return useQuery({
-    queryKey: ["admin", "staff-profiles"],
+    queryKey: ["admin", "staff-profiles", getActiveDistrict()],
     queryFn: async () => {
       const roleRows = await fetchAllPaged<{ user_id: string; role: "teacher" | "head_teacher" }>(
         async (from, to) => {
@@ -250,12 +254,12 @@ export function useStaffProfiles() {
 
 export function useStudents() {
   return useQuery({
-    queryKey: ["admin", "students"],
+    queryKey: ["admin", "students", getActiveDistrict()],
     queryFn: async () => {
       return await fetchAllPaged<StudentLite>(async (from, to) => {
-        const { data, error, count } = await supabase
+        const { data, error, count } = await distFilter(supabase
           .from("students")
-          .select("id,school_id", { count: "exact" })
+          .select(distSel("id,school_id"), { count: "exact" }) as any)
           .range(from, to);
         return { data: data as StudentLite[] | null, error, count };
       });
@@ -268,15 +272,15 @@ export function useStudents() {
 
 export function useTeacherAttendanceToday() {
   return useQuery({
-    queryKey: ["admin", "teacher-attendance", todayStr()],
+    queryKey: ["admin", "teacher-attendance", todayStr(), getActiveDistrict()],
     queryFn: async () => {
       const rows = await fetchAllPaged<TeacherAttendanceLite>(async (from, to) => {
-        const { data, error, count } = await supabase
+        const { data, error, count } = await distFilter(supabase
           .from("teacher_attendance")
           .select(
-            "id,school_id,teacher_user_id,arrival_time,arrival_status,departure_time,head_verified",
+            distSel("id,school_id,teacher_user_id,arrival_time,arrival_status,departure_time,head_verified"),
             { count: "exact" },
-          )
+          ) as any)
           .eq("attendance_date", todayStr())
           .range(from, to);
         return { data: data as TeacherAttendanceLite[] | null, error, count };
@@ -303,12 +307,12 @@ export function useTeacherAttendanceToday() {
 
 export function useStudentAttendanceToday() {
   return useQuery({
-    queryKey: ["admin", "student-attendance", todayStr()],
+    queryKey: ["admin", "student-attendance", todayStr(), getActiveDistrict()],
     queryFn: async () => {
       const rows = await fetchAllPaged<StudentAttendanceLite>(async (from, to) => {
-        const { data, error, count } = await supabase
+        const { data, error, count } = await distFilter(supabase
           .from("student_attendance")
-          .select("student_id,school_id,morning_status,afternoon_status", { count: "exact" })
+          .select(distSel("student_id,school_id,morning_status,afternoon_status"), { count: "exact" }) as any)
           .eq("attendance_date", todayStr())
           .range(from, to);
         return { data: data as StudentAttendanceLite[] | null, error, count };

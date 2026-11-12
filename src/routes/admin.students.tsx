@@ -1,3 +1,4 @@
+import { distSel, distFilter, getActiveDistrict } from "@/lib/senatorial";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -34,17 +35,17 @@ type School = { id: string; name: string; lga: string; category: string | null }
 
 function useAllStudents() {
   return useQuery({
-    queryKey: ["admin", "students-full"],
+    queryKey: ["admin", "students-full", getActiveDistrict()],
     queryFn: async () => {
       const pageSize = 1000;
       const students: Student[] = [];
       for (let from = 0; ; from += pageSize) {
         const to = from + pageSize - 1;
-        const { data, error } = await supabase
+        const { data, error } = await distFilter(supabase
           .from("students")
           .select(
-            "id,student_id,full_name,class,gender,school_id,parent_contact,parent_nin,created_at",
-          )
+            distSel("id,student_id,full_name,class,gender,school_id,parent_contact,parent_nin,created_at"),
+          ) as any)
           .order("created_at", { ascending: false })
           .range(from, to);
         if (error) throw error;

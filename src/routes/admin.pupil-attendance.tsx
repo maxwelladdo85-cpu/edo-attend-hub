@@ -1,3 +1,4 @@
+import { isDistrictView } from "@/lib/senatorial";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -280,6 +281,7 @@ function AttendanceDeepDivePage() {
         afternoon_status: afternoonIso ? "present" : null,
         marked_by: profile?.user_id ?? null,
       };
+      if (isDistrictView()) throw new Error("View only: Senatorial District Heads cannot edit attendance");
       const { error } = await supabase
         .from("student_attendance")
         .upsert(payload, { onConflict: "student_id,attendance_date" });
@@ -491,10 +493,10 @@ function AttendanceDeepDivePage() {
                       <td className="px-4 py-3">{s.class}</td>
                       <td className="px-4 py-3 text-muted-foreground text-xs">{schoolNameById.get(s.school_id) ?? "—"}</td>
                       <td className="px-4 py-3">
-                        <Input type="time" value={d.arrival} onChange={(e) => setField(s.id, "arrival", e.target.value)} className="h-9 w-28" />
+                        <Input type="time" value={d.arrival} disabled={isDistrictView()} onChange={(e) => setField(s.id, "arrival", e.target.value)} className="h-9 w-28" />
                       </td>
                       <td className="px-4 py-3">
-                        <Input type="time" value={d.departure} onChange={(e) => setField(s.id, "departure", e.target.value)} className="h-9 w-28" />
+                        <Input type="time" value={d.departure} disabled={isDistrictView()} onChange={(e) => setField(s.id, "departure", e.target.value)} className="h-9 w-28" />
                       </td>
                       <td className="px-4 py-3 text-right">
                         {savingId === s.id ? (

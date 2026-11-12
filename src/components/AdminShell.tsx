@@ -21,6 +21,7 @@ import {
   UploadCloud,
   BookOpen,
 } from "lucide-react";
+import { getActiveDistrict, isDistrictView } from "@/lib/senatorial";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,9 @@ const NAV = [
 
 
 
+// Read-only attendance views a Senatorial District Head may open.
+const DISTRICT_NAV = ["/admin", "/admin/lga", "/admin/school-type", "/admin/flagged", "/admin/students", "/admin/pupil-attendance", "/admin/analytics", "/admin/reports", "/admin/map"];
+
 export function AdminShell() {
   const { session, loading, roles, profile, signOut } = useAuth();
   const navigate = useNavigate();
@@ -85,6 +89,13 @@ export function AdminShell() {
     }
   }, [loading, session, roles, navigate]);
 
+  const districtView = isDistrictView();
+  useEffect(() => {
+    if (districtView && !DISTRICT_NAV.includes(pathname.replace(/\/$/, "") || "/admin")) {
+      navigate({ to: "/admin", replace: true });
+    }
+  }, [districtView, pathname, navigate]);
+
   // Close mobile nav on route change
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
@@ -111,11 +122,11 @@ export function AdminShell() {
         <Logo className="h-9 w-9" />
         <div className="leading-tight">
           <div className="font-display font-bold text-sm">EdoSAS</div>
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Administrator</div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{districtView ? `${getActiveDistrict()} · View only` : "Administrator"}</div>
         </div>
       </div>
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {NAV.map((item) => {
+        {NAV.filter((n) => !districtView || DISTRICT_NAV.includes(n.to)).map((item) => {
           const active = isActive(item.to, item.end);
           const Icon = item.icon;
           return (
