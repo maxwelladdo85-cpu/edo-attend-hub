@@ -1,3 +1,4 @@
+import { getActiveDistrict, lgaInDistrict } from "@/lib/senatorial";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Users, GraduationCap, School as SchoolIcon, UserCheck, AlertCircle, Activity, ShieldCheck, Filter, X } from "lucide-react";
@@ -38,7 +39,9 @@ function pct(n: number, d: number): string {
 
 
 function OverviewPage() {
-  const { data: schools = [] } = useSchools();
+  const { data: allSchools = [] } = useSchools();
+  const district = getActiveDistrict();
+  const schools = useMemo(() => allSchools.filter((s) => lgaInDistrict(s.lga, district)), [allSchools, district]);
   const { data: teachers = [] } = useTeacherProfiles();
   const { data: students = [] } = useStudents();
   const { data: staff = [] } = useStaffProfiles();

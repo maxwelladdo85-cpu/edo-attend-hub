@@ -80,7 +80,7 @@ export function AdminShell() {
       navigate({ to: "/login", replace: true });
       return;
     }
-    if (roles.length > 0 && primaryRole(roles) !== "admin") {
+    if (roles.length > 0 && !["admin", "senatorial_head"].includes(primaryRole(roles))) {
       navigate({ to: "/dashboard", replace: true });
     }
   }, [loading, session, roles, navigate]);

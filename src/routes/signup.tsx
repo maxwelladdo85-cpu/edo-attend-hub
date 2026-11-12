@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DISTRICT_NAMES } from "@/lib/senatorial";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
@@ -20,13 +21,14 @@ export const Route = createFileRoute("/signup")({
   component: SignupPage,
 });
 
-type Role = "teacher" | "head_teacher" | "admin";
+type Role = "teacher" | "head_teacher" | "admin" | "senatorial_head";
 type Category = "primary" | "junior_secondary";
 
 const ROLE_LABEL: Record<Role, string> = {
   teacher: "Teacher",
   head_teacher: "Head Teacher",
   admin: "Administrator",
+  senatorial_head: "Senatorial District Head",
 };
 
 const CATEGORY_LABEL: Record<Category, string> = {
@@ -65,6 +67,7 @@ function SignupPage() {
     lga: "",
     schoolId: "",
     classTaught: "",
+    district: "",
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -73,7 +76,8 @@ function SignupPage() {
     if (session) navigate({ to: "/dashboard", replace: true });
   }, [session, navigate]);
 
-  const needsSchool = form.role !== "admin";
+  const isEmailRole = form.role === "admin" || form.role === "senatorial_head";
+  const needsSchool = !isEmailRole;
 
   const { data: schools = [] } = useQuery({
     queryKey: ["schools-signup"],
@@ -106,7 +110,11 @@ function SignupPage() {
       toast.error("Password must be at least 8 characters");
       return;
     }
-    if (form.role === "admin") {
+    if (form.role === "senatorial_head" && !form.district) {
+      toast.error("Please select a senatorial district");
+      return;
+    }
+    if (isEmailRole) {
       if (!form.email) {
         toast.error("Please enter your email address");
         return;
@@ -126,7 +134,7 @@ function SignupPage() {
     setLoading(true);
     const redirectUrl = `${window.location.origin}/dashboard`;
     const authEmail =
-      form.role === "admin"
+      isEmailRole
         ? form.email
         : form.teacherId.includes("@")
           ? form.teacherId
@@ -142,7 +150,8 @@ function SignupPage() {
           role: form.role,
           school_id: needsSchool ? form.schoolId : null,
           class_taught: needsSchool && form.role === "teacher" ? form.classTaught : null,
-          teacher_id: form.role === "admin" ? null : form.teacherId,
+          teacher_id: isEmailRole ? null : form.teacherId,
+          senatorial_district: form.role === "senatorial_head" ? form.district : null,
         },
       },
     });
@@ -212,7 +221,7 @@ function SignupPage() {
               <Label htmlFor="fullName">Full name</Label>
               <Input id="fullName" required value={form.fullName} onChange={updateText("fullName")} />
             </div>
-            {form.role === "admin" ? (
+            {isEmailRole ? (
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email address</Label>
                 <Input id="email" type="email" required value={form.email} onChange={updateText("email")} placeholder="you@edosubeb.gov.ng" />
@@ -246,6 +255,20 @@ function SignupPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {form.role === "senatorial_head" && (
+              <div className="space-y-1.5">
+                <Label>Senatorial District</Label>
+                <Select value={form.district} onValueChange={(v) => setForm((f) => ({ ...f, district: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select a senatorial district" /></SelectTrigger>
+                  <SelectContent>
+                    {DISTRICT_NAMES.map((d) => (
+                      <SelectItem key={d} value={d}>{d} Senatorial District</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {needsSchool && (
               <>

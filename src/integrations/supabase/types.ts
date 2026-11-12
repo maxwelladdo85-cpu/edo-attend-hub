@@ -283,6 +283,7 @@ export type Database = {
           id: string
           phone: string | null
           school_id: string | null
+          senatorial_district: string | null
           status: string
           teacher_id: string | null
           updated_at: string
@@ -296,6 +297,7 @@ export type Database = {
           id?: string
           phone?: string | null
           school_id?: string | null
+          senatorial_district?: string | null
           status?: string
           teacher_id?: string | null
           updated_at?: string
@@ -309,6 +311,7 @@ export type Database = {
           id?: string
           phone?: string | null
           school_id?: string | null
+          senatorial_district?: string | null
           status?: string
           teacher_id?: string | null
           updated_at?: string
@@ -616,7 +619,7 @@ export type Database = {
       user_in_same_school: { Args: { _target: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "head_teacher" | "teacher"
+      app_role: "admin" | "head_teacher" | "teacher" | "senatorial_head"
       arrival_status: "early" | "on_time" | "late"
       attendance_mark: "present" | "late" | "absent"
       departure_status: "left_early" | "on_time" | "overtime"
@@ -747,7 +750,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "head_teacher", "teacher"],
+      app_role: ["admin", "head_teacher", "teacher", "senatorial_head"],
       arrival_status: ["early", "on_time", "late"],
       attendance_mark: ["present", "late", "absent"],
       departure_status: ["left_early", "on_time", "overtime"],

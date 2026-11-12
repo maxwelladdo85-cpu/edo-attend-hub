@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DISTRICT_NAMES, setActiveDistrict } from "@/lib/senatorial";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { InstallAppCard } from "@/components/InstallAppButton";
@@ -20,7 +22,7 @@ export const Route = createFileRoute("/login")({
   component: LoginPage,
 });
 
-type Role = "teacher" | "head_teacher" | "admin";
+type Role = "teacher" | "head_teacher" | "admin" | "senatorial_head";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -31,6 +33,7 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [district, setDistrict] = useState<string>("");
 
   useEffect(() => {
     if (!session || authLoading) return;
@@ -40,6 +43,10 @@ function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === "senatorial_head" && !district) {
+      toast.error("Please select a senatorial district");
+      return;
+    }
     setSubmitting(true);
     try {
       let signInEmail = email;
@@ -62,6 +69,18 @@ function LoginPage() {
         toast.error("Sign in failed — no session returned");
         return;
       }
+      if (role === "senatorial_head") {
+        const { data: rr } = await supabase.from("user_roles").select("role").eq("user_id", data.session.user.id);
+        if (!(rr ?? []).some((x: any) => x.role === "senatorial_head")) {
+          await supabase.auth.signOut();
+          toast.error("This account is not a Senatorial District Head");
+          return;
+        }
+        setActiveDistrict(district);
+        await supabase.from("profiles").update({ senatorial_district: district } as any).eq("user_id", data.session.user.id);
+      } else {
+        setActiveDistrict(null);
+      }
       toast.success("Welcome back");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Sign in failed");
@@ -74,6 +93,7 @@ function LoginPage() {
     { value: "teacher", label: "Teacher" },
     { value: "head_teacher", label: "Head Teacher" },
     { value: "admin", label: "Admin" },
+    { value: "senatorial_head", label: "Senatorial District Head" },
   ];
 
   return (
@@ -124,7 +144,7 @@ function LoginPage() {
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div className="space-y-1.5">
               <Label>Role</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {roleOptions.map((r) => (
                   <button
                     key={r.value}
@@ -142,6 +162,19 @@ function LoginPage() {
               </div>
             </div>
 
+            {role === "senatorial_head" && (
+              <div className="space-y-1.5">
+                <Label>Senatorial District</Label>
+                <Select value={district} onValueChange={setDistrict}>
+                  <SelectTrigger><SelectValue placeholder="Select a senatorial district" /></SelectTrigger>
+                  <SelectContent>
+                    {DISTRICT_NAMES.map((d) => (
+                      <SelectItem key={d} value={d}>{d} Senatorial District</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             {role === "teacher" || role === "head_teacher" ? (
               <>
                 <div className="space-y-1.5">

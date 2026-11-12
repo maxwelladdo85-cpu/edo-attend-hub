@@ -60,7 +60,7 @@ function DashboardPage() {
 
   // Redirect admins to the dedicated admin section
   useEffect(() => {
-    if (!loading && roles.length > 0 && primaryRole(roles) === "admin") {
+    if (!loading && roles.length > 0 && ["admin", "senatorial_head"].includes(primaryRole(roles))) {
       navigate({ to: "/admin", replace: true });
     }
   }, [loading, roles, navigate]);

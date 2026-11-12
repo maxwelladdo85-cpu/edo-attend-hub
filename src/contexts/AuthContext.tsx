@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@/integrations/supabase/client";
 
-export type AppRole = "admin" | "head_teacher" | "teacher";
+export type AppRole = "admin" | "senatorial_head" | "head_teacher" | "teacher";
 
 export interface Profile {
   id: string;
@@ -132,6 +132,7 @@ export function useAuth() {
 
 export function primaryRole(roles: AppRole[]): AppRole {
   if (roles.includes("admin")) return "admin";
+  if (roles.includes("senatorial_head")) return "senatorial_head";
   if (roles.includes("head_teacher")) return "head_teacher";
   return "teacher";
 }
