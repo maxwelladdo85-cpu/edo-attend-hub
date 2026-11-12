@@ -642,7 +642,7 @@ function HeadTeacherView() {
   useEffect(() => {
     if (!profile?.school_id) return;
     const channel = supabase
-      .channel(`head-teacher-attendance-${profile.school_id}`)
+      .channel(`head-teacher-attendance-${profile.school_id}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         {

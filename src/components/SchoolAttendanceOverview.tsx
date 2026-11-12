@@ -70,7 +70,7 @@ export function SchoolAttendanceOverview() {
   useEffect(() => {
     if (!schoolId) return;
     const channel = supabase
-      .channel(`school-attendance-${schoolId}`)
+      .channel(`school-attendance-${schoolId}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "student_attendance", filter: `school_id=eq.${schoolId}` },

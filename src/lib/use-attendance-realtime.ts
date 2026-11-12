@@ -20,7 +20,7 @@ export function useAttendanceRealtime() {
       qc.invalidateQueries({ queryKey: ["admin", "student-attendance", today] });
 
     const channel = supabase
-      .channel("admin-attendance-live")
+      .channel(`admin-attendance-live-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "teacher_attendance" },

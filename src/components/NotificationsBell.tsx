@@ -55,7 +55,7 @@ export function NotificationsBell() {
     let channel: any;
     try {
       channel = supabase
-        .channel(`notif-${user.id}`)
+        .channel(`notif-${user.id}-${Math.random().toString(36).slice(2)}`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
